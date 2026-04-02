@@ -1,0 +1,24 @@
+ M backend/app/__pycache__/database.cpython-312.pyc
+ M backend/app/database.py
+?? .git_branches.txt
+?? .git_log.txt
+?? .git_remotes.txt
+?? .git_status.txt
+
+* integration
+  main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/caregiver-merge
+  remotes/origin/feat/backend-phases
+  remotes/origin/integration
+  remotes/origin/main
+
+---LOG---
+7458a79 Add screening module
+6d00769 feat: redesign patient dashboard, navbar, and sidebar to match reference
+6207cd8 Complete UI redesign and backend AI integration
+
+---REMOTE---
+origin	https://github.com/snehaa1706/NeuroVia (fetch)
+origin	https://github.com/snehaa1706/NeuroVia (push)
+
