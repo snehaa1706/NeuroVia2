@@ -125,9 +125,9 @@ function StroopTest({ stroopData, onComplete }) {
           </p>
         </div>
         <button onClick={startTest} style={{
-          padding: "14px 32px", background: "linear-gradient(135deg, #6f42c1, #9b59b6)",
-          color: "white", border: "none", borderRadius: "8px", cursor: "pointer",
-          fontSize: "17px", fontWeight: "bold", boxShadow: "0 4px 12px rgba(111,66,193,0.3)"
+          padding: "16px 32px", background: "var(--color-teal)",
+          color: "white", border: "none", borderRadius: "12px", cursor: "pointer",
+          fontSize: "17px", fontWeight: "bold", boxShadow: "0 4px 12px rgba(143,163,150,0.3)"
         }}>
           🧠 Start Stroop Test ({totalTrials} trials)
         </button>
@@ -342,19 +342,52 @@ export default function Level3({ assessmentId, initialContext, onNext }) {
   }
 
   return (
-    <div style={{ padding: "20px", maxWidth: "750px", margin: "auto" }}>
-      <h2 style={{ textAlign: "center", borderBottom: "2px solid #6f42c1", paddingBottom: "10px", marginBottom: "30px" }}>
-        Phase 3: Executive Function & Attention
-      </h2>
+    <div style={{ padding: "40px", maxWidth: "1200px", margin: "auto", display: "flex", gap: "40px", alignItems: "flex-start", flexWrap: "wrap" }}>
+      
+      {/* === STICKY SIDEBAR === */}
+      <div style={{ 
+        flex: "1 1 300px", 
+        maxWidth: "350px",
+        position: "sticky", 
+        top: "40px", 
+        background: "var(--color-navy)", 
+        color: "white", 
+        padding: "40px", 
+        borderRadius: "24px",
+        boxShadow: "0 10px 30px rgba(27, 42, 65, 0.15)"
+      }}>
+        <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--color-teal)", letterSpacing: "1px", marginBottom: "10px", textTransform: "uppercase" }}>
+          Level 3 of 3
+        </div>
+        <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "36px", marginTop: 0, marginBottom: "20px", lineHeight: "1.2" }}>
+          Executive Function
+        </h2>
+        <p style={{ color: "var(--color-primary-100)", fontSize: "16px", lineHeight: "1.6", marginBottom: "30px" }}>
+          This final phase assesses response inhibition, attention, and visuospatial planning.
+        </p>
+        <div style={{ background: "rgba(255,255,255,0.05)", padding: "20px", borderRadius: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
+            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "var(--color-teal)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "bold" }}>1</div>
+            <span style={{ fontSize: "15px", color: "white", fontWeight: "500" }}>Stroop Test</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "var(--color-teal)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "bold" }}>2</div>
+            <span style={{ fontSize: "15px", color: "white", fontWeight: "500" }}>Clock Drawing Assessment</span>
+          </div>
+        </div>
+      </div>
+
+      {/* === MAIN CONTENT === */}
+      <div style={{ flex: "2 1 600px", minWidth: 0 }}>
 
       <form onSubmit={handleSubmit}>
 
         {stroopData && (
           <div style={{
-            background: "#f3e5f5", padding: "20px", borderRadius: "8px",
-            marginBottom: "25px", border: "1px solid #ce93d8"
+            background: "var(--color-bg-card)", padding: "40px", borderRadius: "20px",
+            marginBottom: "40px", borderTop: "8px solid var(--color-teal)", boxShadow: "0 10px 30px rgba(27, 42, 65, 0.06)"
           }}>
-            <h3 style={{ marginTop: 0, color: "#6f42c1" }}>1. Stroop Color-Word Test</h3>
+            <h3 style={{ marginTop: 0, color: "var(--color-navy)", fontFamily: "var(--font-serif)", fontSize: "28px" }}>1. Stroop Color-Word Test</h3>
             <p style={{ color: "#7b1fa2", fontSize: "14px", marginBottom: "15px" }}>
               This test measures your <strong>attention</strong>, <strong>cognitive control</strong>, and <strong>response inhibition</strong> under time pressure.
             </p>
@@ -362,8 +395,8 @@ export default function Level3({ assessmentId, initialContext, onNext }) {
           </div>
         )}
 
-        <div style={{ background: "#e8daef", padding: "20px", borderRadius: "8px", marginBottom: "25px", border: "1px solid #d2b4de" }}>
-          <h3 style={{ marginTop: 0, color: "#6c3483" }}>{stroopData ? "2. " : ""}Clock Drawing Test (CDT)</h3>
+        <div style={{ background: "var(--color-bg-card)", padding: "40px", borderRadius: "20px", marginBottom: "40px", borderTop: "8px solid var(--color-teal)", boxShadow: "0 10px 30px rgba(27, 42, 65, 0.06)" }}>
+          <h3 style={{ marginTop: 0, color: "var(--color-navy)", fontFamily: "var(--font-serif)", fontSize: "28px" }}>{stroopData ? "2. " : ""}Clock Drawing Test (CDT)</h3>
           <p style={{ color: "#6c3483", fontSize: "14px", lineHeight: "1.6" }}>
             Assesses executive function, visuospatial ability, and cognitive planning.
           </p>
@@ -380,19 +413,20 @@ export default function Level3({ assessmentId, initialContext, onNext }) {
           </p>
 
           <div style={{
-            background: "#f8f9fa", padding: "25px", borderRadius: "8px", marginBottom: "15px",
-            border: previewBase64 ? "2px solid #28a745" : "2px dashed #ccc",
+            background: "var(--color-bg-hover)", padding: "30px", borderRadius: "12px", marginBottom: "15px",
+            border: previewBase64 ? "2px solid var(--color-teal)" : "2px dashed var(--color-primary-100)",
             textAlign: "center", transition: "border-color 0.3s"
           }}>
             <label htmlFor="clock-upload" style={{
-              display: "inline-block", padding: "12px 28px",
-              background: "#6f42c1", color: "white", borderRadius: "5px",
-              cursor: "pointer", fontWeight: "bold", fontSize: "15px"
+              display: "inline-block", padding: "16px 28px",
+              background: "var(--color-navy)", color: "white", borderRadius: "12px",
+              cursor: "pointer", fontWeight: "600", fontSize: "16px",
+              boxShadow: "0 4px 12px rgba(27,42,65,0.2)"
             }}>
               📷 {previewBase64 ? "Change Image" : "Upload Clock Drawing"}
             </label>
             <input id="clock-upload" type="file" accept="image/*" onChange={handleFileChange} style={{ display: "none" }} />
-            {fileName && <p style={{ color: "#666", fontSize: "13px", marginTop: "8px", marginBottom: 0 }}>Selected: {fileName}</p>}
+            {fileName && <p style={{ color: "var(--color-text-secondary)", fontSize: "14px", marginTop: "12px", marginBottom: 0 }}>Selected: {fileName}</p>}
           </div>
 
           {previewBase64 && (
@@ -420,12 +454,13 @@ export default function Level3({ assessmentId, initialContext, onNext }) {
 
         <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "12px", alignItems: "center" }}>
           <button type="submit" disabled={loading} style={{
-            padding: "15px 40px",
-            background: loading ? "#6c757d" : "#6f42c1",
-            color: "white", border: "none", borderRadius: "8px",
-            fontSize: "18px", fontWeight: "bold",
+            padding: "16px 40px",
+            background: loading ? "var(--color-primary-100)" : "var(--color-teal)",
+            color: "white", border: "none", borderRadius: "12px",
+            fontSize: "16px", fontWeight: "600",
             cursor: loading ? "not-allowed" : "pointer",
-            transition: "background 0.3s",
+            transition: "all 0.2s",
+            boxShadow: "0 4px 12px rgba(143, 163, 150, 0.3)",
             minWidth: "300px"
           }}>
             {loading ? "Analyzing..." : "Submit Level 3 Assessment"}
@@ -434,7 +469,8 @@ export default function Level3({ assessmentId, initialContext, onNext }) {
             You can submit even if some sections are unanswered — unanswered parts will be scored as 0.
           </p>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

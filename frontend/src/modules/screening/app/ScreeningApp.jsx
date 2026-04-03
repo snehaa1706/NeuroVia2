@@ -83,11 +83,32 @@ export default function ScreeningApp() {
   };
 
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif' }}>
-      <h1 style={{ textAlign: "center", color: "#333", borderBottom: "1px solid #ddd", paddingBottom: "10px" }}>
-        NeuroVia Cognitive Screening
-      </h1>
-      {renderCurrentLevel()}
+    <div style={{ background: "var(--color-bg-page)", minHeight: "100vh", paddingBottom: "60px" }}>
+      <header style={{ 
+        background: "var(--color-navy)", 
+        color: "var(--color-bg-page)", 
+        padding: "24px 40px", 
+        boxShadow: "0 4px 12px rgba(27, 42, 65, 0.15)",
+        marginBottom: "40px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "15px"
+      }}>
+        <div style={{ fontSize: "28px" }}>🩺</div>
+        <h1 style={{ 
+          fontFamily: "var(--font-serif)", 
+          margin: 0, 
+          fontSize: "32px",
+          letterSpacing: "1px",
+          fontWeight: "600"
+        }}>
+          NeuroVia Cognitive Screening
+        </h1>
+      </header>
+      <main>
+        {renderCurrentLevel()}
+      </main>
     </div>
   );
 }

@@ -1,9 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import {
     LayoutDashboard,
-    ClipboardCheck,
     Gamepad2,
-    Stethoscope,
     Pill,
     AlertTriangle,
     ChevronLeft,
@@ -11,41 +9,21 @@ import {
     Brain,
     Zap,
 } from 'lucide-react';
-import type { User } from '../../types';
+
 
 interface SidebarProps {
-    user: User;
     isOpen: boolean;
     onToggle: () => void;
     alertCount?: number;
 }
 
-export default function Sidebar({ user, isOpen, onToggle, alertCount = 0 }: SidebarProps) {
-    const patientLinks = [
+export default function Sidebar({ isOpen, onToggle, alertCount = 0 }: SidebarProps) {
+    const links = [
         { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-        { to: '/screening', icon: ClipboardCheck, label: 'Screening' },
         { to: '/activities', icon: Gamepad2, label: 'Activities' },
-        { to: '/consult', icon: Stethoscope, label: 'Doctors' },
         { to: '/medications', icon: Pill, label: 'Medications' },
         { to: '/alerts', icon: AlertTriangle, label: 'Alerts', badge: alertCount },
     ];
-
-    const caregiverLinks = [
-        { to: '/caregiver', icon: LayoutDashboard, label: 'Dashboard' },
-        { to: '/medications', icon: Pill, label: 'Medications' },
-        { to: '/activities', icon: Gamepad2, label: 'Activities' },
-        { to: '/alerts', icon: AlertTriangle, label: 'Alerts', badge: alertCount },
-    ];
-
-    const doctorLinks = [
-        { to: '/consult', icon: Stethoscope, label: 'Consultations' },
-        { to: '/alerts', icon: AlertTriangle, label: 'Alerts', badge: alertCount },
-    ];
-
-    const links =
-        user.role === 'caregiver' ? caregiverLinks :
-            user.role === 'doctor' ? doctorLinks :
-                patientLinks;
 
     return (
         <aside className={`${isOpen ? 'w-[220px]' : 'w-[72px]'} bg-white border-r border-slate-100 flex flex-col transition-all duration-300 shrink-0 shadow-sm`}>
@@ -115,7 +93,7 @@ export default function Sidebar({ user, isOpen, onToggle, alertCount = 0 }: Side
                         <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider">Daily Insight</span>
                     </div>
                     <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                        Consistency in routines improves patient comfort. Stick to daily habits for best outcomes.
+                        Consistency in routines improves your comfort. Stick to daily habits for best outcomes.
                     </p>
                 </div>
             )}

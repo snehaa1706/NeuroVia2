@@ -19,7 +19,7 @@ class Difficulty(str, Enum):
 
 class ActivityResponse(BaseModel):
     id: str
-    patient_id: str
+    user_id: str
     activity_type: ActivityType
     content: dict[str, Any]
     difficulty: Difficulty
@@ -40,7 +40,6 @@ class ActivityResultResponse(BaseModel):
 
 
 class FamilyMemberCreate(BaseModel):
-    patient_id: str
     name: str
     relationship: str
     photo_url: Optional[str] = None
@@ -48,7 +47,7 @@ class FamilyMemberCreate(BaseModel):
 
 class FamilyMemberResponse(BaseModel):
     id: str
-    patient_id: str
+    user_id: str
     name: str
     relationship: str
     photo_url: Optional[str] = None

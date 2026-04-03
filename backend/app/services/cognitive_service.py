@@ -19,7 +19,6 @@ import app.utils.cognitive_tests.memory as memory_test
 import app.utils.cognitive_tests.fluency as fluency_test
 import app.utils.cognitive_tests.reaction as reaction_test
 import app.utils.cognitive_tests.sequence as sequence_test
-from app.services.caregiver_service import validate_assignment
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +31,7 @@ MOCK_RESULTS = [
     {
         "id": str(uuid.uuid4()),
         "session_id": str(uuid.uuid4()),
-        "patient_id": "test-patient-id",
+        "user_id": "test-user-id",
         "test_type": "memory_recall",
         "score": 88.0,
         "score_components": {"accuracy": 88, "response_time": 92},
@@ -43,7 +42,7 @@ MOCK_RESULTS = [
     {
         "id": str(uuid.uuid4()),
         "session_id": str(uuid.uuid4()),
-        "patient_id": "test-patient-id",
+        "user_id": "test-user-id",
         "test_type": "verbal_fluency",
         "score": 82.0,
         "score_components": {"fluency": 82, "vocabulary": 78},
@@ -54,7 +53,7 @@ MOCK_RESULTS = [
     {
         "id": str(uuid.uuid4()),
         "session_id": str(uuid.uuid4()),
-        "patient_id": "test-patient-id",
+        "user_id": "test-user-id",
         "test_type": "sequence_memory",
         "score": 75.0,
         "score_components": {"accuracy": 75, "sequence_length": 6},
@@ -65,7 +64,7 @@ MOCK_RESULTS = [
     {
         "id": str(uuid.uuid4()),
         "session_id": str(uuid.uuid4()),
-        "patient_id": "test-patient-id",
+        "user_id": "test-user-id",
         "test_type": "reaction_time",
         "score": 70.0,
         "score_components": {"avg_reaction_ms": 450, "consistency": 70},
@@ -76,7 +75,7 @@ MOCK_RESULTS = [
     {
         "id": str(uuid.uuid4()),
         "session_id": str(uuid.uuid4()),
-        "patient_id": "test-patient-id",
+        "user_id": "test-user-id",
         "test_type": "memory_recall",
         "score": 65.0,
         "score_components": {"accuracy": 65, "response_time": 60},
@@ -87,7 +86,7 @@ MOCK_RESULTS = [
     {
         "id": str(uuid.uuid4()),
         "session_id": str(uuid.uuid4()),
-        "patient_id": "test-patient-id",
+        "user_id": "test-user-id",
         "test_type": "verbal_fluency",
         "score": 58.0,
         "score_components": {"fluency": 58, "vocabulary": 55},
@@ -98,7 +97,7 @@ MOCK_RESULTS = [
     {
         "id": str(uuid.uuid4()),
         "session_id": str(uuid.uuid4()),
-        "patient_id": "test-patient-id",
+        "user_id": "test-user-id",
         "test_type": "sequence_memory",
         "score": 52.0,
         "score_components": {"accuracy": 52, "sequence_length": 4},
@@ -109,7 +108,7 @@ MOCK_RESULTS = [
     {
         "id": str(uuid.uuid4()),
         "session_id": str(uuid.uuid4()),
-        "patient_id": "test-patient-id",
+        "user_id": "test-user-id",
         "test_type": "reaction_time",
         "score": 45.0,
         "score_components": {"avg_reaction_ms": 620, "consistency": 45},
@@ -189,7 +188,7 @@ def _check_session_expiration(session: dict, sb) -> None:
 
         logger.warning(
             "cognitive_session_expired",
-            extra={"session_id": session["id"], "patient_id": session["patient_id"], "age_minutes": round(age_minutes, 1)},
+            extra={"session_id": session["id"], "user_id": session["user_id"], "age_minutes": round(age_minutes, 1)},
         )
         raise HTTPException(
             status_code=400,
@@ -202,13 +201,13 @@ def _check_session_expiration(session: dict, sb) -> None:
 # ================================
 
 
-def _recompute_summary_from_results(patient_id: str) -> dict:
+def _recompute_summary_from_results(user_id: str) -> dict:
     """Fallback: compute summary directly from cognitive_results rows."""
     sb = get_supabase()
     res = (
         sb.table("cognitive_results")
         .select("score")
-        .eq("patient_id", patient_id)
+        .eq("user_id", user_id)
         .order("created_at", desc=True)
         .limit(5)
         .execute()
@@ -243,14 +242,14 @@ def _recompute_summary_from_results(patient_id: str) -> dict:
     }
 
 
-def _update_summary_cache(patient_id: str) -> None:
+def _update_summary_cache(user_id: str) -> None:
     """Upsert the cognitive_summary_cache row for a patient after a new result."""
     try:
-        summary = _recompute_summary_from_results(patient_id)
+        summary = _recompute_summary_from_results(user_id)
         sb = get_supabase()
 
         cache_record = {
-            "patient_id": patient_id,
+            "user_id": user_id,
             "latest_score": summary["latest_score"],
             "average_score": summary["avg_score"],
             "trend_direction": summary["trend"],
@@ -258,16 +257,16 @@ def _update_summary_cache(patient_id: str) -> None:
             "last_updated": datetime.now(timezone.utc).isoformat(),
         }
 
-        # Upsert: ON CONFLICT (patient_id) DO UPDATE
-        sb.table("cognitive_summary_cache").upsert(cache_record, on_conflict="patient_id").execute()
+        # Upsert: ON CONFLICT (user_id) DO UPDATE
+        sb.table("cognitive_summary_cache").upsert(cache_record, on_conflict="user_id").execute()
 
         logger.info(
             "cognitive_summary_cache_updated",
-            extra={"patient_id": patient_id, "latest_score": summary["latest_score"]},
+            extra={"user_id": user_id, "latest_score": summary["latest_score"]},
         )
     except Exception as e:
         # Cache update failure should never break the submission flow
-        logger.error("cognitive_summary_cache_update_failed", extra={"patient_id": patient_id, "error": str(e)})
+        logger.error("cognitive_summary_cache_update_failed", extra={"user_id": user_id, "error": str(e)})
 
 
 # ================================
@@ -277,13 +276,13 @@ def _update_summary_cache(patient_id: str) -> None:
 
 def start_session(user_id: str, payload: SessionStartRequest) -> dict:
     """Creates a new test session and generates the mandatory test_config."""
-    if user_id == "test-patient-id":
+    if user_id == "test-user-id":
         # DEV MOCK OVERRIDE
         sess_id = str(uuid.uuid4())
         config = _generate_test_config(payload.test_type, payload.difficulty)
         session = {
             "id": sess_id,
-            "patient_id": user_id,
+            "user_id": user_id,
             "test_type": payload.test_type.value,
             "difficulty": payload.difficulty.value,
             "status": "in_progress",
@@ -298,7 +297,7 @@ def start_session(user_id: str, payload: SessionStartRequest) -> dict:
     config = _generate_test_config(payload.test_type, payload.difficulty)
 
     record = {
-        "patient_id": user_id,
+        "user_id": user_id,
         "test_type": payload.test_type.value,
         "difficulty": payload.difficulty.value,
         "status": "in_progress",
@@ -314,7 +313,7 @@ def start_session(user_id: str, payload: SessionStartRequest) -> dict:
 
 def submit_test(user_id: str, session_id: str, payload: TestSubmissionRequest) -> dict:
     """Validates inputs, calculates score, stores result, and locks session."""
-    if user_id == "test-patient-id":
+    if user_id == "test-user-id":
         if session_id not in MOCK_SESSIONS:
             raise HTTPException(status_code=404, detail="Session not found in mock store")
         session = MOCK_SESSIONS[session_id]
@@ -328,7 +327,7 @@ def submit_test(user_id: str, session_id: str, payload: TestSubmissionRequest) -
         res = {
             "id": str(uuid.uuid4()),
             "session_id": session_id,
-            "patient_id": user_id,
+            "user_id": user_id,
             "test_type": test_type.value,
             "score": score,
             "score_components": score_components,
@@ -349,7 +348,7 @@ def submit_test(user_id: str, session_id: str, payload: TestSubmissionRequest) -
     session = session_res.data
 
     # Ownership Control
-    if session["patient_id"] != user_id:
+    if session["user_id"] != user_id:
         raise HTTPException(status_code=403, detail="Unauthorized to submit logic for this session")
 
     # Session State Control
@@ -387,7 +386,7 @@ def submit_test(user_id: str, session_id: str, payload: TestSubmissionRequest) -
     try:
         result_record = {
             "session_id": session["id"],
-            "patient_id": user_id,
+            "user_id": user_id,
             "test_type": test_type.value,
             "score": score,
             "score_components": score_components,
@@ -404,7 +403,7 @@ def submit_test(user_id: str, session_id: str, payload: TestSubmissionRequest) -
 
         logger.info(
             "cognitive_test_completed",
-            extra={"patient_id": user_id, "session_id": session["id"], "score": score},
+            extra={"user_id": user_id, "session_id": session["id"], "score": score},
         )
 
         # 7. Update summary cache asynchronously (best-effort)
@@ -416,26 +415,22 @@ def submit_test(user_id: str, session_id: str, payload: TestSubmissionRequest) -
         raise HTTPException(status_code=500, detail=f"Database transaction failed: {str(e)}")
 
 
-def get_cognitive_history(requesting_user: dict, patient_id: str) -> list[dict]:
-    """Retrieve history. Allows patients to see own, and caregivers assigned."""
-    if patient_id == "test-patient-id":
+def get_cognitive_history(requesting_user: dict, user_id: str) -> list[dict]:
+    """Retrieve history for the specific user."""
+    if user_id == "test-user-id":
         return sorted(MOCK_RESULTS, key=lambda x: x["created_at"], reverse=True)
 
     sb = get_supabase()
 
-    role = requesting_user.get("role")
     req_id = requesting_user.get("id")
 
-    if role == "caregiver":
-        # Will raise 403 if unassigned
-        validate_assignment(req_id, patient_id)
-    elif role == "patient" and req_id != patient_id:
+    if req_id != user_id:
         raise HTTPException(status_code=403, detail="Cannot access other patient's records")
 
     res = (
         sb.table("cognitive_results")
         .select("*")
-        .eq("patient_id", patient_id)
+        .eq("user_id", user_id)
         .order("created_at", desc=True)
         .limit(50)
         .execute()
@@ -444,9 +439,9 @@ def get_cognitive_history(requesting_user: dict, patient_id: str) -> list[dict]:
     return res.data or []
 
 
-def compute_cognitive_summary(patient_id: str) -> dict:
+def compute_cognitive_summary(user_id: str) -> dict:
     """Read from cache first; fall back to live recompute if cache is missing."""
-    if patient_id == "test-patient-id":
+    if user_id == "test-user-id":
         scores = [r["score"] for r in MOCK_RESULTS]
         if not scores:
             return {"avg_score": None, "latest_score": None, "trend": "no_data", "recent_scores": [], "recent_results": []}
@@ -472,7 +467,7 @@ def compute_cognitive_summary(patient_id: str) -> dict:
         cache_res = (
             sb.table("cognitive_summary_cache")
             .select("*")
-            .eq("patient_id", patient_id)
+            .eq("user_id", user_id)
             .single()
             .execute()
         )
@@ -490,7 +485,7 @@ def compute_cognitive_summary(patient_id: str) -> dict:
             }
     except Exception:
         # Cache miss or table doesn't exist yet — fall through to live recompute
-        logger.debug("cognitive_summary_cache_miss", extra={"patient_id": patient_id})
+        logger.debug("cognitive_summary_cache_miss", extra={"user_id": user_id})
 
     # Fallback: recompute from results
-    return _recompute_summary_from_results(patient_id)
+    return _recompute_summary_from_results(user_id)

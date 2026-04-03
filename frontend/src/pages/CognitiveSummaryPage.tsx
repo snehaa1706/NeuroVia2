@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
-import type { User } from '../types';
+
 import {
   BarChart3,
   TrendingUp,
@@ -62,7 +62,7 @@ const TEST_TYPE_ICONS: Record<string, typeof Brain> = {
   sequence_memory: BarChart3,
 };
 
-export default function CognitiveSummaryPage({ user: _user }: { user: User }) {
+export default function CognitiveSummaryPage() {
   const navigate = useNavigate();
   const [summary, setSummary] = useState<CognitiveSummary | null>(null);
   const [loading, setLoading] = useState(true);

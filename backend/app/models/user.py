@@ -5,8 +5,7 @@ from datetime import date, datetime
 
 
 class UserRole(str, Enum):
-    patient = "patient"
-    caregiver = "caregiver"
+    user = "user"
     doctor = "doctor"
     admin = "admin"
 
@@ -15,7 +14,7 @@ class UserRegister(BaseModel):
     email: str
     password: str
     full_name: str
-    role: UserRole = UserRole.patient
+    role: UserRole = UserRole.user
     phone: Optional[str] = None
     date_of_birth: Optional[date] = None
 

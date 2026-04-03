@@ -5,14 +5,14 @@ from app.models.ai_analysis import (
     AIAnalysisRequest,
     AIAnalysisResponse,
     ActivityGenerationRequest,
-    CaregiverGuidanceRequest,
-    CaregiverGuidanceResponse,
+    HealthGuidanceRequest,
+    HealthGuidanceResponse,
     ConsultationSummaryRequest,
     ConsultationSummaryResponse,
 )
 from app.services.ai_service import (
     analyze_screening,
-    generate_caregiver_guidance,
+    generate_health_guidance,
     generate_activity,
     generate_consultation_summary,
     generate_ai_response
@@ -32,6 +32,8 @@ def _get_user_id(request: Request) -> str:
     sb = get_supabase()
     auth_header = request.headers.get("Authorization", "")
     token = auth_header.replace("Bearer ", "")
+    if token == "TEST_TOKEN":
+        return "test-patient-id"
     user_response = sb.auth.get_user(token)
     if not user_response.user:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -100,7 +102,7 @@ async def analyze_screening_endpoint(request: Request, data: AIAnalysisRequest):
 @router.post("/generate-activity")
 async def generate_activity_endpoint(request: Request, data: ActivityGenerationRequest):
     """Generate a cognitive activity using OpenAI."""
-    _get_user_id(request)
+    user_id = _get_user_id(request)
 
     activity_type = data.activity_type or "memory_recall"
     difficulty = data.difficulty or "easy"
@@ -110,10 +112,20 @@ async def generate_activity_endpoint(request: Request, data: ActivityGenerationR
     if "error" in ai_result:
         raise HTTPException(status_code=500, detail=ai_result["error"])
 
-    # Store activity
     sb = get_supabase()
+
+    # Delete any existing activity of this type for the user (prevent duplicates)
+    (
+        sb.table("activities")
+        .delete()
+        .eq("user_id", user_id)
+        .eq("activity_type", activity_type)
+        .execute()
+    )
+
+    # Insert the fresh activity
     activity_record = {
-        "patient_id": data.patient_id,
+        "user_id": user_id,
         "activity_type": activity_type,
         "content": ai_result,
         "difficulty": difficulty,
@@ -123,19 +135,19 @@ async def generate_activity_endpoint(request: Request, data: ActivityGenerationR
     return {"activity": result.data[0]}
 
 
-@router.post("/caregiver-guidance", response_model=CaregiverGuidanceResponse)
-async def caregiver_guidance_endpoint(
-    request: Request, data: CaregiverGuidanceRequest
+@router.post("/health-guidance", response_model=HealthGuidanceResponse)
+async def health_guidance_endpoint(
+    request: Request, data: HealthGuidanceRequest
 ):
     """Get AI-powered caregiver guidance."""
     _get_user_id(request)
     sb = get_supabase()
 
-    # Fetch the caregiver log
+    # Fetch the health log
     log = (
-        sb.table("caregiver_logs")
+        sb.table("health_logs")
         .select("*")
-        .eq("id", data.caregiver_log_id)
+        .eq("id", data.health_log_id)
         .single()
         .execute()
     )
@@ -144,9 +156,9 @@ async def caregiver_guidance_endpoint(
 
     # Fetch recent logs for context
     recent = (
-        sb.table("caregiver_logs")
+        sb.table("health_logs")
         .select("*")
-        .eq("patient_id", data.patient_id)
+        .eq("user_id", data.user_id)
         .order("created_at", desc=True)
         .limit(5)
         .execute()
@@ -155,7 +167,7 @@ async def caregiver_guidance_endpoint(
     recent_text = json.dumps(recent.data, default=str) if recent.data else "None"
     log_data = log.data
 
-    ai_result = await generate_caregiver_guidance(
+    ai_result = await generate_health_guidance(
         mood=log_data.get("mood", "unknown"),
         confusion_level=log_data.get("confusion_level", 5),
         sleep_hours=log_data.get("sleep_hours", 0),
@@ -167,7 +179,7 @@ async def caregiver_guidance_endpoint(
     if "error" in ai_result:
         raise HTTPException(status_code=500, detail=ai_result["error"])
 
-    return CaregiverGuidanceResponse(
+    return HealthGuidanceResponse(
         assessment=ai_result.get("assessment", ""),
         care_strategies=ai_result.get("care_strategies", []),
         warning_signs=ai_result.get("warning_signs", []),

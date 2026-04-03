@@ -25,17 +25,17 @@ class AIAnalysisResponse(BaseModel):
 
 
 class ActivityGenerationRequest(BaseModel):
-    patient_id: str
+    user_id: Optional[str] = None
     activity_type: Optional[str] = None
     difficulty: Optional[str] = "easy"
 
 
-class CaregiverGuidanceRequest(BaseModel):
-    caregiver_log_id: str
-    patient_id: str
+class HealthGuidanceRequest(BaseModel):
+    health_log_id: str
+    user_id: str
 
 
-class CaregiverGuidanceResponse(BaseModel):
+class HealthGuidanceResponse(BaseModel):
     assessment: str
     care_strategies: list[str]
     warning_signs: list[str]
@@ -43,7 +43,7 @@ class CaregiverGuidanceResponse(BaseModel):
 
 
 class ConsultationSummaryRequest(BaseModel):
-    patient_id: str
+    user_id: str
     screening_id: str
 
 

@@ -22,16 +22,16 @@ def _get_user_id(request: Request) -> str:
     return user_response.user.id
 
 
-@router.get("/{patient_id}")
-async def get_activities(request: Request, patient_id: str):
-    """Get cognitive activities for a patient."""
+@router.get("/")
+async def get_activities(request: Request):
+    """Get cognitive activities for the user."""
     sb = get_supabase()
-    _get_user_id(request)
+    user_id = _get_user_id(request)
 
     result = (
         sb.table("activities")
         .select("*")
-        .eq("patient_id", patient_id)
+        .eq("user_id", user_id)
         .order("created_at", desc=True)
         .limit(20)
         .execute()
@@ -83,17 +83,17 @@ async def submit_activity_result(
     )
 
 
-@router.get("/{patient_id}/progress")
-async def get_activity_progress(request: Request, patient_id: str):
+@router.get("/progress")
+async def get_activity_progress(request: Request):
     """Get activity progress and performance trends."""
     sb = get_supabase()
-    _get_user_id(request)
+    user_id = _get_user_id(request)
 
     # Get activities with results
     activities = (
         sb.table("activities")
         .select("*, activity_results(*)")
-        .eq("patient_id", patient_id)
+        .eq("user_id", user_id)
         .order("created_at", desc=True)
         .execute()
     )
@@ -132,10 +132,10 @@ async def get_activity_progress(request: Request, patient_id: str):
 async def add_family_member(request: Request, data: FamilyMemberCreate):
     """Add a family member for photo recognition activities."""
     sb = get_supabase()
-    _get_user_id(request)
+    user_id = _get_user_id(request)
 
     record = {
-        "patient_id": data.patient_id,
+        "user_id": user_id,
         "name": data.name,
         "relationship": data.relationship,
         "photo_url": data.photo_url,
@@ -146,16 +146,16 @@ async def add_family_member(request: Request, data: FamilyMemberCreate):
     return FamilyMemberResponse(**member)
 
 
-@router.get("/family-members/{patient_id}")
-async def get_family_members(request: Request, patient_id: str):
-    """Get family members for a patient."""
+@router.get("/family-members")
+async def get_family_members(request: Request):
+    """Get family members for the user."""
     sb = get_supabase()
-    _get_user_id(request)
+    user_id = _get_user_id(request)
 
     result = (
         sb.table("family_members")
         .select("*")
-        .eq("patient_id", patient_id)
+        .eq("user_id", user_id)
         .execute()
     )
 

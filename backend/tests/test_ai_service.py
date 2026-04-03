@@ -1,7 +1,7 @@
 import pytest
 import asyncio
 from unittest.mock import patch
-from app.services.ai_service import generate_caregiver_guidance
+from app.services.ai_service import generate_health_guidance
 
 @pytest.mark.asyncio
 async def test_ai_valid_response():
@@ -17,7 +17,7 @@ async def test_ai_valid_response():
         }
 
     with patch('app.services.ai_service._get_json_response', side_effect=mock_success):
-        res = await generate_caregiver_guidance(
+        res = await generate_health_guidance(
             confusion_trend=[],
             recent_incidents=[],
             medication_adherence="100%",
@@ -36,7 +36,7 @@ async def test_ai_invalid_response_fallback():
         raise ValueError("AI Down")
 
     with patch('app.services.ai_service._get_json_response', side_effect=mock_fail):
-        res = await generate_caregiver_guidance(
+        res = await generate_health_guidance(
             confusion_trend=[], recent_incidents=[], medication_adherence="", activity_scores="", mood="", notes="", recent_logs=""
         )
         assert res["risk_level"] == "medium"
@@ -50,7 +50,7 @@ async def test_ai_large_input_sanitization():
         return {"risk_level": "low"} # Partial
 
     with patch('app.services.ai_service._get_json_response', side_effect=mock_success):
-        res = await generate_caregiver_guidance(
+        res = await generate_health_guidance(
             confusion_trend=[1]*100, # Large array
             recent_incidents=[],
             medication_adherence="",

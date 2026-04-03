@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getDifficultyRecommendation } from '../services/cognitiveAI';
-import api from '../api/apiClient';
-import type { User } from '../types';
+import { api } from '../lib/api';
+
 import {
   Brain,
   Play,
@@ -82,7 +82,7 @@ const DIFFICULTY_LABELS: Record<DifficultyOption, { label: string; color: string
 // Component
 // ============================================
 
-export default function CognitiveTestPage({ user: _user }: { user: User }) {
+export default function CognitiveTestPage() {
   const navigate = useNavigate();
   const [phase, setPhase] = useState<Phase>('select');
   const [selectedTest, setSelectedTest] = useState<TestTypeOption>('memory_recall');
@@ -138,11 +138,8 @@ export default function CognitiveTestPage({ user: _user }: { user: User }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.post("/cognitive/start", {
-        test_type: selectedTest,
-        difficulty: selectedDifficulty
-      });
-      setSession(response.data);
+      const sessionData = await api.startCognitiveTest(selectedTest, selectedDifficulty);
+      setSession(sessionData);
       setPhase('running');
       startTimer();
     } catch (error: any) {
@@ -161,11 +158,8 @@ export default function CognitiveTestPage({ user: _user }: { user: User }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.post(`/cognitive/${session.id}/submit`, {
-        responses,
-        time_taken_seconds: Math.max(elapsedSeconds, 1)
-      });
-      setResult(response.data);
+      const resultData = await api.submitCognitiveTest(session.id, responses, Math.max(elapsedSeconds, 1));
+      setResult(resultData);
       setPhase('result');
     } catch (error: any) {
       console.error("Submit test failed:", error);

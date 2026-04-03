@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Pill, Plus, X, Sun, Sunset, Moon, Sunrise, Loader2, Check } from 'lucide-react';
 import { api } from '../lib/api';
-import type { User, Medication } from '../types';
+import type { Medication } from '../types';
 import { MedicationItem } from '../components/ui/MedicationItem';
 import { StatCard } from '../components/ui/StatCard';
 
-interface Props {
-    user: User;
-}
 
-export default function MedicationsPage({ user }: Props) {
+
+export default function MedicationsPage() {
     const [medications, setMedications] = useState<Medication[]>([]);
     const [adherence, setAdherence] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -22,8 +20,8 @@ export default function MedicationsPage({ user }: Props) {
     const loadData = async () => {
         try {
             const [medRes, adhRes] = await Promise.all([
-                api.getMedications(user.id).catch(() => ({ medications: [] })),
-                api.getMedicationAdherence(user.id).catch(() => ({ adherence: [] })),
+                api.getMedications().catch(() => ({ medications: [] })),
+                api.getMedicationAdherence().catch(() => ({ adherence: [] })),
             ]);
             setMedications(medRes.medications || []);
             setAdherence(adhRes.adherence || []);
@@ -34,7 +32,7 @@ export default function MedicationsPage({ user }: Props) {
     const addMedication = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.addMedication({ patient_id: user.id, name: newMed.name, dosage: newMed.dosage, frequency: newMed.frequency, time_slots: newMed.time_slots.split(',').map(t => t.trim()) });
+            await api.addMedication({ name: newMed.name, dosage: newMed.dosage, frequency: newMed.frequency, time_slots: newMed.time_slots.split(',').map(t => t.trim()) });
             setShowAdd(false);
             setNewMed({ name: '', dosage: '', frequency: '', time_slots: '' });
             loadData();

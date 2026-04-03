@@ -11,7 +11,6 @@ class MedicationStatus(str, Enum):
 
 
 class MedicationCreate(BaseModel):
-    patient_id: str
     name: str
     dosage: str
     frequency: str
@@ -20,7 +19,7 @@ class MedicationCreate(BaseModel):
 
 class MedicationResponse(BaseModel):
     id: str
-    patient_id: str
+    user_id: str
     name: str
     dosage: str
     frequency: str

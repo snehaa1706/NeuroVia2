@@ -19,8 +19,7 @@ class AlertSeverity(str, Enum):
 
 class AlertResponse(BaseModel):
     id: str
-    patient_id: str
-    caregiver_id: Optional[str] = None
+    user_id: str
     alert_type: AlertType
     severity: AlertSeverity
     message: str

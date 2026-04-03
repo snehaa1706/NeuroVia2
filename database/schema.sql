@@ -11,7 +11,7 @@ DROP TABLE IF EXISTS alerts CASCADE;
 DROP TABLE IF EXISTS family_members CASCADE;
 DROP TABLE IF EXISTS activity_results CASCADE;
 DROP TABLE IF EXISTS activities CASCADE;
-DROP TABLE IF EXISTS caregiver_logs CASCADE;
+DROP TABLE IF EXISTS health_logs CASCADE;
 DROP TABLE IF EXISTS medication_logs CASCADE;
 DROP TABLE IF EXISTS medications CASCADE;
 DROP TABLE IF EXISTS consult_requests CASCADE;
@@ -109,7 +109,7 @@ CREATE TABLE doctors (
 -- Consultation Requests
 CREATE TABLE consult_requests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    patient_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     doctor_id UUID NOT NULL REFERENCES doctors(id) ON DELETE CASCADE,
     assessment_id UUID REFERENCES assessments(id),
     summary TEXT,
@@ -120,7 +120,7 @@ CREATE TABLE consult_requests (
 -- Medications
 CREATE TABLE medications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    patient_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     dosage VARCHAR(255),
     frequency VARCHAR(255),
@@ -137,11 +137,10 @@ CREATE TABLE medication_logs (
     notes TEXT
 );
 
--- Caregiver Logs
-CREATE TABLE caregiver_logs (
+-- Health Logs
+CREATE TABLE health_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    caregiver_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    patient_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     log_type log_type NOT NULL DEFAULT 'daily_checkin',
     mood VARCHAR(50),
     confusion_level INT CHECK (confusion_level >= 1 AND confusion_level <= 10),
@@ -154,7 +153,7 @@ CREATE TABLE caregiver_logs (
 -- Activities
 CREATE TABLE activities (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    patient_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     activity_type activity_type NOT NULL,
     content JSONB NOT NULL DEFAULT '{}',
     difficulty difficulty_level DEFAULT 'easy',
@@ -174,7 +173,7 @@ CREATE TABLE activity_results (
 -- Family Members
 CREATE TABLE family_members (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    patient_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     relationship VARCHAR(100),
     photo_url TEXT
@@ -183,8 +182,7 @@ CREATE TABLE family_members (
 -- Alerts
 CREATE TABLE alerts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    patient_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    caregiver_id UUID REFERENCES users(id),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     alert_type alert_type NOT NULL,
     severity alert_severity NOT NULL DEFAULT 'info',
     message TEXT NOT NULL,
@@ -200,15 +198,13 @@ CREATE TABLE alerts (
 CREATE INDEX idx_assessments_user ON assessments(user_id);
 CREATE INDEX idx_assessment_results_assessment ON assessment_results(assessment_id);
 CREATE INDEX idx_ai_analyses_assessment ON ai_analyses(assessment_id);
-CREATE INDEX idx_caregiver_logs_patient ON caregiver_logs(patient_id);
-CREATE INDEX idx_caregiver_logs_caregiver ON caregiver_logs(caregiver_id);
-CREATE INDEX idx_medications_patient ON medications(patient_id);
+CREATE INDEX idx_health_logs_user ON health_logs(user_id);
+CREATE INDEX idx_medications_user ON medications(user_id);
 CREATE INDEX idx_medication_logs_medication ON medication_logs(medication_id);
-CREATE INDEX idx_activities_patient ON activities(patient_id);
-CREATE INDEX idx_alerts_patient ON alerts(patient_id);
-CREATE INDEX idx_alerts_caregiver ON alerts(caregiver_id);
+CREATE INDEX idx_activities_user ON activities(user_id);
+CREATE INDEX idx_alerts_user ON alerts(user_id);
 CREATE INDEX idx_alerts_read ON alerts(read);
-CREATE INDEX idx_consult_requests_patient ON consult_requests(patient_id);
+CREATE INDEX idx_consult_requests_user ON consult_requests(user_id);
 CREATE INDEX idx_consult_requests_doctor ON consult_requests(doctor_id);
 
 -- ============================================
@@ -223,7 +219,7 @@ ALTER TABLE doctors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE consult_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE medications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE medication_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE caregiver_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE health_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE activity_results ENABLE ROW LEVEL SECURITY;
 ALTER TABLE family_members ENABLE ROW LEVEL SECURITY;
@@ -256,7 +252,7 @@ CREATE POLICY "Service role full access" ON medications
 CREATE POLICY "Service role full access" ON medication_logs
     FOR ALL USING (true) WITH CHECK (true);
 
-CREATE POLICY "Service role full access" ON caregiver_logs
+CREATE POLICY "Service role full access" ON health_logs
     FOR ALL USING (true) WITH CHECK (true);
 
 CREATE POLICY "Service role full access" ON activities

@@ -5,13 +5,13 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
-from app.routers import auth, screening, ai, caregiver, doctor, activities, medications, alerts, transcribe
+from app.routers import auth, screening, ai, health, activities, medications, alerts, transcribe
 
 limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
     title="NeuroVia API",
-    description="AI-Driven Dementia Screening & Caregiver Support Platform",
+    description="AI-Driven Dementia Screening & Patient Support Platform",
     version="1.0.0",
 )
 
@@ -29,8 +29,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(screening.router, prefix="/screening", tags=["Screening"])
 app.include_router(ai.router, prefix="/ai", tags=["AI Analysis"])
-app.include_router(caregiver.router, prefix="/caregiver", tags=["Caregiver"])
-app.include_router(doctor.router, prefix="/doctors", tags=["Doctors"])
+app.include_router(health.router, prefix="/health", tags=["Health Logs"])
 app.include_router(activities.router, prefix="/activities", tags=["Activities"])
 app.include_router(medications.router, prefix="/medications", tags=["Medications"])
 app.include_router(alerts.router, prefix="/alerts", tags=["Alerts"])

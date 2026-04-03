@@ -13,6 +13,10 @@ async function apiFetch(endpoint, options = {}) {
   });
 
   if (!res.ok) {
+    if (res.status === 401 && token !== "dummy_dev_token") {
+      localStorage.removeItem("neurovia_token");
+      return apiFetch(endpoint, options);
+    }
     const error = await res.text();
     throw new Error(error || "API Error");
   }

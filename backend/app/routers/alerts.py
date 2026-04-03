@@ -21,41 +21,19 @@ async def get_alerts(request: Request, unread_only: bool = False):
     sb = get_supabase()
     user_id = _get_user_id(request)
 
-    # Check alerts where user is either the patient or the caregiver
-    query_patient = (
+    # Get alerts for user
+    query = (
         sb.table("alerts")
         .select("*")
-        .eq("patient_id", user_id)
+        .eq("user_id", user_id)
         .order("created_at", desc=True)
         .limit(50)
     )
     if unread_only:
-        query_patient = query_patient.eq("read", False)
-    result_patient = query_patient.execute()
-
-    query_caregiver = (
-        sb.table("alerts")
-        .select("*")
-        .eq("caregiver_id", user_id)
-        .order("created_at", desc=True)
-        .limit(50)
-    )
-    if unread_only:
-        query_caregiver = query_caregiver.eq("read", False)
-    result_caregiver = query_caregiver.execute()
-
-    # Merge and deduplicate
-    all_alerts = {a["id"]: a for a in (result_patient.data or [])}
-    for a in (result_caregiver.data or []):
-        all_alerts[a["id"]] = a
-
-    sorted_alerts = sorted(
-        all_alerts.values(),
-        key=lambda x: x.get("created_at", ""),
-        reverse=True,
-    )
-
-    return {"alerts": sorted_alerts}
+        query = query.eq("read", False)
+    
+    result = query.execute()
+    return {"alerts": result.data or []}
 
 
 @router.put("/{alert_id}/read")

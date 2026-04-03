@@ -6,29 +6,29 @@
    ============================================ */
 
 :root {
-  /* ── Primary — Clinical Blue ── */
-  --color-primary: #1A6FA8;
-  --color-primary-light: #5FA5D9;
-  --color-primary-dark: #124A70;
-  --color-primary-50: #E8F1F7;
-  --color-primary-100: #BAD4E8;
+  /* ── Primary — Elegant Navy ── */
+  --color-primary: #1B2A41;
+  --color-primary-light: #2C3E50;
+  --color-primary-dark: #0F1A2A;
+  --color-primary-50: #E3E8ED;
+  --color-primary-100: #BCC7D3;
 
-  /* ── Secondary — Deep Navy ── */
-  --color-navy: #0D2B45;
-  --color-navy-light: #3D6A8F;
+  /* ── Secondary — Sage Green ── */
+  --color-navy: #1B2A41;
+  --color-navy-light: #2C3E50;
 
-  /* ── Accent — Healing Green ── */
-  --color-teal: #28A98C;
-  --color-teal-light: #5CE0C2;
-  --color-teal-dark: #1D7A65;
-  --color-teal-50: #EAF7F4;
+  /* ── Accent — Sage Green ── */
+  --color-teal: #8FA396;
+  --color-teal-light: #D1DACB;
+  --color-teal-dark: #6D8274;
+  --color-teal-50: #F1F4F1;
 
-  /* ── Warm Neutrals ── */
-  --color-bg-page: #F7FBFF;
-  --color-bg-warm: #F7FBFF;
+  /* ── Warm Neutrals (Ivory) ── */
+  --color-bg-page: #FAF9F6;
+  --color-bg-warm: #F4F1EA;
   --color-bg-card: #FFFFFF;
   --color-bg-sidebar: #FFFFFF;
-  --color-bg-hover: #EBF4FA;
+  --color-bg-hover: #F1F4F1;
   --color-bg-input: #FFFFFF;
 
   /* ── Text ── */
@@ -66,7 +66,8 @@
   --radius-full: 9999px;
 
   /* ── Typography ── */
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
   --text-xs: 12px;
   --text-sm: 14px;
   --text-base: 16px;

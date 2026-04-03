@@ -52,7 +52,7 @@ class ApiClient {
     }
 
     // Auth
-    async register(data: { email: string; password: string; full_name: string; role: string }) {
+    async register(data: { email: string; password: string; full_name: string; role?: string }) {
         return this.request<any>('/auth/register', { method: 'POST', body: JSON.stringify(data) });
     }
 
@@ -92,68 +92,67 @@ class ApiClient {
         });
     }
 
-    async generateActivity(patientId: string, activityType?: string, difficulty?: string) {
+    async generateActivity(activityType?: string, difficulty?: string) {
         return this.request<any>('/ai/generate-activity', {
             method: 'POST',
-            body: JSON.stringify({ patient_id: patientId, activity_type: activityType, difficulty }),
+            body: JSON.stringify({ activity_type: activityType, difficulty }),
         });
     }
 
-    async getCaregiverGuidance(logId: string, patientId: string) {
-        return this.request<any>('/ai/caregiver-guidance', {
+    async getHealthGuidance(logId: string) {
+        return this.request<any>('/ai/health-guidance', {
             method: 'POST',
-            body: JSON.stringify({ caregiver_log_id: logId, patient_id: patientId }),
+            body: JSON.stringify({ health_log_id: logId }),
         });
     }
 
-    async getConsultationSummary(patientId: string, screeningId: string) {
+    async getConsultationSummary(screeningId: string) {
         return this.request<any>('/ai/consultation-summary', {
             method: 'POST',
-            body: JSON.stringify({ patient_id: patientId, screening_id: screeningId }),
+            body: JSON.stringify({ screening_id: screeningId }),
         });
     }
 
-    // Caregiver
+    async getCognitiveSummary() {
+        return this.request<any>('/cognitive/summary');
+    }
+
+    async getCognitiveHistory() {
+        return this.request<any>('/cognitive/history/list');
+    }
+
+    async startCognitiveTest(testType: string, difficulty: string) {
+        return this.request<any>('/cognitive/start', {
+            method: 'POST',
+            body: JSON.stringify({ test_type: testType, difficulty }),
+        });
+    }
+
+    async submitCognitiveTest(sessionId: string, responses: any, timeTakenSeconds: number) {
+        return this.request<any>(`/cognitive/${sessionId}/submit`, {
+            method: 'POST',
+            body: JSON.stringify({ responses, time_taken_seconds: timeTakenSeconds }),
+        });
+    }
+
+    // Health Logs
     async submitCheckin(data: any) {
-        return this.request<any>('/caregiver/checkin', { method: 'POST', body: JSON.stringify(data) });
+        return this.request<any>('/health/checkin', { method: 'POST', body: JSON.stringify(data) });
     }
 
     async logIncident(data: any) {
-        return this.request<any>('/caregiver/incident', { method: 'POST', body: JSON.stringify(data) });
+        return this.request<any>('/health/incident', { method: 'POST', body: JSON.stringify(data) });
     }
 
-    async getPatientLogs(patientId: string) {
-        return this.request<any>(`/caregiver/logs/${patientId}`);
+    async getHealthLogs() {
+        return this.request<any>(`/health/logs`);
     }
 
-    async getAssignedPatients() {
-        return this.request<any>('/caregiver/patients');
-    }
 
-    // Doctors
-    async getDoctors(specialization?: string) {
-        const query = specialization ? `?specialization=${specialization}` : '';
-        return this.request<any>(`/doctors/${query}`);
-    }
-
-    async requestConsultation(doctorId: string, screeningId?: string) {
-        return this.request<any>('/doctors/consult/request', {
-            method: 'POST',
-            body: JSON.stringify({ doctor_id: doctorId, screening_id: screeningId }),
-        });
-    }
-
-    async getConsultRequests() {
-        return this.request<any>('/doctors/consult/requests');
-    }
-
-    async getPatientOverview(patientId: string) {
-        return this.request<any>(`/doctors/patients/${patientId}/overview`);
-    }
 
     // Medications
-    async getMedications(patientId: string) {
-        return this.request<any>(`/medications/${patientId}`);
+    async getMedications() {
+        return this.request<any>(`/medications/`);
     }
 
     async addMedication(data: any) {
@@ -167,13 +166,13 @@ class ApiClient {
         });
     }
 
-    async getMedicationAdherence(patientId: string) {
-        return this.request<any>(`/medications/${patientId}/adherence`);
+    async getMedicationAdherence() {
+        return this.request<any>(`/medications/adherence`);
     }
 
     // Activities
-    async getActivities(patientId: string) {
-        return this.request<any>(`/activities/${patientId}`);
+    async getActivities() {
+        return this.request<any>(`/activities/`);
     }
 
     async submitActivityResult(activityId: string, responses: Record<string, any>) {
@@ -183,8 +182,8 @@ class ApiClient {
         });
     }
 
-    async getActivityProgress(patientId: string) {
-        return this.request<any>(`/activities/${patientId}/progress`);
+    async getActivityProgress() {
+        return this.request<any>(`/activities/progress`);
     }
 
     // Alerts

@@ -1,58 +1,88 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Trophy, Sparkles, ArrowLeft } from 'lucide-react';
+import { Loader2, Sparkles, ChevronDown, Plus, Trash2, Users } from 'lucide-react';
 import { api } from '../lib/api';
-import type { User, Activity } from '../types';
-import { ActivityCard } from '../components/ui/ActivityCard';
-
-interface Props {
-    user: User;
-}
+import { ActivityRunner } from '../components/activities/ActivityRunner';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 const ACTIVITY_TYPES = [
-    { key: 'memory_recall', label: 'Memory Recall', emoji: '🧠', description: 'Remember and recall information' },
-    { key: 'pattern_recognition', label: 'Pattern Recognition', emoji: '🧩', description: 'Identify logical patterns' },
-    { key: 'image_recall', label: 'Image Recall', emoji: '📷', description: 'Remember visual details' },
-    { key: 'word_association', label: 'Word Association', emoji: '🗣️', description: 'Connect related concepts' },
-    { key: 'object_matching', label: 'Object Matching', emoji: '🔍', description: 'Match and categorize objects' }
+    { key: 'memory_recall', label: 'Memory Recall', emoji: '🧠', description: 'Remember and recall information', domain: 'Memory' },
+    { key: 'pattern_recognition', label: 'Pattern Recognition', emoji: '🧩', description: 'Identify logical patterns', domain: 'Logic' },
+    { key: 'image_recall', label: 'Image Recall', emoji: '📷', description: 'Remember visual details', domain: 'Visual' },
+    { key: 'word_association', label: 'Word Association', emoji: '🗣️', description: 'Connect related concepts', domain: 'Language' },
+    { key: 'object_matching', label: 'Object Matching', emoji: '🔍', description: 'Match and categorize objects', domain: 'Visual' },
+    { key: 'story_recall', label: 'Story Recall', emoji: '📖', description: 'Recall details from a short story', domain: 'Memory' },
+    { key: 'family_recognition', label: 'Family Recognition', emoji: '👨‍👩‍👧‍👦', description: 'Recognize family members', domain: 'Memory' },
+    { key: 'phone_recognition', label: 'Phone Recognition', emoji: '📱', description: 'Recall important phone numbers', domain: 'Memory' },
+    { key: 'stroop_test', label: 'Stroop Test', emoji: '🎨', description: 'Color/Word interference task', domain: 'Attention' },
+    { key: 'digit_span', label: 'Digit Span', emoji: '🔢', description: 'Remember sequences of numbers', domain: 'Memory' },
+    { key: 'task_sequencing', label: 'Task Sequencing', emoji: '📋', description: 'Order steps of a task logically', domain: 'Logic' },
+    { key: 'sentence_completion', label: 'Sentence Completion', emoji: '✍️', description: 'Complete sentences logically', domain: 'Language' },
+    { key: 'semantic_fluency', label: 'Semantic Fluency', emoji: '💡', description: 'Name items in a category rapidly', domain: 'Language' }
 ];
 
-export default function ActivitiesPage({ user }: Props) {
-    const [activities, setActivities] = useState<Activity[]>([]);
+interface FamilyMember { name: string; relationship: string; }
+interface PhoneContact { name: string; number: string; }
+
+export default function ActivitiesPage() {
     const [progress, setProgress] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [generating, setGenerating] = useState<string | null>(null);
-    const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
-    const [activityResponses, setActivityResponses] = useState<Record<string, string>>({});
-    const [result, setResult] = useState<any>(null);
-    const [submitting, setSubmitting] = useState(false);
+    const [activeActivity, setActiveActivity] = useState<string | null>(null);
+    const [chartData, setChartData] = useState<any[]>([]);
+    const [showPersonalSetup, setShowPersonalSetup] = useState(false);
 
-    useEffect(() => { loadData(); }, []);
+    // Personal data state
+    const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+    const [phoneContacts, setPhoneContacts] = useState<PhoneContact[]>([]);
+    const [newFamily, setNewFamily] = useState<FamilyMember>({ name: '', relationship: '' });
+    const [newPhone, setNewPhone] = useState<PhoneContact>({ name: '', number: '' });
+
+    useEffect(() => { loadData(); loadPersonalData(); }, []);
 
     const loadData = async () => {
         try {
-            const [actRes, progRes] = await Promise.all([
-                api.getActivities(user.id).catch(() => ({ activities: [] })),
-                api.getActivityProgress(user.id).catch(() => ({})),
-            ]);
-            setActivities(actRes.activities || []);
+            const progRes = await api.getActivityProgress().catch(() => ({}));
             setProgress(progRes);
+            const rawChart = localStorage.getItem("activity_progress");
+            if (rawChart) setChartData(JSON.parse(rawChart));
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
     };
 
-    const generateActivity = async (type: string) => {
-        setGenerating(type);
-        try { await api.generateActivity(user.id, type, 'easy'); loadData(); }
-        catch (err: any) { alert(err.message); }
-        finally { setGenerating(null); }
+    const loadPersonalData = () => {
+        try {
+            const fam = localStorage.getItem('neurovia_family_members');
+            if (fam) setFamilyMembers(JSON.parse(fam));
+            const ph = localStorage.getItem('neurovia_phone_contacts');
+            if (ph) setPhoneContacts(JSON.parse(ph));
+        } catch { /* ignore */ }
     };
 
-    const submitActivity = async () => {
-        if (!selectedActivity) return;
-        setSubmitting(true);
-        try { const res = await api.submitActivityResult(selectedActivity.id, activityResponses); setResult(res); }
-        catch (err: any) { alert(err.message); }
-        finally { setSubmitting(false); }
+    const addFamilyMember = () => {
+        if (!newFamily.name.trim() || !newFamily.relationship.trim()) return;
+        const updated = [...familyMembers, { name: newFamily.name.trim(), relationship: newFamily.relationship.trim() }];
+        setFamilyMembers(updated);
+        localStorage.setItem('neurovia_family_members', JSON.stringify(updated));
+        setNewFamily({ name: '', relationship: '' });
+    };
+
+    const removeFamilyMember = (idx: number) => {
+        const updated = familyMembers.filter((_, i) => i !== idx);
+        setFamilyMembers(updated);
+        localStorage.setItem('neurovia_family_members', JSON.stringify(updated));
+    };
+
+    const addPhoneContact = () => {
+        if (!newPhone.name.trim() || !newPhone.number.trim()) return;
+        const updated = [...phoneContacts, { name: newPhone.name.trim(), number: newPhone.number.trim() }];
+        setPhoneContacts(updated);
+        localStorage.setItem('neurovia_phone_contacts', JSON.stringify(updated));
+        setNewPhone({ name: '', number: '' });
+    };
+
+    const removePhoneContact = (idx: number) => {
+        const updated = phoneContacts.filter((_, i) => i !== idx);
+        setPhoneContacts(updated);
+        localStorage.setItem('neurovia_phone_contacts', JSON.stringify(updated));
     };
 
     if (loading) {
@@ -66,78 +96,12 @@ export default function ActivitiesPage({ user }: Props) {
         );
     }
 
-    if (selectedActivity) {
-        const content = selectedActivity.content;
+    if (activeActivity) {
         return (
             <div className="page-container animate-fadeIn max-w-4xl">
-                <div className="mx-auto">
-                    {result ? (
-                        <div className="text-center animate-fadeIn">
-                            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center mx-auto mb-8 shadow-xl shadow-amber-500/20">
-                                <Trophy className="w-12 h-12 text-white" />
-                            </div>
-                            <h2 className="text-4xl font-bold text-[#0D2B45] mb-4 font-serif">Activity Complete!</h2>
-                            <div className="bg-white rounded-3xl p-10 shadow-2xl border border-[#DCE5ED] mt-8 relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#1A6FA8] to-[#28A98C]" />
-                                <div className="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#1A6FA8] to-[#28A98C] mb-6 font-serif">
-                                    {result.score}%
-                                </div>
-                                <p className="text-[#0D2B45] text-lg leading-relaxed bg-[#F7FBFF] p-6 rounded-2xl border border-[#DCE5ED]/50">
-                                    {result.ai_feedback}
-                                </p>
-                            </div>
-                            <button onClick={() => { setSelectedActivity(null); setResult(null); setActivityResponses({}); loadData(); }} className="mt-10 px-8 py-4 rounded-xl bg-[#0D2B45] hover:bg-[#1A6FA8] text-white font-medium shadow-lg hover:shadow-xl transition-all">
-                                Return to Dashboard
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="animate-fadeIn">
-                            <button onClick={() => { setSelectedActivity(null); setActivityResponses({}); }} className="mb-8 flex items-center gap-2 text-[#7AA3BE] hover:text-[#1A6FA8] font-medium transition-colors px-4 py-2 rounded-xl hover:bg-[#F7FBFF] -ml-4">
-                                <ArrowLeft className="w-5 h-5" /> Back to exercises
-                            </button>
-                            <div className="bg-white rounded-3xl p-10 shadow-2xl border border-[#DCE5ED] relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#1A6FA8] to-[#28A98C]" />
-                                <div className="flex items-start justify-between mb-2">
-                                    <h2 className="text-3xl font-bold text-[#0D2B45] font-serif">{content.title || 'Cognitive Exercise'}</h2>
-                                    <span className="px-3 py-1 bg-[#EAF7F4] text-[#28A98C] rounded-full text-xs font-bold uppercase tracking-wider">{selectedActivity.difficulty}</span>
-                                </div>
-                                <p className="text-[#7AA3BE] text-lg mb-10 pb-8 border-b border-[#DCE5ED]">{content.instructions || 'Follow the instructions and answer the questions below.'}</p>
-
-                                <div className="space-y-8">
-                                    {(content.prompts || []).map((prompt: string, i: number) => (
-                                        <div key={i} className="group">
-                                            <label className="block text-[#0D2B45] font-medium text-lg mb-3 ml-1 group-focus-within:text-[#1A6FA8] transition-colors">
-                                                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#F7FBFF] text-[#1A6FA8] text-sm font-bold mr-3 border border-[#DCE5ED]/50">{i + 1}</span>
-                                                {prompt}
-                                            </label>
-                                            <input
-                                                className="w-full h-14 px-6 bg-[#F7FBFF] border border-[#DCE5ED] rounded-2xl text-[#0D2B45] text-lg focus:bg-white focus:border-[#1A6FA8] focus:ring-4 focus:ring-[#1A6FA8]/10 transition-all outline-none placeholder:text-[#9BB8CD]"
-                                                placeholder="Type your response..."
-                                                value={activityResponses[`q${i}`] || ''}
-                                                onChange={(e) => setActivityResponses({ ...activityResponses, [`q${i}`]: e.target.value })}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="mt-12 pt-8 border-t border-[#DCE5ED]">
-                                    <button onClick={submitActivity} disabled={submitting} className="w-full h-16 rounded-2xl bg-gradient-to-r from-[#1A6FA8] to-[#28A98C] text-white text-lg font-bold shadow-lg shadow-[#1A6FA8]/20 hover:shadow-xl hover:-translate-y-1 transition-all disabled:opacity-70 flex items-center justify-center gap-3">
-                                        {submitting ? (
-                                            <><Loader2 className="w-6 h-6 animate-spin" /> Evaluating...</>
-                                        ) : (
-                                            <>Submit Exercise</>
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
+                <ActivityRunner type={activeActivity} onExit={() => { setActiveActivity(null); loadData(); }} />
             </div>
         );
-    }
-
-    const getActivityMeta = (typeKey: string) => {
-        return ACTIVITY_TYPES.find(t => t.key === typeKey) || { emoji: '🧠', label: typeKey.replace('_', ' ') };
     }
 
     return (
@@ -162,73 +126,156 @@ export default function ActivitiesPage({ user }: Props) {
                 )}
             </div>
 
-            {/* Generate Section */}
+            {/* Personal Data Setup */}
+            <div className="bg-white rounded-3xl shadow-lg border border-[#DCE5ED] mb-10 overflow-hidden">
+                <button
+                    onClick={() => setShowPersonalSetup(!showPersonalSetup)}
+                    className="w-full flex items-center justify-between p-6 hover:bg-[#F7FBFF] transition-colors"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-sm">
+                            <Users className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="text-left">
+                            <h3 className="text-lg font-bold text-[#0D2B45]">Personal Details</h3>
+                            <p className="text-sm text-[#7AA3BE]">Add family members & phone numbers for personalized exercises</p>
+                        </div>
+                    </div>
+                    <ChevronDown className={`w-5 h-5 text-[#7AA3BE] transition-transform ${showPersonalSetup ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showPersonalSetup && (
+                    <div className="p-6 pt-0 border-t border-[#DCE5ED]">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+                            {/* Family Members */}
+                            <div>
+                                <h4 className="text-base font-bold text-[#0D2B45] mb-4 flex items-center gap-2">
+                                    <span className="text-xl">👨‍👩‍👧‍👦</span> Family Members
+                                </h4>
+                                <div className="space-y-2 mb-4">
+                                    {familyMembers.map((m, i) => (
+                                        <div key={i} className="flex items-center justify-between p-3 bg-[#F7FBFF] rounded-xl border border-[#DCE5ED]">
+                                            <div>
+                                                <span className="font-bold text-[#0D2B45]">{m.name}</span>
+                                                <span className="text-[#7AA3BE] ml-2">— {m.relationship}</span>
+                                            </div>
+                                            <button onClick={() => removeFamilyMember(i)} className="text-red-400 hover:text-red-600 p-1">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {familyMembers.length === 0 && (
+                                        <p className="text-sm text-[#9BB8CD] italic p-3">No family members added yet. Add at least 2 for the Family Recognition exercise.</p>
+                                    )}
+                                </div>
+                                <div className="flex gap-2">
+                                    <input value={newFamily.name} onChange={e => setNewFamily({ ...newFamily, name: e.target.value })}
+                                        className="flex-1 h-10 px-3 bg-[#F7FBFF] border border-[#DCE5ED] rounded-lg text-sm outline-none focus:border-[#1A6FA8]" placeholder="Name (e.g. Sarah)" />
+                                    <input value={newFamily.relationship} onChange={e => setNewFamily({ ...newFamily, relationship: e.target.value })}
+                                        className="flex-1 h-10 px-3 bg-[#F7FBFF] border border-[#DCE5ED] rounded-lg text-sm outline-none focus:border-[#1A6FA8]" placeholder="Relationship (e.g. Daughter)" />
+                                    <button onClick={addFamilyMember} className="h-10 px-4 bg-[#1A6FA8] text-white rounded-lg font-bold text-sm hover:bg-[#155a8a] transition-colors flex items-center gap-1">
+                                        <Plus className="w-4 h-4" /> Add
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Phone Contacts */}
+                            <div>
+                                <h4 className="text-base font-bold text-[#0D2B45] mb-4 flex items-center gap-2">
+                                    <span className="text-xl">📱</span> Important Phone Numbers
+                                </h4>
+                                <div className="space-y-2 mb-4">
+                                    {phoneContacts.map((c, i) => (
+                                        <div key={i} className="flex items-center justify-between p-3 bg-[#F7FBFF] rounded-xl border border-[#DCE5ED]">
+                                            <div>
+                                                <span className="font-bold text-[#0D2B45]">{c.name}</span>
+                                                <span className="text-[#1A6FA8] ml-2 font-mono">{c.number}</span>
+                                            </div>
+                                            <button onClick={() => removePhoneContact(i)} className="text-red-400 hover:text-red-600 p-1">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {phoneContacts.length === 0 && (
+                                        <p className="text-sm text-[#9BB8CD] italic p-3">No contacts added yet. Add numbers for the Phone Recognition exercise.</p>
+                                    )}
+                                </div>
+                                <div className="flex gap-2">
+                                    <input value={newPhone.name} onChange={e => setNewPhone({ ...newPhone, name: e.target.value })}
+                                        className="flex-1 h-10 px-3 bg-[#F7FBFF] border border-[#DCE5ED] rounded-lg text-sm outline-none focus:border-[#1A6FA8]" placeholder="Name (e.g. Daughter)" />
+                                    <input value={newPhone.number} onChange={e => setNewPhone({ ...newPhone, number: e.target.value })}
+                                        className="flex-1 h-10 px-3 bg-[#F7FBFF] border border-[#DCE5ED] rounded-lg text-sm outline-none focus:border-[#1A6FA8]" placeholder="Number (e.g. 555-0199)" />
+                                    <button onClick={addPhoneContact} className="h-10 px-4 bg-[#1A6FA8] text-white rounded-lg font-bold text-sm hover:bg-[#155a8a] transition-colors flex items-center gap-1">
+                                        <Plus className="w-4 h-4" /> Add
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Exercise Cards */}
             <div className="mb-14">
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-2xl font-bold text-[#0D2B45] font-serif flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center shadow-sm">
                             <Sparkles className="w-5 h-5 text-white" />
                         </div>
-                        New Exercises
+                        Exercises
                     </h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {ACTIVITY_TYPES.map((type) => (
                         <div key={type.key} className="bg-white rounded-3xl p-6 shadow-md border border-[#DCE5ED] hover:-translate-y-1 hover:shadow-xl transition-all flex flex-col h-full group">
-                            <div className="w-16 h-16 text-4xl bg-[#F7FBFF] rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform mb-5">
-                                {type.emoji}
+                            <div className="flex justify-between items-start mb-5">
+                                <div className="w-16 h-16 text-4xl bg-[#F7FBFF] rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                                    {type.emoji}
+                                </div>
+                                <span className="px-3 py-1 bg-[#EAF7F4] text-[#28A98C] rounded-full text-xs font-bold uppercase tracking-wider">
+                                    {type.domain}
+                                </span>
                             </div>
-                            <h4 className="text-lg font-bold text-[#0D2B45] mb-2 leading-tight">{type.label}</h4>
-                            <p className="text-[#7AA3BE] text-sm flex-grow mb-6 leading-relaxed">{type.description}</p>
+                            <h4 className="text-xl font-bold text-[#0D2B45] mb-2 leading-tight">{type.label}</h4>
+                            <p className="text-[#7AA3BE] text-base flex-grow mb-6 leading-relaxed">{type.description}</p>
                             <button
-                                onClick={() => generateActivity(type.key)}
-                                disabled={generating !== null}
-                                className="w-full py-2.5 rounded-xl bg-[#F7FBFF] text-[#1A6FA8] font-semibold border border-[#DCE5ED] hover:bg-[#1A6FA8] hover:text-white hover:border-[#1A6FA8] transition-all flex items-center justify-center gap-2 group-hover:shadow-md disabled:opacity-50"
+                                onClick={() => setActiveActivity(type.key)}
+                                className="w-full py-3 rounded-xl bg-[#F7FBFF] text-[#1A6FA8] text-lg font-bold border border-[#DCE5ED] hover:bg-[#1A6FA8] hover:text-white hover:border-[#1A6FA8] transition-all flex items-center justify-center gap-2 group-hover:shadow-md"
                             >
-                                {generating === type.key ? (
-                                    <><Loader2 className="w-4 h-4 animate-spin" /> ...</>
-                                ) : (
-                                    <>Generate</>
-                                )}
+                                ▶ Play
                             </button>
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* Your Activities Library */}
-            <div className="mb-10">
-                <h3 className="text-2xl font-bold text-[#0D2B45] font-serif mb-6 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#1A6FA8] flex items-center justify-center shadow-sm text-white">
-                        <Trophy className="w-5 h-5" />
-                    </div>
-                    Your Library
-                </h3>
-
-                {activities.length === 0 ? (
-                    <div className="bg-white rounded-3xl border border-[#DCE5ED] p-12 text-center shadow-sm hover:border-[#1A6FA8] transition-colors">
-                        <div className="w-20 h-20 bg-[#F7FBFF] rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Sparkles className="w-10 h-10 text-[#7AA3BE]" />
-                        </div>
-                        <h4 className="text-xl font-bold text-[#0D2B45] mb-2 font-serif">No exercises generated yet</h4>
-                        <p className="text-[#7AA3BE]">Click on one of the categories above to create an AI-powered activity.</p>
+            {/* Daily Progress Graph */}
+            <div className="bg-white rounded-3xl p-10 shadow-2xl border border-[#DCE5ED] mb-10">
+                <h3 className="text-2xl font-bold text-[#0D2B45] font-serif mb-6">Daily Progress</h3>
+                {chartData && chartData.length > 0 ? (
+                    <div style={{ width: '100%', height: 320 }}>
+                        <ResponsiveContainer>
+                            <LineChart data={chartData.map((d: any, i: number) => ({ ...d, uniqueKey: `${d.date}#${i}` }))}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#EAF7F4" />
+                                <XAxis dataKey="uniqueKey" stroke="#7AA3BE" strokeWidth={2} tick={{ fontSize: 12 }} tickFormatter={(val: string) => val.split('#')[0]} />
+                                <YAxis stroke="#7AA3BE" strokeWidth={2} domain={[0, 100]} tick={{ fontSize: 12 }} />
+                                <Tooltip
+                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)', padding: '12px 16px' }}
+                                    labelFormatter={(label: any) => typeof label === 'string' ? label.split('#')[0] : label}
+                                    formatter={(value: any, _name: any, props: any) => [
+                                        `${value}%`,
+                                        props.payload.type || 'Score'
+                                    ]}
+                                />
+                                <Line type="monotone" dataKey="score" stroke="#1A6FA8" strokeWidth={3} dot={{ r: 5, fill: '#28A98C', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 8, fill: '#1A6FA8' }} />
+                            </LineChart>
+                        </ResponsiveContainer>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {activities.map((act) => {
-                            const meta = getActivityMeta(act.activity_type);
-                            return (
-                                <ActivityCard
-                                    key={act.id}
-                                    title={act.content?.title || meta.label}
-                                    description={act.content?.instructions || `${meta.label} exercise focusing on cognitive stimulation.`}
-                                    icon={meta.emoji}
-                                    difficulty={act.difficulty}
-                                    onStart={() => setSelectedActivity(act)}
-                                />
-                            );
-                        })}
+                    <div className="text-center p-8 bg-[#F7FBFF] rounded-2xl border border-[#DCE5ED] border-dashed">
+                        <p className="text-[#7AA3BE] font-medium text-lg mb-2">No activity history yet</p>
+                        <p className="text-[#9BB8CD]">Complete some activities to start tracking your daily progress here!</p>
                     </div>
                 )}
             </div>

@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Bell, Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
-import type { User, Alert } from '../types';
+import type { Alert } from '../types';
 import { AlertItem } from '../components/ui/AlertItem';
 
-interface Props {
-    user: User;
-}
-
-export default function AlertsPage({ user: _user }: Props) {
+export default function AlertsPage() {
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'unread'>('all');

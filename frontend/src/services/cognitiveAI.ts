@@ -1,9 +1,8 @@
-import api from '../api/apiClient';
+import { api } from '../lib/api';
 
 export const getDifficultyRecommendation = async (): Promise<'easy' | 'medium' | 'hard'> => {
   try {
-    const response = await api.get('/cognitive/summary');
-    const summary = response.data;
+    const summary = await api.getCognitiveSummary();
 
     if (!summary || summary.latest_score === null) {
       return 'easy';

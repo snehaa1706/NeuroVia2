@@ -9,18 +9,15 @@ import {
     Activity
 } from 'lucide-react';
 import { api } from '../lib/api';
-import type { User, CaregiverLog } from '../types';
+import type { HealthLog } from '../types';
 import { StatCard } from '../components/ui/StatCard';
 import { GlassCard } from '../components/ui/GlassCard';
 
-interface Props {
-    user: User;
-}
 
-export default function CaregiverDashboard({ user: _user }: Props) {
-    const [patients, setPatients] = useState<any[]>([]);
-    const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
-    const [logs, setLogs] = useState<CaregiverLog[]>([]);
+
+export default function HealthLogsPage() {
+    // Removed patients array and selected patient logic
+    const [logs, setLogs] = useState<HealthLog[]>([]);
     const [showCheckin, setShowCheckin] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -32,30 +29,28 @@ export default function CaregiverDashboard({ user: _user }: Props) {
         notes: '',
     });
 
-    useEffect(() => { loadData(); }, []);
-    useEffect(() => { if (selectedPatient) loadPatientLogs(selectedPatient); }, [selectedPatient]);
-
     const loadData = async () => {
+        setLoading(true);
         try {
-            const patientRes = await api.getAssignedPatients().catch(() => ({ patients: [] }));
-            setPatients(patientRes.patients || []);
-            if (patientRes.patients?.length > 0) setSelectedPatient(patientRes.patients[0].id);
-        } catch (err) { console.error(err); }
-        finally { setLoading(false); }
+            await loadHealthLogs();
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const loadPatientLogs = async (patientId: string) => {
-        try { const res = await api.getPatientLogs(patientId); setLogs(res.logs || []); }
+    useEffect(() => { loadData(); }, []);
+
+    const loadHealthLogs = async () => {
+        try { const res = await api.getHealthLogs(); setLogs(res.logs || []); }
         catch (err) { console.error(err); }
     };
 
     const handleCheckin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedPatient) return;
         try {
-            await api.submitCheckin({ patient_id: selectedPatient, ...checkinData });
+            await api.submitCheckin(checkinData);
             setShowCheckin(false);
-            loadPatientLogs(selectedPatient);
+            loadHealthLogs();
             setCheckinData({ mood: 'normal', confusion_level: 5, sleep_hours: 7, appetite: 'normal', notes: '' });
         } catch (err: any) { alert(err.message); }
     };
@@ -79,25 +74,15 @@ export default function CaregiverDashboard({ user: _user }: Props) {
         <div className="page-container animate-fadeIn">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
                 <div>
-                    <h2 className="text-4xl font-bold text-[#0D2B45] font-serif tracking-tight">Caregiver Dashboard</h2>
-                    <p className="text-lg text-[#7AA3BE] mt-2">Monitor patient vitals and health trends</p>
+                    <h2 className="text-4xl font-bold text-[#0D2B45] font-serif tracking-tight">Your Health Logs</h2>
+                    <p className="text-lg text-[#7AA3BE] mt-2">Track your daily vitals and observations</p>
                 </div>
                 <div className="flex items-center gap-4">
-                    {patients.length > 0 && (
-                        <select
-                            className="h-12 px-6 rounded-xl bg-white border border-[#DCE5ED] text-[#0D2B45] font-semibold outline-none focus:border-[#1A6FA8] focus:ring-4 focus:ring-[#1A6FA8]/10 transition-all shadow-sm max-w-[200px]"
-                            value={selectedPatient || ''}
-                            onChange={(e) => setSelectedPatient(e.target.value)}
-                        >
-                            {patients.map((p) => (<option key={p.id} value={p.id}>{p.full_name}</option>))}
-                        </select>
-                    )}
                     <button
                         onClick={() => setShowCheckin(true)}
-                        disabled={!selectedPatient}
                         className="h-12 px-6 bg-gradient-to-r from-[#1A6FA8] to-[#28A98C] text-white rounded-xl font-bold shadow-lg shadow-[#1A6FA8]/20 hover:shadow-xl hover:-translate-y-1 transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:hover:translate-y-0"
                     >
-                        <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" /> New Caregiver Log
+                        <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" /> New Daily Log
                     </button>
                 </div>
             </div>

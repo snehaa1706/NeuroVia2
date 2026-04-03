@@ -12,7 +12,6 @@ export default function RegisterPage({ onLogin }: RegisterPageProps) {
         full_name: '',
         email: '',
         password: '',
-        role: 'patient',
     });
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
@@ -23,7 +22,7 @@ export default function RegisterPage({ onLogin }: RegisterPageProps) {
         setError('');
         setLoading(true);
         try {
-            const response = await api.register(formData);
+            const response = await api.register({ ...formData, role: 'user' });
             onLogin(response);
         } catch (err: any) {
             setError(err.message || 'Registration failed');
@@ -58,7 +57,7 @@ export default function RegisterPage({ onLogin }: RegisterPageProps) {
                         </div>
                         <div className="flex items-center gap-3 text-gray-600">
                             <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-sm">✓</div>
-                            <span>Caregiver monitoring & alerts</span>
+                            <span>Personalized monitoring & alerts</span>
                         </div>
                     </div>
                 </div>
@@ -139,19 +138,7 @@ export default function RegisterPage({ onLogin }: RegisterPageProps) {
                             </div>
                         </div>
 
-                        <div>
-                            <label className="label" htmlFor="register-role">I am a</label>
-                            <select
-                                id="register-role"
-                                className="select"
-                                value={formData.role}
-                                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                            >
-                                <option value="patient">Patient</option>
-                                <option value="caregiver">Caregiver</option>
-                                <option value="doctor">Doctor</option>
-                            </select>
-                        </div>
+
 
                         <button
                             id="register-submit"

@@ -10,8 +10,7 @@ class LogType(str, Enum):
     observation = "observation"
 
 
-class CaregiverCheckin(BaseModel):
-    patient_id: str
+class HealthCheckin(BaseModel):
     mood: str
     confusion_level: int  # 1-10
     sleep_hours: float
@@ -19,17 +18,15 @@ class CaregiverCheckin(BaseModel):
     notes: Optional[str] = None
 
 
-class CaregiverIncident(BaseModel):
-    patient_id: str
+class HealthIncident(BaseModel):
     description: str
     severity: Optional[str] = "moderate"
     notes: Optional[str] = None
 
 
-class CaregiverLogResponse(BaseModel):
+class HealthLogResponse(BaseModel):
     id: str
-    caregiver_id: str
-    patient_id: str
+    user_id: str
     log_type: LogType
     mood: Optional[str] = None
     confusion_level: Optional[int] = None

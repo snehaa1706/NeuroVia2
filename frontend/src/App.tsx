@@ -7,13 +7,15 @@ import Sidebar from './components/common/Sidebar';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PatientDashboard from './pages/PatientDashboard';
-import CaregiverDashboard from './pages/CaregiverDashboard';
 import ScreeningPage from './pages/ScreeningPage';
 import ActivitiesPage from './pages/ActivitiesPage';
-import DoctorConsultPage from './pages/DoctorConsultPage';
 import AlertsPage from './pages/AlertsPage';
 import MedicationsPage from './pages/MedicationsPage';
 import LandingPage from './pages/LandingPage';
+import HealthLogsPage from './pages/HealthLogsPage';
+import CognitiveTestPage from './pages/CognitiveTestPage';
+import CognitiveHistoryPage from './pages/CognitiveHistoryPage';
+import CognitiveSummaryPage from './pages/CognitiveSummaryPage';
 import './index.css';
 
 function ProtectedRoute({ user, children }: { user: User | null; children: React.ReactNode }) {
@@ -29,7 +31,6 @@ function DashboardLayout({ user, onLogout, children }: { user: User; onLogout: (
   return (
     <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
       <Sidebar
-        user={user}
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
@@ -103,29 +104,18 @@ function App() {
           </ProtectedRoute>
         } />
 
-        <Route path="/caregiver" element={
-          <ProtectedRoute user={user}>
-            <DashboardLayout user={user!} onLogout={handleLogout}>
-              <CaregiverDashboard user={user!} />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/doctor" element={
-          <ProtectedRoute user={user}>
-            <DashboardLayout user={user!} onLogout={handleLogout}>
-              <DoctorConsultPage user={user!} />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        
-        {/* Deprecated/Alias mapped strictly correctly above, maintaining generic consult map */}
-        <Route path="/consult" element={<Navigate to="/doctor" />} />
-
         <Route path="/activities" element={
           <ProtectedRoute user={user}>
             <DashboardLayout user={user!} onLogout={handleLogout}>
-              <ActivitiesPage user={user!} />
+              <ActivitiesPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/logs" element={
+          <ProtectedRoute user={user}>
+            <DashboardLayout user={user!} onLogout={handleLogout}>
+              <HealthLogsPage />
             </DashboardLayout>
           </ProtectedRoute>
         } />
@@ -133,7 +123,7 @@ function App() {
         <Route path="/medications" element={
           <ProtectedRoute user={user}>
             <DashboardLayout user={user!} onLogout={handleLogout}>
-              <MedicationsPage user={user!} />
+              <MedicationsPage />
             </DashboardLayout>
           </ProtectedRoute>
         } />
@@ -141,7 +131,31 @@ function App() {
         <Route path="/alerts" element={
           <ProtectedRoute user={user}>
             <DashboardLayout user={user!} onLogout={handleLogout}>
-              <AlertsPage user={user!} />
+              <AlertsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/cognitive/test" element={
+          <ProtectedRoute user={user}>
+            <DashboardLayout user={user!} onLogout={handleLogout}>
+              <CognitiveTestPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/cognitive/history" element={
+          <ProtectedRoute user={user}>
+            <DashboardLayout user={user!} onLogout={handleLogout}>
+              <CognitiveHistoryPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/cognitive/summary" element={
+          <ProtectedRoute user={user}>
+            <DashboardLayout user={user!} onLogout={handleLogout}>
+              <CognitiveSummaryPage />
             </DashboardLayout>
           </ProtectedRoute>
         } />

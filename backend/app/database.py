@@ -171,6 +171,7 @@ class DummyQuery:
         self.order_by = None
         self.limit_n = None
         self._single = False
+        self._delete_mode = False
 
     def select(self, *args, **kwargs):
         return self
@@ -204,7 +205,14 @@ class DummyQuery:
         self.update_payload = data
         return self
 
+    def delete(self):
+        self._delete_mode = True
+        return self
+
     def execute(self):
+        if self._delete_mode:
+            deleted = self.client._delete(self.table, self.filters)
+            return DummyResponse(deleted)
         if self.insert_payload is not None:
             rows = self.client._insert(self.table, self.insert_payload, self.upsert_mode)
             return DummyResponse(rows)
@@ -234,7 +242,7 @@ class DummyClient:
             rows = [row for row in rows if row.get(key) == value]
         if order_by:
             column, desc = order_by
-            rows.sort(key=lambda x: x.get(column, None), reverse=bool(desc))
+            rows.sort(key=lambda x: str(x.get(column, "") or ""), reverse=bool(desc))
         if limit_n is not None:
             rows = rows[:limit_n]
         return rows
@@ -249,6 +257,9 @@ class DummyClient:
         row = dict(payload)
         if not row.get("id"):
             row["id"] = str(uuid4())
+        if not row.get("created_at"):
+            from datetime import datetime
+            row["created_at"] = datetime.utcnow().isoformat()
         existing = None
         if upsert:
             for i, existing_row in enumerate(self.tables[table]):
@@ -270,6 +281,12 @@ class DummyClient:
                 row[key] = value
             updated_rows.append(row)
         return updated_rows
+
+    def _delete(self, table, filters):
+        to_delete = self._select(table, filters, None, None)
+        ids = {row.get("id") for row in to_delete}
+        self.tables[table] = [r for r in self.tables[table] if r.get("id") not in ids]
+        return to_delete
 
 
 def _build_dummy_clients():

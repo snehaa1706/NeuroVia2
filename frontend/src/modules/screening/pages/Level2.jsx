@@ -124,9 +124,9 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
     setInputMode('done');
   };
 
-  const processedAnimals = (inputMode === 'typing' || inputMode === 'done')
+  const processedAnimals = transcript.includes(',')
     ? transcript.split(',').map(a => a.trim()).filter(a => a.length > 0)
-    : transcript.split(',').map(a => a.trim()).filter(a => a.length > 0);
+    : transcript.split(/[\s]+/).map(a => a.trim()).filter(a => a.length > 0);
 
   // === DIGIT SPAN HANDLERS ===
   const startDigitSpan = () => {
@@ -247,16 +247,57 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
   });
 
   return (
-    <div style={{ padding: "20px", maxWidth: "800px", margin: "auto" }}>
-      <h2 style={{ textAlign: "center", borderBottom: "2px solid #2e7d32", paddingBottom: "10px", marginBottom: "30px" }}>
-        Phase 2: Mild Cognitive Impairment (MCI) Testing
-      </h2>
+    <div style={{ padding: "40px", maxWidth: "1200px", margin: "auto", display: "flex", gap: "40px", alignItems: "flex-start", flexWrap: "wrap" }}>
+      
+      {/* === STICKY SIDEBAR === */}
+      <div style={{ 
+        flex: "1 1 300px", 
+        maxWidth: "350px",
+        position: "sticky", 
+        top: "40px", 
+        background: "var(--color-navy)", 
+        color: "white", 
+        padding: "40px", 
+        borderRadius: "24px",
+        boxShadow: "0 10px 30px rgba(27, 42, 65, 0.15)"
+      }}>
+        <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--color-teal)", letterSpacing: "1px", marginBottom: "10px", textTransform: "uppercase" }}>
+          Level 2 of 3
+        </div>
+        <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "36px", marginTop: 0, marginBottom: "20px", lineHeight: "1.2" }}>
+          MCI Testing
+        </h2>
+        <p style={{ color: "var(--color-primary-100)", fontSize: "16px", lineHeight: "1.6", marginBottom: "30px" }}>
+          This phase assesses Mild Cognitive Impairment through verbal fluency, digit span memory, visual recognition, and delayed recall tasks.
+        </p>
+        <div style={{ background: "rgba(255,255,255,0.05)", padding: "20px", borderRadius: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
+            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "var(--color-teal)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "bold" }}>1</div>
+            <span style={{ fontSize: "15px", color: "white", fontWeight: "500" }}>Verbal Fluency</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
+            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "var(--color-teal)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "bold" }}>2</div>
+            <span style={{ fontSize: "15px", color: "white", fontWeight: "500" }}>Digit Span</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
+            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "var(--color-teal)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "bold" }}>3</div>
+            <span style={{ fontSize: "15px", color: "white", fontWeight: "500" }}>Visual Memory</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "var(--color-teal)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "bold" }}>4</div>
+            <span style={{ fontSize: "15px", color: "white", fontWeight: "500" }}>Delayed Recall</span>
+          </div>
+        </div>
+      </div>
+
+      {/* === MAIN CONTENT === */}
+      <div style={{ flex: "2 1 600px", minWidth: 0 }}>
 
       <form onSubmit={handleSubmit}>
 
         {/* ===== SECTION 1: VERBAL FLUENCY ===== */}
-        <div style={{ background: "#fffde7", padding: "20px", borderRadius: "8px", marginBottom: "25px", border: "1px solid #fff9c4" }}>
-          <h3 style={{ marginTop: 0, color: "#f57f17" }}>1. Semantic Verbal Fluency ({fluencyCategory.charAt(0).toUpperCase() + fluencyCategory.slice(1)})</h3>
+        <div style={{ background: "var(--color-bg-card)", padding: "40px", borderRadius: "20px", marginBottom: "40px", borderTop: "8px solid var(--color-teal)", boxShadow: "0 10px 30px rgba(27, 42, 65, 0.06)" }}>
+          <h3 style={{ marginTop: 0, color: "var(--color-navy)", fontFamily: "var(--font-serif)", fontSize: "28px" }}>1. Semantic Verbal Fluency ({fluencyCategory.charAt(0).toUpperCase() + fluencyCategory.slice(1)})</h3>
           <p style={{ color: "#666", fontSize: "14px" }}>{fluencyInstruction}</p>
 
           <div style={{ display: "flex", alignItems: "center", gap: "15px", marginBottom: "15px" }}>
@@ -283,7 +324,7 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
               onChange={(e) => setTranscript(e.target.value)}
               placeholder={`Type ${fluencyCategory} separated by commas: item1, item2, item3...`}
               rows={3}
-              style={{ width: "100%", padding: "12px", fontSize: "16px", borderRadius: "5px", border: "1px solid #ccc", boxSizing: "border-box", resize: "vertical" }}
+              style={{ width: "100%", padding: "16px 20px", fontSize: "16px", borderRadius: "12px", border: "2px solid var(--color-primary-100)", boxSizing: "border-box", resize: "vertical", outline: "none", color: "var(--color-navy)" }}
             />
           )}
 
@@ -304,7 +345,7 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
                 value={transcript}
                 onChange={(e) => setTranscript(e.target.value)}
                 rows={3}
-                style={{ width: "100%", padding: "10px", fontSize: "15px", borderRadius: "5px", border: "1px solid #ccc", boxSizing: "border-box" }}
+                style={{ width: "100%", padding: "16px 20px", fontSize: "16px", borderRadius: "12px", border: "2px solid var(--color-primary-100)", boxSizing: "border-box", outline: "none", color: "var(--color-navy)" }}
               />
             </div>
           )}
@@ -315,8 +356,8 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
         </div>
 
         {/* ===== SECTION 2: DIGIT SPAN ===== */}
-        <div style={{ background: "#e8eaf6", padding: "20px", borderRadius: "8px", marginBottom: "25px", border: "1px solid #c5cae9" }}>
-          <h3 style={{ marginTop: 0, color: "#283593" }}>2. Digit Span Test</h3>
+        <div style={{ background: "var(--color-bg-card)", padding: "40px", borderRadius: "20px", marginBottom: "40px", borderTop: "8px solid var(--color-teal)", boxShadow: "0 10px 30px rgba(27, 42, 65, 0.06)" }}>
+          <h3 style={{ marginTop: 0, color: "var(--color-navy)", fontFamily: "var(--font-serif)", fontSize: "28px" }}>2. Digit Span Test</h3>
           <p style={{ color: "#3949ab", fontSize: "14px" }}>
             A sequence of numbers will appear briefly. Memorize them, then enter them <strong>forward</strong> and <strong>backward</strong>.
           </p>
@@ -346,20 +387,20 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
               <p style={{ fontWeight: "bold", color: "#283593", marginBottom: "10px" }}>The sequence has been hidden. Now enter it:</p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
                 <div>
-                  <label style={{ fontWeight: "500", display: "block", marginBottom: "5px", color: "#3949ab" }}>Forward (left to right):</label>
+                  <label style={{ fontWeight: "500", display: "block", marginBottom: "5px", color: "var(--color-navy)" }}>Forward (left to right):</label>
                   <input type="text" inputMode="numeric" pattern="[0-9]*" value={digitForward} onChange={(e) => { if (/^\d*$/.test(e.target.value)) setDigitForward(e.target.value); }}
                     disabled={dontRememberDigitForward}
-                    style={{ width: "100%", padding: "12px", fontSize: "20px", boxSizing: "border-box", borderRadius: "5px", border: "1px solid #ccc", fontFamily: "monospace", letterSpacing: "8px", textAlign: "center", backgroundColor: dontRememberDigitForward ? "#e9ecef" : "white", marginBottom: "10px" }}
+                    style={{ width: "100%", padding: "16px", fontSize: "20px", boxSizing: "border-box", borderRadius: "12px", border: "2px solid var(--color-primary-100)", fontFamily: "monospace", letterSpacing: "8px", textAlign: "center", backgroundColor: dontRememberDigitForward ? "var(--color-primary-50)" : "white", color: "var(--color-navy)", marginBottom: "12px", outline: "none" }}
                     placeholder="e.g. 7392" />
-                  <button type="button" onClick={() => { setDontRememberDigitForward(!dontRememberDigitForward); if(!dontRememberDigitForward) setDigitForward(""); }} style={{ width: "100%", padding: "8px", borderRadius: "5px", border: dontRememberDigitForward ? "2px solid #dc3545" : "1px solid #ccc", background: dontRememberDigitForward ? "#dc3545" : "#f8f9fa", color: dontRememberDigitForward ? "white" : "#333", cursor: "pointer", fontWeight: "bold" }}>I Don't Remember</button>
+                  <button type="button" onClick={() => { setDontRememberDigitForward(!dontRememberDigitForward); if(!dontRememberDigitForward) setDigitForward(""); }} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: dontRememberDigitForward ? "2px solid #dc3545" : "1px solid var(--color-primary-100)", background: dontRememberDigitForward ? "#dc3545" : "var(--color-bg-card)", color: dontRememberDigitForward ? "white" : "var(--color-navy)", cursor: "pointer", fontWeight: "600", transition: "all 0.2s" }}>I Don't Remember</button>
                 </div>
                 <div>
-                  <label style={{ fontWeight: "500", display: "block", marginBottom: "5px", color: "#3949ab" }}>Backward (right to left):</label>
+                  <label style={{ fontWeight: "500", display: "block", marginBottom: "5px", color: "var(--color-navy)" }}>Backward (right to left):</label>
                   <input type="text" inputMode="numeric" pattern="[0-9]*" value={digitBackward} onChange={(e) => { if (/^\d*$/.test(e.target.value)) setDigitBackward(e.target.value); }}
                     disabled={dontRememberDigitBackward}
-                    style={{ width: "100%", padding: "12px", fontSize: "20px", boxSizing: "border-box", borderRadius: "5px", border: "1px solid #ccc", fontFamily: "monospace", letterSpacing: "8px", textAlign: "center", backgroundColor: dontRememberDigitBackward ? "#e9ecef" : "white", marginBottom: "10px" }}
+                    style={{ width: "100%", padding: "16px", fontSize: "20px", boxSizing: "border-box", borderRadius: "12px", border: "2px solid var(--color-primary-100)", fontFamily: "monospace", letterSpacing: "8px", textAlign: "center", backgroundColor: dontRememberDigitBackward ? "var(--color-primary-50)" : "white", color: "var(--color-navy)", marginBottom: "12px", outline: "none" }}
                     placeholder="e.g. 2937" />
-                  <button type="button" onClick={() => { setDontRememberDigitBackward(!dontRememberDigitBackward); if(!dontRememberDigitBackward) setDigitBackward(""); }} style={{ width: "100%", padding: "8px", borderRadius: "5px", border: dontRememberDigitBackward ? "2px solid #dc3545" : "1px solid #ccc", background: dontRememberDigitBackward ? "#dc3545" : "#f8f9fa", color: dontRememberDigitBackward ? "white" : "#333", cursor: "pointer", fontWeight: "bold" }}>I Don't Remember</button>
+                  <button type="button" onClick={() => { setDontRememberDigitBackward(!dontRememberDigitBackward); if(!dontRememberDigitBackward) setDigitBackward(""); }} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: dontRememberDigitBackward ? "2px solid #dc3545" : "1px solid var(--color-primary-100)", background: dontRememberDigitBackward ? "#dc3545" : "var(--color-bg-card)", color: dontRememberDigitBackward ? "white" : "var(--color-navy)", cursor: "pointer", fontWeight: "600", transition: "all 0.2s" }}>I Don't Remember</button>
                 </div>
               </div>
               {((digitForward || dontRememberDigitForward) && (digitBackward || dontRememberDigitBackward)) && (
@@ -381,8 +422,8 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
 
         {/* ===== SECTION 3: VISUAL RECOGNITION ===== */}
         {vrData && (
-          <div style={{ background: "#fce4ec", padding: "20px", borderRadius: "8px", marginBottom: "25px", border: "1px solid #f8bbd0" }}>
-            <h3 style={{ marginTop: 0, color: "#c62828" }}>3. Visual Recognition</h3>
+          <div style={{ background: "var(--color-bg-card)", padding: "40px", borderRadius: "20px", marginBottom: "40px", borderTop: "8px solid var(--color-teal)", boxShadow: "0 10px 30px rgba(27, 42, 65, 0.06)" }}>
+            <h3 style={{ marginTop: 0, color: "var(--color-navy)", fontFamily: "var(--font-serif)", fontSize: "28px" }}>3. Visual Recognition</h3>
             <p style={{ color: "#d32f2f", fontSize: "14px" }}>
               You will see a set of objects. Memorize them, then identify which ones you saw from a mixed set.
             </p>
@@ -461,8 +502,8 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
 
         {/* ===== SECTION 4: VISUAL PATTERN RECOGNITION ===== */}
         {patternData && (
-          <div style={{ background: "#fff3e0", padding: "20px", borderRadius: "8px", marginBottom: "25px", border: "1px solid #ffe0b2" }}>
-            <h3 style={{ marginTop: 0, color: "#e65100" }}>4. Pattern Recognition</h3>
+          <div style={{ background: "var(--color-bg-card)", padding: "40px", borderRadius: "20px", marginBottom: "40px", borderTop: "8px solid var(--color-teal)", boxShadow: "0 10px 30px rgba(27, 42, 65, 0.06)" }}>
+            <h3 style={{ marginTop: 0, color: "var(--color-navy)", fontFamily: "var(--font-serif)", fontSize: "28px" }}>4. Pattern Recognition</h3>
             <p style={{ color: "#bf360c", fontSize: "14px", marginBottom: "15px" }}>
               Look at the pattern and select what comes next.
             </p>
@@ -526,8 +567,8 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
         )}
 
         {/* ===== SECTION 5: DELAYED RECALL ===== */}
-        <div style={{ background: "#e2f0d9", padding: "20px", borderRadius: "8px", marginBottom: "30px", border: "1px solid #c3e6cb" }}>
-          <h3 style={{ marginTop: 0, color: "#155724" }}>5. Delayed Recall</h3>
+        <div style={{ background: "var(--color-bg-card)", padding: "40px", borderRadius: "20px", marginBottom: "40px", borderTop: "8px solid var(--color-teal)", boxShadow: "0 10px 30px rgba(27, 42, 65, 0.06)" }}>
+          <h3 style={{ marginTop: 0, color: "var(--color-navy)", fontFamily: "var(--font-serif)", fontSize: "28px" }}>5. Delayed Recall</h3>
           <p style={{ color: "#155724", fontSize: "14px", marginBottom: "10px" }}>
             Earlier in Phase 1, you were asked to remember some words.
             <br /><strong>Instruction:</strong> Now recall and type them from memory.
@@ -538,7 +579,7 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
             value={delayedRecall}
             onChange={(e) => setDelayedRecall(e.target.value)}
             disabled={dontRememberDelayedRecall}
-            style={{ width: "100%", padding: "12px", fontSize: "16px", boxSizing: "border-box", borderRadius: "5px", border: "1px solid #ccc", backgroundColor: dontRememberDelayedRecall ? "#e9ecef" : "white", marginBottom: "15px" }}
+            style={{ width: "100%", padding: "16px 20px", fontSize: "16px", boxSizing: "border-box", borderRadius: "12px", border: "2px solid var(--color-primary-100)", backgroundColor: dontRememberDelayedRecall ? "var(--color-primary-50)" : "white", color: "var(--color-navy)", marginBottom: "15px", outline: "none" }}
           />
           <button
             type="button"
@@ -546,7 +587,7 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
               setDontRememberDelayedRecall(!dontRememberDelayedRecall);
               if (!dontRememberDelayedRecall) setDelayedRecall("");
             }}
-            style={{ width: "100%", padding: "16px", borderRadius: "8px", border: dontRememberDelayedRecall ? "2px solid #dc3545" : "2px solid #adb5bd", background: dontRememberDelayedRecall ? "#dc3545" : "#f8f9fa", color: dontRememberDelayedRecall ? "white" : "#495057", fontSize: "18px", fontWeight: "bold", cursor: "pointer", transition: "all 0.2s" }}
+            style={{ width: "100%", padding: "16px", borderRadius: "12px", border: dontRememberDelayedRecall ? "2px solid #dc3545" : "1px solid var(--color-primary-100)", background: dontRememberDelayedRecall ? "#dc3545" : "var(--color-bg-card)", color: dontRememberDelayedRecall ? "white" : "var(--color-navy)", fontSize: "16px", fontWeight: "600", cursor: "pointer", transition: "all 0.2s" }}
           >
             I Don't Remember
           </button>
@@ -556,12 +597,13 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
         <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "12px", alignItems: "center" }}>
           <button type="submit" disabled={loading}
             style={{
-              padding: "15px 40px",
-              background: loading ? "#6c757d" : "#2e7d32",
-              color: "white", border: "none", borderRadius: "8px",
-              fontSize: "18px", fontWeight: "bold",
+              padding: "16px 40px",
+              background: loading ? "var(--color-primary-100)" : "var(--color-teal)",
+              color: "white", border: "none", borderRadius: "12px",
+              fontSize: "16px", fontWeight: "600",
               cursor: loading ? "not-allowed" : "pointer",
-              transition: "background 0.3s",
+              transition: "all 0.2s",
+              boxShadow: "0 4px 12px rgba(143, 163, 150, 0.3)",
               minWidth: "300px"
             }}>
             {loading ? "Analyzing..." : "Submit Level 2 Assessment"}
@@ -570,7 +612,8 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
             You can submit even if some sections are unanswered — unanswered parts will be scored as 0.
           </p>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
-import type { User } from '../types';
+
 import {
   History,
   ArrowLeft,
@@ -31,7 +31,7 @@ const TEST_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   sequence_memory: { label: 'Sequence Memory', color: '#8B5CF6' },
 };
 
-export default function CognitiveHistoryPage({ user: _user }: { user: User }) {
+export default function CognitiveHistoryPage() {
   const navigate = useNavigate();
   const [history, setHistory] = useState<CognitiveResult[]>([]);
   const [loading, setLoading] = useState(true);

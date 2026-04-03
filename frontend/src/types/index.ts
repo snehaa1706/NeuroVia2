@@ -2,7 +2,7 @@
 // NeuroVia TypeScript Types
 // ============================================
 
-export type UserRole = 'patient' | 'caregiver' | 'doctor' | 'admin';
+export type UserRole = 'user' | 'admin';
 
 export interface User {
     id: string;
@@ -71,7 +71,7 @@ export interface Doctor {
 
 export interface ConsultRequest {
     id: string;
-    patient_id: string;
+    user_id: string;
     doctor_id: string;
     screening_id?: string;
     summary?: string;
@@ -79,11 +79,10 @@ export interface ConsultRequest {
     created_at?: string;
 }
 
-// Caregiver
-export interface CaregiverLog {
+// Health Log
+export interface HealthLog {
     id: string;
-    caregiver_id: string;
-    patient_id: string;
+    user_id: string;
     log_type: string;
     mood?: string;
     confusion_level?: number;
@@ -96,7 +95,7 @@ export interface CaregiverLog {
 // Medication
 export interface Medication {
     id: string;
-    patient_id: string;
+    user_id: string;
     name: string;
     dosage: string;
     frequency: string;
@@ -118,7 +117,7 @@ export type Difficulty = 'easy' | 'medium' | 'hard';
 
 export interface Activity {
     id: string;
-    patient_id: string;
+    user_id: string;
     activity_type: ActivityType;
     content: Record<string, any>;
     difficulty: Difficulty;
@@ -141,8 +140,7 @@ export type AlertSeverity = 'info' | 'warning' | 'critical';
 
 export interface Alert {
     id: string;
-    patient_id: string;
-    caregiver_id?: string;
+    user_id: string;
     alert_type: AlertType;
     severity: AlertSeverity;
     message: string;
@@ -154,7 +152,7 @@ export interface Alert {
 // Family Member
 export interface FamilyMember {
     id: string;
-    patient_id: string;
+    user_id: string;
     name: string;
     relationship: string;
     photo_url?: string;

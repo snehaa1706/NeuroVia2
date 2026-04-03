@@ -21,16 +21,16 @@ def _get_user_id(request: Request) -> str:
     return user_response.user.id
 
 
-@router.get("/{patient_id}")
-async def get_medications(request: Request, patient_id: str):
-    """Get all medications for a patient."""
+@router.get("/")
+async def get_medications(request: Request):
+    """Get all medications for the user."""
     sb = get_supabase()
-    _get_user_id(request)
+    user_id = _get_user_id(request)
 
     result = (
         sb.table("medications")
         .select("*")
-        .eq("patient_id", patient_id)
+        .eq("user_id", user_id)
         .eq("active", True)
         .execute()
     )
@@ -42,10 +42,10 @@ async def get_medications(request: Request, patient_id: str):
 async def add_medication(request: Request, data: MedicationCreate):
     """Add a new medication for a patient."""
     sb = get_supabase()
-    _get_user_id(request)
+    user_id = _get_user_id(request)
 
     record = {
-        "patient_id": data.patient_id,
+        "user_id": user_id,
         "name": data.name,
         "dosage": data.dosage,
         "frequency": data.frequency,
@@ -96,7 +96,7 @@ async def log_medication(
             .execute()
         )
         missed_count = len(missed_logs.data) if missed_logs.data else 0
-        alert_data = check_medication_alerts(med.data["patient_id"], missed_count)
+        alert_data = check_medication_alerts(med.data["user_id"], missed_count)
         if alert_data:
             sb.table("alerts").insert(alert_data).execute()
 
@@ -109,17 +109,17 @@ async def log_medication(
     )
 
 
-@router.get("/{patient_id}/adherence")
-async def get_adherence(request: Request, patient_id: str):
-    """Get medication adherence statistics for a patient."""
+@router.get("/adherence")
+async def get_adherence(request: Request):
+    """Get medication adherence statistics for the user."""
     sb = get_supabase()
-    _get_user_id(request)
+    user_id = _get_user_id(request)
 
     # Get all medications for patient
     meds = (
         sb.table("medications")
         .select("id, name")
-        .eq("patient_id", patient_id)
+        .eq("user_id", user_id)
         .execute()
     )
 
