@@ -58,13 +58,17 @@ export default function LoginPage() {
       const res = await fetch(`${API_URL}/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: credential }),
+        body: JSON.stringify({ token: credential, role: 'user' }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Google login failed');
       storeAndRedirect(data);
     } catch (err: any) {
-      setError(err.message || 'Google login failed.');
+      if (err.message === 'Doctor profile details required') {
+        navigate('/register', { state: { role: 'doctor', googleToken: credential } });
+      } else {
+        setError(err.message || 'Google login failed.');
+      }
     } finally {
       setLoading(false);
     }
