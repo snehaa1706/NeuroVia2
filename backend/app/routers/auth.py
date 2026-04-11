@@ -40,21 +40,21 @@ async def register(request: Request, user_data: UserRegister):
         if not auth_response.user:
             raise HTTPException(status_code=400, detail="Registration failed")
 
-        # Create user record in users table
         user_record = {
             "id": auth_response.user.id,
             "email": user_data.email,
             "full_name": user_data.full_name,
             "role": user_data.role.value,
-            "phone": user_data.phone,
-            "date_of_birth": str(user_data.date_of_birth) if user_data.date_of_birth else None,
-            "avatar_url": user_data.avatar_url,
-            "specialty": user_data.specialty,
-            "bio": user_data.bio,
-            "location": user_data.location,
-            "experience": user_data.experience,
-            "gender": user_data.gender,
         }
+        if user_data.phone: user_record["phone"] = user_data.phone
+        if user_data.date_of_birth: user_record["date_of_birth"] = str(user_data.date_of_birth)
+        if hasattr(user_data, "avatar_url") and user_data.avatar_url: user_record["avatar_url"] = user_data.avatar_url
+        if hasattr(user_data, "specialty") and user_data.specialty: user_record["specialty"] = user_data.specialty
+        if hasattr(user_data, "bio") and user_data.bio: user_record["bio"] = user_data.bio
+        if hasattr(user_data, "location") and user_data.location: user_record["location"] = user_data.location
+        if hasattr(user_data, "experience") and user_data.experience: user_record["experience"] = user_data.experience
+        if hasattr(user_data, "gender") and user_data.gender: user_record["gender"] = user_data.gender
+
         sb.table("users").insert(user_record).execute()
 
         profile = UserProfile(

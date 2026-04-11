@@ -50,11 +50,11 @@ async def generate_caregiver_guidance(
 ) -> dict:
     """Generate caregiver guidance using OpenAI."""
     from app.prompts.caregiver_prompts import (
-        CAREGIVER_GUIDANCE_SYSTEM,
-        CAREGIVER_GUIDANCE_USER,
+        HEALTH_GUIDANCE_SYSTEM,
+        HEALTH_GUIDANCE_USER,
     )
 
-    user_prompt = CAREGIVER_GUIDANCE_USER.format(
+    user_prompt = HEALTH_GUIDANCE_USER.format(
         mood=mood,
         confusion_level=confusion_level,
         sleep_hours=sleep_hours,
@@ -62,7 +62,7 @@ async def generate_caregiver_guidance(
         notes=notes or "None",
         recent_logs=recent_logs or "No recent logs available",
     )
-    return await get_ai_response(CAREGIVER_GUIDANCE_SYSTEM, user_prompt)
+    return await get_ai_response(HEALTH_GUIDANCE_SYSTEM, user_prompt)
 
 
 async def generate_activity(

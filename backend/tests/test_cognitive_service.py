@@ -2,13 +2,13 @@ import pytest
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 from fastapi import HTTPException
-from app.services.cognitive_service import (
+from app.modules.screening.service import (
     start_session,
     submit_test,
     get_cognitive_history,
     compute_cognitive_summary
 )
-from app.models.cognitive import SessionStartRequest, TestSubmissionRequest, TestType, Difficulty
+from app.modules.screening.model import SessionStartRequest, TestSubmissionRequest, TestType, Difficulty
 
 def mock_supabase_builder(*args, **kwargs):
     mock = MagicMock()
@@ -23,7 +23,7 @@ def mock_supabase_builder(*args, **kwargs):
 
 @pytest.fixture
 def sb_mock():
-    with patch("app.services.cognitive_service.get_supabase") as mock_get_supabase:
+    with patch("app.modules.screening.service.get_supabase") as mock_get_supabase:
         sb = MagicMock()
         mock_get_supabase.return_value = sb
         yield sb
@@ -50,7 +50,7 @@ def test_submit_test_success(sb_mock):
     table_mock = mock_supabase_builder()
     sb_mock.table.return_value = table_mock
     
-    session_res = MagicMock(data={"id": "session_123", "patient_id": "pat_1", "status": "in_progress", "test_type": "memory_recall", "test_config": {"words": ["apple", "blue", "chair"]}, "started_at": datetime.now(timezone.utc).isoformat()})
+    session_res = MagicMock(data={"id": "session_123", "user_id": "pat_1", "status": "in_progress", "test_type": "memory_recall", "test_config": {"words": ["apple", "blue", "chair"]}, "started_at": datetime.now(timezone.utc).isoformat()})
     result_insert_res = MagicMock(data=[{"id": "res_1", "score": 100.0}])
     update_res = MagicMock()
     # session fetch, result insert, session update, cache recompute (results query), cache upsert
@@ -69,7 +69,7 @@ def test_submit_duplicate(sb_mock):
     table_mock = mock_supabase_builder()
     sb_mock.table.return_value = table_mock
     
-    session_res = MagicMock(data={"id": "session_123", "patient_id": "pat_1", "status": "completed", "test_type": "memory_recall", "test_config": {}})
+    session_res = MagicMock(data={"id": "session_123", "user_id": "pat_1", "status": "completed", "test_type": "memory_recall", "test_config": {}})
     table_mock.execute.return_value = session_res
     
     payload = TestSubmissionRequest(responses={}, time_taken_seconds=10)
@@ -153,7 +153,7 @@ def test_expired_session(sb_mock):
     old_start = (datetime.now(timezone.utc) - timedelta(minutes=31)).isoformat()
     
     session_res = MagicMock(data={
-        "id": "session_expired", "patient_id": "pat_1", "status": "in_progress",
+        "id": "session_expired", "user_id": "pat_1", "status": "in_progress",
         "test_type": "memory_recall", "test_config": {"words": ["apple"]},
         "started_at": old_start,
     })
@@ -174,7 +174,7 @@ def test_submit_duplicate_returns_409(sb_mock):
     sb_mock.table.return_value = table_mock
     
     session_res = MagicMock(data={
-        "id": "session_done", "patient_id": "pat_1", "status": "completed",
+        "id": "session_done", "user_id": "pat_1", "status": "completed",
         "test_type": "memory_recall", "test_config": {},
     })
     table_mock.execute.return_value = session_res
@@ -192,7 +192,7 @@ def test_summary_cache_updated_on_submit(sb_mock):
     sb_mock.table.return_value = table_mock
     
     session_res = MagicMock(data={
-        "id": "session_cache", "patient_id": "pat_1", "status": "in_progress",
+        "id": "session_cache", "user_id": "pat_1", "status": "in_progress",
         "test_type": "memory_recall", "test_config": {"words": ["apple", "chair"]},
         "started_at": datetime.now(timezone.utc).isoformat(),
     })
