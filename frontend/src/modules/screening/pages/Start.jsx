@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { startAssessment } from '../api/screeningApi';
+import { startAssessment } from '../services/screeningApi';
 
 export default function Start({ onNext }) {
   const [loading, setLoading] = useState(false);

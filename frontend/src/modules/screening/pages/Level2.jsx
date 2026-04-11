@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { submitLevel2, transcribeAudio, resumeAssessment } from '../api/screeningApi';
+import { submitLevel2, transcribeAudio, resumeAssessment } from '../services/screeningApi';
 
 export default function Level2({ assessmentId, initialContext, onNext }) {
   const assessment_id = assessmentId || localStorage.getItem("screening_assessmentId");

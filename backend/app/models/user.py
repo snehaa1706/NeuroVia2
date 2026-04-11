@@ -17,6 +17,12 @@ class UserRegister(BaseModel):
     role: UserRole = UserRole.user
     phone: Optional[str] = None
     date_of_birth: Optional[date] = None
+    specialty: Optional[str] = None
+    bio: Optional[str] = None
+    location: Optional[str] = None
+    avatar_url: Optional[str] = None
+    experience: Optional[str] = None
+    gender: Optional[str] = None
 
 
 class UserLogin(BaseModel):
@@ -32,6 +38,11 @@ class UserProfile(BaseModel):
     phone: Optional[str] = None
     date_of_birth: Optional[date] = None
     avatar_url: Optional[str] = None
+    specialty: Optional[str] = None
+    bio: Optional[str] = None
+    location: Optional[str] = None
+    experience: Optional[str] = None
+    gender: Optional[str] = None
     created_at: Optional[datetime] = None
 
 
@@ -40,6 +51,11 @@ class UserProfileUpdate(BaseModel):
     phone: Optional[str] = None
     date_of_birth: Optional[date] = None
     avatar_url: Optional[str] = None
+    specialty: Optional[str] = None
+    bio: Optional[str] = None
+    location: Optional[str] = None
+    experience: Optional[str] = None
+    gender: Optional[str] = None
 
 
 class AuthResponse(BaseModel):

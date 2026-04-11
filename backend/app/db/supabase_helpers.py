@@ -3,11 +3,56 @@ from app.database import get_supabase
 
 # Valid tables we are permitted to query in this integration
 VALID_TABLES = [
+    "users",
+    "doctors",
+    "consultations",
     "assessments",
     "assessment_results",
     "assessment_responses",
-    "recommendations"
+    "recommendations",
+    "daily_reports",
+    "activity_results",
+    "medications",
+    "alerts"
 ]
+
+def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
+    """
+    Fetch a user profile by ID (used by doctors to see patient info).
+    """
+    sb = get_supabase()
+    result = sb.table("users").select("*").eq("id", user_id).single().execute()
+    return result.data if result.data else None
+
+def get_patient_records_for_doctor(doctor_user_id: str, patient_id: str, table: str, limit: int = 100) -> List[Dict[str, Any]]:
+    """
+    Securely fetch a patient's records for a doctor, ensuring a consultation link exists.
+    """
+    _validate_table(table)
+    sb = get_supabase()
+    
+    # 1. Verify that this doctor has an accepted/completed consultation with this patient
+    # or that the patient has a pending consultation that the doctor is viewing.
+    # For now, we'll verify if there's ANY consultation between them.
+    consult_check = sb.table("consultations").select("id") \
+        .eq("patient_id", patient_id) \
+        .eq("doctor_id", doctor_user_id) \
+        .execute()
+    
+    if not consult_check.data:
+        # Also check if it's a pending consultation that hasn't been "claimed" yet
+        # but the doctor is authorized to see it (all doctors can see pending for now).
+        pending_check = sb.table("consultations").select("id") \
+            .eq("patient_id", patient_id) \
+            .eq("status", "pending") \
+            .execute()
+        if not pending_check.data:
+            raise ValueError("Unauthorized: No consultation link found between doctor and patient.")
+
+    # 2. If authorized, fetch the patient's data
+    result = sb.table(table).select("*").eq("user_id", patient_id).order("created_at", desc=True).limit(limit).execute()
+    return result.data
+
 
 def _validate_table(table_name: str):
     if table_name not in VALID_TABLES:

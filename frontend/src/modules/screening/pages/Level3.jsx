@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { submitLevel3, resumeAssessment } from '../api/screeningApi';
+import { submitLevel3, resumeAssessment } from '../services/screeningApi';
 
 // === STROOP COMPONENT ===
 function StroopTest({ stroopData, onComplete }) {

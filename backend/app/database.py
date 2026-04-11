@@ -152,6 +152,7 @@ class DummyAuth:
 class DummyResponse:
     def __init__(self, data):
         self.data = data
+        self.count = len(data) if isinstance(data, list) else 0
 
 
 class DummySingleResponse:
@@ -177,7 +178,11 @@ class DummyQuery:
         return self
 
     def eq(self, column, value):
-        self.filters.append((column, value))
+        self.filters.append((column, value, "eq"))
+        return self
+
+    def is_(self, column, value):
+        self.filters.append((column, value, "is"))
         return self
 
     def single(self):
@@ -238,8 +243,22 @@ class DummyClient:
 
     def _select(self, table, filters, order_by, limit_n):
         rows = list(self.tables[table])
-        for key, value in filters:
-            rows = [row for row in rows if row.get(key) == value]
+        for filter_tuple in filters:
+            if len(filter_tuple) == 3:
+                key, value, op = filter_tuple
+                if op == "eq":
+                    rows = [row for row in rows if row.get(key) == value]
+                elif op == "is":
+                    # Special case for "null" as string or actual None
+                    if value == "null":
+                        rows = [row for row in rows if row.get(key) is None or row.get(key) == "null"]
+                    else:
+                        rows = [row for row in rows if row.get(key) is value]
+            else:
+                # Fallback for old eq calls if any
+                key, value = filter_tuple
+                rows = [row for row in rows if row.get(key) == value]
+
         if order_by:
             column, desc = order_by
             rows.sort(key=lambda x: str(x.get(column, "") or ""), reverse=bool(desc))

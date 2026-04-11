@@ -1,11 +1,16 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
-from app.routers import auth, screening, ai, health, activities, medications, alerts, transcribe
+from app.routers import auth, ai, transcribe
+from app.modules.screening.router import router as screening_router
+from app.modules.doctor.router import router as doctor_router
+from app.modules.patient.router import router as patient_router
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -27,13 +32,16 @@ app.add_middleware(
 )
 
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
-app.include_router(screening.router, prefix="/screening", tags=["Screening"])
+app.include_router(screening_router)
 app.include_router(ai.router, prefix="/ai", tags=["AI Analysis"])
-app.include_router(health.router, prefix="/health", tags=["Health Logs"])
-app.include_router(activities.router, prefix="/activities", tags=["Activities"])
-app.include_router(medications.router, prefix="/medications", tags=["Medications"])
-app.include_router(alerts.router, prefix="/alerts", tags=["Alerts"])
+app.include_router(patient_router)
 app.include_router(transcribe.router, prefix="/audio", tags=["Audio Transcription"])
+app.include_router(doctor_router, prefix="/doctors", tags=["Healthcare"])
+
+# Mount uploads directory for serving profile images
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 
 @app.get("/")

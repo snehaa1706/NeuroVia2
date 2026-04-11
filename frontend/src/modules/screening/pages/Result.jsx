@@ -1,4 +1,7 @@
+import { useNavigate } from 'react-router-dom';
+
 export default function Result({ resultData, onReset }) {
+  const navigate = useNavigate();
   if (!resultData) {
     return (
       <div style={{ padding: "40px", textAlign: "center" }}>
@@ -20,7 +23,8 @@ export default function Result({ resultData, onReset }) {
     clinical_recommendation,
     ai_explanation,
     ai_recommendation,
-    ai_confidence
+    ai_confidence,
+    assessment_id
   } = resultData;
 
   const getThemeColor = (band) => {
@@ -76,7 +80,23 @@ export default function Result({ resultData, onReset }) {
         </div>
       )}
 
-      <div style={{ textAlign: "center", marginTop: "50px" }}>
+      {(risk_band === "moderate" || risk_band === "high") && (
+        <div style={{ marginTop: "40px", padding: "30px", background: "#fef2f2", borderRadius: "16px", border: "1px solid #fee2e2", textAlign: "center" }}>
+          <h5 style={{ margin: "0 0 10px 0", color: "#991b1b", fontSize: "18px", fontWeight: "700" }}>Urgent Specialist Consult Recommended</h5>
+          <p style={{ color: "#b91c1c", fontSize: "14px", marginBottom: "20px" }}>Based on your results, we recommend sharing these findings with a professional for a formal evaluation.</p>
+          <button 
+            onClick={() => navigate('/consult', { state: { screening_id: assessment_id, risk_level: risk_band, summary: ai_explanation } })}
+            style={{ 
+              padding: "16px 32px", fontSize: "18px", fontWeight: "700", 
+              background: "#dc2626", color: "white", border: "none", 
+              borderRadius: "12px", cursor: "pointer", boxShadow: "0 10px 15px -3px rgba(220, 38, 38, 0.4)"
+            }}>
+             Consult NeuroVia Specialist
+          </button>
+        </div>
+      )}
+
+      <div style={{ textAlign: "center", marginTop: "50px", display: "flex", justifyContent: "center", gap: "20px" }}>
         <button onClick={() => {
           localStorage.removeItem('screening_assessmentId');
           onReset();
@@ -90,13 +110,11 @@ export default function Result({ resultData, onReset }) {
           fontWeight: "600",
           fontSize: "16px",
           transition: "all 0.2s"
-        }}
-        onMouseOver={e => { e.currentTarget.style.background = "var(--color-navy)"; e.currentTarget.style.color = "white"; }}
-        onMouseOut={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--color-navy)"; }}
-        >
+        }}>
           Initialize New Screening
         </button>
       </div>
     </div>
   );
 }
+

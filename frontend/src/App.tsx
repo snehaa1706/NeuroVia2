@@ -1,169 +1,29 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { api } from './lib/api';
-import type { User } from './types';
-import Navbar from './components/common/Navbar';
-import Sidebar from './components/common/Sidebar';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import PatientDashboard from './pages/PatientDashboard';
-import ScreeningPage from './pages/ScreeningPage';
-import ActivitiesPage from './pages/ActivitiesPage';
-import AlertsPage from './pages/AlertsPage';
-import MedicationsPage from './pages/MedicationsPage';
-import LandingPage from './pages/LandingPage';
-import HealthLogsPage from './pages/HealthLogsPage';
-import CognitiveTestPage from './pages/CognitiveTestPage';
-import CognitiveHistoryPage from './pages/CognitiveHistoryPage';
-import CognitiveSummaryPage from './pages/CognitiveSummaryPage';
-import './index.css';
-
-function ProtectedRoute({ user, children }: { user: User | null; children: React.ReactNode }) {
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  return <>{children}</>;
-}
-
-function DashboardLayout({ user, onLogout, children }: { user: User; onLogout: () => void; children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  return (
-    <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
-      <Sidebar
-        isOpen={sidebarOpen}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
-      />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Navbar user={user} onLogout={onLogout} />
-        <main className="flex-1 overflow-y-auto bg-[#F8FAFC]">
-          {children}
-        </main>
-      </div>
-    </div>
-  );
-}
+import React, { useEffect } from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import AppRoutes from './routes/AppRoutes';
 
 function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
-    const token = api.getToken();
-    if (token) {
-      api.getProfile()
-        .then((profile) => setUser(profile))
-        .catch(() => {
-          api.clearToken();
-          setUser(null);
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
+    // SECURITY: Purge legacy keys to prevent session cross-contamination
+    localStorage.removeItem('neurovia_user');
+    
+    // Auto-fix corrupted patient sessions where a doctor was accidentally saved
+    const patientStr = localStorage.getItem('neurovia_patient_user');
+    if (patientStr) {
+      try {
+        const pUser = JSON.parse(patientStr);
+        if (pUser.role === 'doctor') {
+          localStorage.removeItem('neurovia_patient_user');
+          localStorage.removeItem('neurovia_patient_token');
+        }
+      } catch (e) {}
     }
   }, []);
 
-  const handleLogin = (authResponse: any) => {
-    api.setToken(authResponse.access_token);
-    setUser(authResponse.user);
-  };
-
-  const handleLogout = () => {
-    api.clearToken();
-    setUser(null);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#F8FAFC]">
-        <div className="text-center">
-          <div className="w-14 h-14 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-lg text-slate-500 font-medium">Loading NeuroVia...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <Router>
-      <Routes>
-        {/* Public Standalone Routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/screening" element={<ScreeningPage />} />
-        
-        {/* Auth Routes */}
-        <Route path="/login" element={!user ? <LoginPage onLogin={handleLogin} /> : <Navigate to="/dashboard" />} />
-        <Route path="/register" element={!user ? <RegisterPage onLogin={handleLogin} /> : <Navigate to="/dashboard" />} />
-
-        {/* Dashboard Layout Routes (Protected) */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute user={user}>
-            <DashboardLayout user={user!} onLogout={handleLogout}>
-              <PatientDashboard user={user!} />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/activities" element={
-          <ProtectedRoute user={user}>
-            <DashboardLayout user={user!} onLogout={handleLogout}>
-              <ActivitiesPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/logs" element={
-          <ProtectedRoute user={user}>
-            <DashboardLayout user={user!} onLogout={handleLogout}>
-              <HealthLogsPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/medications" element={
-          <ProtectedRoute user={user}>
-            <DashboardLayout user={user!} onLogout={handleLogout}>
-              <MedicationsPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/alerts" element={
-          <ProtectedRoute user={user}>
-            <DashboardLayout user={user!} onLogout={handleLogout}>
-              <AlertsPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/cognitive/test" element={
-          <ProtectedRoute user={user}>
-            <DashboardLayout user={user!} onLogout={handleLogout}>
-              <CognitiveTestPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/cognitive/history" element={
-          <ProtectedRoute user={user}>
-            <DashboardLayout user={user!} onLogout={handleLogout}>
-              <CognitiveHistoryPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/cognitive/summary" element={
-          <ProtectedRoute user={user}>
-            <DashboardLayout user={user!} onLogout={handleLogout}>
-              <CognitiveSummaryPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </Router>
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
   );
 }
 

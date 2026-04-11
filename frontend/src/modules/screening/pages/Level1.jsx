@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { submitLevel1, resumeAssessment } from '../api/screeningApi';
+import { submitLevel1, resumeAssessment } from '../services/screeningApi';
 
 const AD8_QUESTIONS = [
   "Problems with judgment (e.g., making decisions, bad financial choices)?",

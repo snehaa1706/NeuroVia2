@@ -48,6 +48,12 @@ async def register(request: Request, user_data: UserRegister):
             "role": user_data.role.value,
             "phone": user_data.phone,
             "date_of_birth": str(user_data.date_of_birth) if user_data.date_of_birth else None,
+            "avatar_url": user_data.avatar_url,
+            "specialty": user_data.specialty,
+            "bio": user_data.bio,
+            "location": user_data.location,
+            "experience": user_data.experience,
+            "gender": user_data.gender,
         }
         sb.table("users").insert(user_record).execute()
 
@@ -58,6 +64,12 @@ async def register(request: Request, user_data: UserRegister):
             role=user_data.role,
             phone=user_data.phone,
             date_of_birth=user_data.date_of_birth,
+            avatar_url=user_data.avatar_url,
+            specialty=user_data.specialty,
+            bio=user_data.bio,
+            location=user_data.location,
+            experience=user_data.experience,
+            gender=user_data.gender,
         )
 
         return AuthResponse(
@@ -101,6 +113,11 @@ async def login(request: Request, credentials: UserLogin):
             phone=user_data.get("phone"),
             date_of_birth=user_data.get("date_of_birth"),
             avatar_url=user_data.get("avatar_url"),
+            specialty=user_data.get("specialty"),
+            bio=user_data.get("bio"),
+            location=user_data.get("location"),
+            experience=user_data.get("experience"),
+            gender=user_data.get("gender"),
             created_at=user_data.get("created_at"),
         )
 
@@ -142,6 +159,11 @@ async def get_current_user(request: Request):
             phone=user_data.get("phone"),
             date_of_birth=user_data.get("date_of_birth"),
             avatar_url=user_data.get("avatar_url"),
+            specialty=user_data.get("specialty"),
+            bio=user_data.get("bio"),
+            location=user_data.get("location"),
+            experience=user_data.get("experience"),
+            gender=user_data.get("gender"),
             created_at=user_data.get("created_at"),
         )
     except HTTPException:
@@ -181,9 +203,148 @@ async def update_profile(request: Request, update_data: UserProfileUpdate):
             phone=user_data.get("phone"),
             date_of_birth=user_data.get("date_of_birth"),
             avatar_url=user_data.get("avatar_url"),
+            specialty=user_data.get("specialty"),
+            bio=user_data.get("bio"),
+            location=user_data.get("location"),
+            experience=user_data.get("experience"),
+            gender=user_data.get("gender"),
             created_at=user_data.get("created_at"),
         )
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/google")
+async def google_auth(request: Request):
+    """
+    Authenticate a user via Google OAuth2 token.
+    If the user doesn't exist, creates a new patient account automatically.
+    """
+    from google.oauth2 import id_token
+    from google.auth.transport import requests as google_requests
+    from app.config import settings
+    import uuid
+
+    sb = get_supabase()
+    body = await request.json()
+    token = body.get("token")
+
+    # Debug: Check settings
+    print(f"DEBUG: GOOGLE_CLIENT_ID value in settings: '{settings.GOOGLE_CLIENT_ID}'")
+
+    if not token:
+        raise HTTPException(status_code=400, detail="Token is required")
+
+    try:
+        # Verify the Google token
+        user_info = id_token.verify_oauth2_token(
+            token,
+            google_requests.Request(),
+            settings.GOOGLE_CLIENT_ID
+        )
+
+        email = user_info.get("email")
+        name = user_info.get("name", "Google User")
+        picture = user_info.get("picture", "")
+
+        if not email:
+            raise HTTPException(status_code=400, detail="Email not found in Google token")
+
+        # Check if user already exists in our users table
+        existing = sb.table("users").select("*").eq("email", email).execute()
+
+        if existing.data and len(existing.data) > 0:
+            # User exists — sign them in
+            user_data = existing.data[0]
+
+            # Try to sign in with Supabase Auth using a known password pattern
+            # For Google users, we use a deterministic password hash
+            google_password = f"google_oauth_{user_info['sub']}"
+
+            try:
+                auth_response = sb.auth.sign_in_with_password(
+                    {"email": email, "password": google_password}
+                )
+                access_token = auth_response.session.access_token
+            except Exception:
+                # If Supabase auth fails (user was created with different method),
+                # sign up again with the google password to create auth entry
+                try:
+                    auth_response = sb.auth.sign_up(
+                        {
+                            "email": email,
+                            "password": google_password,
+                            "options": {"data": {"full_name": name, "role": user_data.get("role", "user")}}
+                        }
+                    )
+                    access_token = auth_response.session.access_token if auth_response.session else ""
+                except Exception:
+                    # Last resort — generate a simple session token
+                    access_token = str(uuid.uuid4())
+
+            profile = UserProfile(
+                id=user_data["id"],
+                email=user_data["email"],
+                full_name=user_data["full_name"],
+                role=user_data.get("role", "user"),
+                phone=user_data.get("phone"),
+                avatar_url=user_data.get("avatar_url") or picture,
+                specialty=user_data.get("specialty"),
+                bio=user_data.get("bio"),
+                location=user_data.get("location"),
+                experience=user_data.get("experience"),
+                gender=user_data.get("gender"),
+                created_at=user_data.get("created_at"),
+            )
+
+            return AuthResponse(access_token=access_token, user=profile)
+
+        else:
+            # New user — register them as a patient
+            google_password = f"google_oauth_{user_info['sub']}"
+
+            auth_response = sb.auth.sign_up(
+                {
+                    "email": email,
+                    "password": google_password,
+                    "options": {
+                        "data": {
+                            "full_name": name,
+                            "role": "user",
+                        }
+                    },
+                }
+            )
+
+            if not auth_response.user:
+                raise HTTPException(status_code=400, detail="Failed to create Google user")
+
+            user_record = {
+                "id": auth_response.user.id,
+                "email": email,
+                "full_name": name,
+                "role": "user",
+                "avatar_url": picture,
+            }
+            sb.table("users").insert(user_record).execute()
+
+            profile = UserProfile(
+                id=auth_response.user.id,
+                email=email,
+                full_name=name,
+                role="user",
+                avatar_url=picture,
+            )
+
+            return AuthResponse(
+                access_token=auth_response.session.access_token if auth_response.session else "",
+                user=profile,
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Invalid Google token: {str(e)}")
+
