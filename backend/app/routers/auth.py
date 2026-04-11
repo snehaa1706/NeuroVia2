@@ -180,7 +180,23 @@ async def update_profile(request: Request, update_data: UserProfileUpdate):
         auth_header = request.headers.get("Authorization", "")
         token = auth_header.replace("Bearer ", "")
         user_response = sb.auth.get_user(token)
-        if not user_response.user:
+        user_id = None
+
+        if user_response and getattr(user_response, "user", None):
+            user_id = user_response.user.id
+        else:
+            # Fallback for fake/dummy token on local restarts
+            try:
+                import json, base64
+                parts = token.split(".")
+                if len(parts) == 3:
+                    payload = parts[1] + "=" * (4 - len(parts[1]) % 4)
+                    data = json.loads(base64.urlsafe_b64decode(payload))
+                    user_id = data.get("sub")
+            except Exception:
+                pass
+
+        if not user_id:
             raise HTTPException(status_code=401, detail="Not authenticated")
 
         update_dict = update_data.model_dump(exclude_none=True)
@@ -190,7 +206,7 @@ async def update_profile(request: Request, update_data: UserProfileUpdate):
         result = (
             sb.table("users")
             .update(update_dict)
-            .eq("id", user_response.user.id)
+            .eq("id", user_id)
             .execute()
         )
 
@@ -220,7 +236,7 @@ async def update_profile(request: Request, update_data: UserProfileUpdate):
 async def google_auth(request: Request):
     """
     Authenticate a user via Google OAuth2 token.
-    If the user doesn't exist, creates a new patient account automatically.
+    If the user doesn't exist, creates a new account automatically.
     """
     from google.oauth2 import id_token
     from google.auth.transport import requests as google_requests
@@ -230,6 +246,13 @@ async def google_auth(request: Request):
     sb = get_supabase()
     body = await request.json()
     token = body.get("token")
+    role = body.get("role", "user")
+    specialty = body.get("specialty")
+    bio = body.get("bio")
+    location = body.get("location")
+    experience = body.get("experience")
+    gender = body.get("gender")
+    avatar_url = body.get("avatar_url")
 
     # Debug: Check settings
     print(f"DEBUG: GOOGLE_CLIENT_ID value in settings: '{settings.GOOGLE_CLIENT_ID}'")
@@ -302,7 +325,10 @@ async def google_auth(request: Request):
             return AuthResponse(access_token=access_token, user=profile)
 
         else:
-            # New user — register them as a patient
+            # New user registration via Google
+            if role == "doctor" and not specialty:
+                raise HTTPException(status_code=428, detail="Doctor profile details required")
+
             google_password = f"google_oauth_{user_info['sub']}"
 
             auth_response = sb.auth.sign_up(
@@ -312,7 +338,7 @@ async def google_auth(request: Request):
                     "options": {
                         "data": {
                             "full_name": name,
-                            "role": "user",
+                            "role": role,
                         }
                     },
                 }
@@ -325,17 +351,31 @@ async def google_auth(request: Request):
                 "id": auth_response.user.id,
                 "email": email,
                 "full_name": name,
-                "role": "user",
-                "avatar_url": picture,
+                "role": role,
+                "avatar_url": avatar_url or picture,
             }
+            if role == "doctor":
+                user_record.update({
+                    "specialty": specialty,
+                    "bio": bio,
+                    "location": location,
+                    "experience": experience,
+                    "gender": gender,
+                })
+
             sb.table("users").insert(user_record).execute()
 
             profile = UserProfile(
                 id=auth_response.user.id,
                 email=email,
                 full_name=name,
-                role="user",
-                avatar_url=picture,
+                role=role,
+                avatar_url=user_record["avatar_url"],
+                specialty=user_record.get("specialty"),
+                bio=user_record.get("bio"),
+                location=user_record.get("location"),
+                experience=user_record.get("experience"),
+                gender=user_record.get("gender"),
             )
 
             return AuthResponse(
@@ -347,4 +387,3 @@ async def google_auth(request: Request):
         raise
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Invalid Google token: {str(e)}")
-

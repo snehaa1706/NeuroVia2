@@ -224,43 +224,129 @@ async def get_patient_data(id: str, service: SupabaseIntegrationService = Depend
 async def respond_to_consultation(id: str, response: ConsultationResponse, service: SupabaseIntegrationService = Depends(get_doctor_service)):
     """
     Doctors use this to submit their diagnosis and move the consultation to completed.
+    SECURITY: Only allows if doctor_id = current_user OR doctor_id IS NULL.
+    If NULL, assigns the current doctor before completing.
     """
     from datetime import datetime
     sb = get_supabase()
-    
-    # 1. Update the consultation record
+
+    # First, verify the consultation exists and check ownership
+    consult_result = sb.table("consultations").select("*").eq("id", id).execute()
+    if not consult_result.data:
+        raise HTTPException(status_code=404, detail="Consultation not found.")
+
+    consult = consult_result.data[0]
+
+    # Block if already completed or cancelled
+    if consult.get("status") in ["completed", "cancelled"]:
+        raise HTTPException(status_code=400, detail=f"Cannot modify a {consult['status']} consultation.")
+
+    # Security check: only assigned doctor or unassigned can respond
+    existing_doctor_id = consult.get("doctor_id")
+    if existing_doctor_id and existing_doctor_id != service.user_id:
+        raise HTTPException(status_code=403, detail="This consultation is assigned to another doctor.")
+
     update_data = {
         "status": "completed",
-        "doctor_id": service.user_id,
+        "doctor_id": service.user_id,  # Assign if was NULL, or keep same
         "response_data": response.model_dump(),
         "updated_at": datetime.utcnow().isoformat()
     }
-    
-    result = sb.table("consultations").update(update_data).eq("id", id).eq("doctor_id", service.user_id).execute()
-    
-    if not result.data:
-        # If it wasn't assigned, try assigning it first
-        result = sb.table("consultations").update(update_data).eq("id", id).is_("doctor_id", "null").execute()
-        if not result.data:
-            raise HTTPException(status_code=403, detail="Consultation already claimed by another doctor or record not found.")
 
-    # Mock Email Notification
+    result = sb.table("consultations").update(update_data).eq("id", id).execute()
+
+    if not result.data:
+        raise HTTPException(status_code=500, detail="Failed to update consultation record.")
+
+    # Email Notification
     patient_id = result.data[0].get("patient_id")
     patient_data = sb.table("users").select("email").eq("id", patient_id).execute()
     patient_email = patient_data.data[0].get("email") if patient_data.data else "patient@neurovia.com"
-    
+
     print(f"📧 SEND_EMAIL: To={patient_email} | Subject='Your Consultation Report' | Body='Your specialized prescription is ready in the NeuroVia dashboard.'")
-            
+
     return {"status": "success", "data": result.data[0]}
 
 @router.patch("/consult/requests/{id}/status")
 async def update_consultation_status(id: str, status: str, service: SupabaseIntegrationService = Depends(get_doctor_service)):
     """
     Claim or change status of a consultation.
+    Validates that finalized consultations cannot be modified.
+    """
+    from datetime import datetime
+    sb = get_supabase()
+
+    # Fetch current consultation to validate
+    consult_result = sb.table("consultations").select("status, doctor_id").eq("id", id).execute()
+    if not consult_result.data:
+        raise HTTPException(status_code=404, detail="Consultation not found.")
+
+    current = consult_result.data[0]
+
+    # Block modifications to finalized consultations
+    if current.get("status") in ["completed", "cancelled"]:
+        raise HTTPException(status_code=400, detail=f"Cannot modify a {current['status']} consultation.")
+
+    # Block cancellation by a different doctor
+    existing_doctor = current.get("doctor_id")
+    if existing_doctor and existing_doctor != service.user_id:
+        raise HTTPException(status_code=403, detail="This consultation is assigned to another doctor.")
+
+    result = sb.table("consultations").update({
+        "status": status,
+        "doctor_id": service.user_id,
+        "updated_at": datetime.utcnow().isoformat()
+    }).eq("id", id).execute()
+    return result.data[0] if result.data else {}
+
+
+@router.get("/patients")
+async def get_doctor_patients(service: SupabaseIntegrationService = Depends(get_doctor_service)):
+    """
+    Returns a list of unique patients this doctor has interacted with via consultations.
     """
     sb = get_supabase()
-    result = sb.table("consultations").update({"status": status, "doctor_id": service.user_id}).eq("id", id).execute()
-    return result.data[0] if result.data else {}
+
+    # Get all consultations for this doctor
+    assigned = sb.table("consultations").select("*").eq("doctor_id", service.user_id).execute()
+    unassigned = sb.table("consultations").select("*").is_("doctor_id", "null").eq("status", "pending").execute()
+
+    all_consults = (assigned.data or []) + (unassigned.data or [])
+
+    # Extract unique patients
+    seen_ids = set()
+    patients = []
+    for c in all_consults:
+        pid = c.get("patient_id")
+        if not pid or pid in seen_ids:
+            continue
+        seen_ids.add(pid)
+
+        # Fetch patient info
+        try:
+            user_result = sb.table("users").select("id, full_name, email, phone, avatar_url, created_at").eq("id", pid).single().execute()
+            if user_result.data:
+                patient_data = user_result.data
+                # Count consultations for this patient
+                patient_consults = [x for x in all_consults if x.get("patient_id") == pid]
+                latest = max(patient_consults, key=lambda x: x.get("created_at", ""), default=None)
+                patient_data["consultation_count"] = len(patient_consults)
+                patient_data["latest_consultation"] = latest.get("created_at") if latest else None
+                patient_data["latest_status"] = latest.get("status") if latest else None
+                patients.append(patient_data)
+        except Exception:
+            # If user not found, create minimal entry from metadata
+            metadata = c.get("metadata") or {}
+            patients.append({
+                "id": pid,
+                "full_name": metadata.get("patient_name", "Unknown Patient"),
+                "email": "",
+                "consultation_count": 1,
+                "latest_consultation": c.get("created_at"),
+                "latest_status": c.get("status")
+            })
+
+    return patients
 
 
 # ===== PATIENT-ACCESSIBLE ENDPOINTS (no doctor auth required) =====

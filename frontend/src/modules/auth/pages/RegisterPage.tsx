@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Brain, Eye, EyeOff, Shield, ArrowRight, Sparkles, User, Mail, Phone, Calendar, Stethoscope, MapPin, FileText, Image, Upload, Camera, Clock, Users } from 'lucide-react';
 import GoogleLoginButton from '@/components/auth/GoogleLoginButton';
 import { useTranslation } from 'react-i18next';
@@ -9,8 +9,11 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const routerLocation = useLocation();
+  const initialState = (routerLocation.state as any) || {};
+
   const { t } = useTranslation();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(initialState.googleToken && initialState.role === 'doctor' ? 3 : 1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -23,7 +26,8 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState('user');
+  const [role, setRole] = useState(initialState.role || 'user');
+  const [googleToken, setGoogleToken] = useState(initialState.googleToken || '');
 
   // Doctor-specific fields
   const [specialty, setSpecialty] = useState('');
@@ -74,14 +78,16 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      const payload: any = {
-        email,
-        password,
-        full_name: fullName,
-        role,
-      };
-      if (phone.trim()) payload.phone = phone;
-      if (dob) payload.date_of_birth = dob;
+      const payload: any = googleToken
+        ? { token: googleToken, role }
+        : {
+            email,
+            password,
+            full_name: fullName,
+            role,
+          };
+      if (!googleToken && phone.trim()) payload.phone = phone;
+      if (!googleToken && dob) payload.date_of_birth = dob;
 
       // Doctor-specific fields
       if (role === 'doctor') {
@@ -112,7 +118,8 @@ export default function RegisterPage() {
         if (gender.trim()) payload.gender = gender;
       }
 
-      const res = await fetch(`${API_URL}/auth/register`, {
+      const endpoint = googleToken ? `${API_URL}/auth/google` : `${API_URL}/auth/register`;
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -474,7 +481,10 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="flex gap-3 mt-2">
-                  <button type="button" onClick={() => { setStep(2); setError(''); }}
+                  <button type="button" onClick={() => { 
+                      if (googleToken) { setGoogleToken(''); setStep(1); } else { setStep(2); }
+                      setError(''); 
+                    }}
                     className="flex-1 py-4 bg-white text-[#0D2B45] font-bold text-base rounded-2xl border-2 border-[#E5E5E0] hover:border-[#8C9A86] transition-all active:scale-[0.98]">
                     Back
                   </button>
@@ -506,13 +516,19 @@ export default function RegisterPage() {
               </div>
               <GoogleLoginButton
                 onSuccess={async (credential: string) => {
+                  if (role === 'doctor') {
+                    setGoogleToken(credential);
+                    setStep(3);
+                    return;
+                  }
+
                   setLoading(true);
                   setError('');
                   try {
                     const res = await fetch(`${API_URL}/auth/google`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ token: credential }),
+                      body: JSON.stringify({ token: credential, role: 'user' }),
                     });
                     const data = await res.json();
                     if (!res.ok) throw new Error(data.detail || 'Google sign-up failed');

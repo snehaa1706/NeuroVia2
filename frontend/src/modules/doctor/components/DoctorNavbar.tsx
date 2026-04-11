@@ -1,7 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Stethoscope } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+const DEFAULT_AVATAR = ''; // empty means we show the initial-letter fallback
+
+function resolveAvatar(url: string | null | undefined): string {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  if (url.startsWith('data:')) return url;
+  return `${API_URL}${url}`;
+}
 
 const DoctorNavbar = () => {
   const stored = localStorage.getItem('neurovia_doctor_user');
@@ -9,11 +19,37 @@ const DoctorNavbar = () => {
   const fullName = user?.full_name || 'Specialist';
   const prefixName = fullName.startsWith('Dr.') ? fullName : `Dr. ${fullName}`;
 
-  // Resolve avatar URL
-  let avatarUrl = user?.avatar_url || '';
-  if (avatarUrl && !avatarUrl.startsWith('http')) {
-    avatarUrl = `${API_URL}${avatarUrl}`;
-  }
+  const [avatarSrc, setAvatarSrc] = useState(resolveAvatar(user?.avatar_url));
+  const [avatarFailed, setAvatarFailed] = useState(false);
+
+  // Fetch fresh avatar from backend ONLY if localStorage is missing avatar_url
+  useEffect(() => {
+    if (user?.avatar_url) return; // already have it locally
+
+    const token = localStorage.getItem('neurovia_doctor_token') || localStorage.getItem('consult_token');
+    if (!token) return;
+
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`${API_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const profile = await res.json();
+        if (profile.avatar_url) {
+          // Update localStorage so we don't fetch again
+          const updatedUser = { ...user, avatar_url: profile.avatar_url };
+          localStorage.setItem('neurovia_doctor_user', JSON.stringify(updatedUser));
+          setAvatarSrc(resolveAvatar(profile.avatar_url));
+        }
+      } catch (err) {
+        // Silent fail — we still show the initial letter fallback
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const showFallback = !avatarSrc || avatarFailed;
 
   return (
     <header className="h-24 bg-white sticky top-0 z-10 flex items-center justify-between px-10 shadow-md rounded-b-3xl mb-8 border-b-2 border-(--color-border)">
@@ -24,16 +60,21 @@ const DoctorNavbar = () => {
         </h2>
         <p className="text-sm font-bold text-(--color-navy)/50 tracking-wider uppercase mt-1">Clinical Management Interface</p>
       </div>
-      <div className="flex items-center gap-4 cursor-pointer hover:bg-(--color-surface-alt) p-3 rounded-2xl transition-colors">
+      <Link to="/doctor/settings" className="flex items-center gap-4 cursor-pointer hover:bg-(--color-surface-alt) p-3 rounded-2xl transition-colors">
         <span className="text-xl font-bold text-(--color-navy)">{prefixName}</span>
-        {avatarUrl ? (
-          <img src={avatarUrl} alt={fullName} className="w-12 h-12 rounded-full object-cover border-2 border-(--color-sage)" />
+        {!showFallback ? (
+          <img
+            src={avatarSrc}
+            alt={fullName}
+            className="w-12 h-12 rounded-full object-cover border-2 border-(--color-sage)"
+            onError={() => setAvatarFailed(true)}
+          />
         ) : (
           <div className="w-12 h-12 bg-gradient-to-br from-(--color-sage) to-(--color-navy) rounded-full flex items-center justify-center border-2 border-white shadow-md">
             <span className="text-xl font-black text-white">{fullName.charAt(0).toUpperCase()}</span>
           </div>
         )}
-      </div>
+      </Link>
     </header>
   );
 };
