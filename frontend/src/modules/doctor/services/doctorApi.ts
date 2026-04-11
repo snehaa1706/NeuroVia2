@@ -22,6 +22,12 @@ export const doctorApi = {
     return res.json();
   },
 
+  getPatients: async () => {
+    const res = await fetch(`${API_URL}/doctors/patients`, { headers: getHeaders() });
+    if (!res.ok) throw new Error('Failed to fetch patients');
+    return res.json();
+  },
+
   getPatientDashboard: async (patientId: string) => {
     const res = await fetch(`${API_URL}/doctors/patients/${patientId}/dashboard`, { headers: getHeaders() });
     if (!res.ok) throw new Error('Failed to fetch patient dashboard');
@@ -34,7 +40,10 @@ export const doctorApi = {
       headers: getHeaders(),
       body: JSON.stringify(response)
     });
-    if (!res.ok) throw new Error('Failed to submit consultation response');
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ detail: 'Failed to submit consultation response' }));
+      throw new Error(errorData.detail || 'Failed to submit consultation response');
+    }
     return res.json();
   },
 
@@ -43,7 +52,22 @@ export const doctorApi = {
       method: 'PATCH',
       headers: getHeaders()
     });
-    if (!res.ok) throw new Error('Failed to update consultation status');
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ detail: 'Failed to update consultation status' }));
+      throw new Error(errorData.detail || 'Failed to update consultation status');
+    }
+    return res.json();
+  },
+
+  cancelConsultation: async (consultationId: string) => {
+    const res = await fetch(`${API_URL}/doctors/consult/requests/${consultationId}/status?status=cancelled`, {
+      method: 'PATCH',
+      headers: getHeaders()
+    });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ detail: 'Cannot cancel this consultation' }));
+      throw new Error(errorData.detail || 'Cannot cancel this consultation');
+    }
     return res.json();
   },
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, MessageSquare, Settings, LogOut, Activity } from 'lucide-react';
+import { LayoutDashboard, Users, MessageSquare, Settings, LogOut, Activity, Calendar } from 'lucide-react';
 
 const DoctorSidebar = () => {
   const navigate = useNavigate();
@@ -8,6 +8,7 @@ const DoctorSidebar = () => {
     { name: 'Dashboard', path: '/doctor/dashboard', icon: LayoutDashboard },
     { name: 'Patients', path: '/doctor/patients', icon: Users },
     { name: 'Consultations', path: '/doctor/consultations', icon: MessageSquare },
+    { name: 'Schedule', path: '/doctor/schedule', icon: Calendar },
   ];
 
   return (

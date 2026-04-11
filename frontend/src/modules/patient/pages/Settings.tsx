@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { User, Bell, Palette, RotateCcw, Save, Check, Mail, Phone, Calendar, Shield, Camera, Upload, Stethoscope, MapPin, Clock, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const Settings = () => {
   const { t } = useTranslation();
@@ -111,8 +111,8 @@ const Settings = () => {
       try {
         const payload: any = {};
         if (name !== user.full_name) payload.full_name = name;
-        if (phone !== user.phone) payload.phone = phone;
-        if (dob !== user.date_of_birth) payload.date_of_birth = dob;
+        if (phone !== user.phone) payload.phone = phone || null;
+        if (dob !== user.date_of_birth) payload.date_of_birth = dob || null;
         if (newAvatarUrl !== user.avatar_url) payload.avatar_url = newAvatarUrl;
 
         if (isDoctor) {

@@ -17,6 +17,7 @@ import PatientList from '../modules/doctor/pages/PatientList';
 import PatientDetail from '../modules/doctor/pages/PatientDetail';
 import Consultations from '../modules/doctor/pages/Consultations';
 import ConsultationDetail from '../modules/doctor/pages/ConsultationDetail';
+import DoctorSchedule from '../modules/doctor/pages/DoctorSchedule';
 import DoctorLayout from '../modules/doctor/layout/DoctorLayout';
 import DoctorListing from '../modules/patient/pages/DoctorListing';
 import ConsultationRequest from '../modules/patient/pages/ConsultationRequest';
@@ -84,6 +85,7 @@ const AppRoutes = () => {
         <Route path="doctor/patient/:id" element={<PatientDetail />} />
         <Route path="doctor/consultations" element={<Consultations />} />
         <Route path="doctor/consultation/:id" element={<ConsultationDetail />} />
+        <Route path="doctor/schedule" element={<DoctorSchedule />} />
         <Route path="doctor/settings" element={<Settings />} />
       </Route>
 

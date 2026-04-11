@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, User, Calendar, Brain, ChevronRight, Hash, Phone, Mail, Clock } from 'lucide-react';
+import { Search, Filter, User, Calendar, Brain, ChevronRight, Mail, Clock, Users } from 'lucide-react';
 import { doctorApi } from '../services/doctorApi';
 import { Link } from 'react-router-dom';
 
@@ -11,10 +11,8 @@ const PatientList = () => {
   useEffect(() => {
     const fetchPatients = async () => {
       try {
-        const data = await doctorApi.getConsultations();
-        // Extract unique patients from consultations
-        const uniquePatients = Array.from(new Map(data.map((c: any) => [c.patient_id || c.id, c.patient])).values());
-        setPatients(uniquePatients.filter(p => p != null));
+        const data = await doctorApi.getPatients();
+        setPatients(data);
       } catch (err) {
         console.error('Error fetching patients:', err);
       } finally {
@@ -29,9 +27,30 @@ const PatientList = () => {
     (p.email || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'text-emerald-600 bg-emerald-50';
+      case 'pending': return 'text-amber-600 bg-amber-50';
+      case 'accepted': return 'text-blue-600 bg-blue-50';
+      case 'cancelled': return 'text-red-600 bg-red-50';
+      default: return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  const formatTimeAgo = (dateStr: string | null) => {
+    if (!dateStr) return 'No activity';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    if (days === 0) return 'Today';
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days} days ago`;
+    if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+    return `${Math.floor(days / 30)} months ago`;
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-8 fade-in pb-20">
-      {/* 🔹 Header Section */}
+      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h2 className="text-4xl font-bold text-(--color-navy) mb-2">Patient Directory</h2>
@@ -49,13 +68,10 @@ const PatientList = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
            </div>
-           <button className="p-4 bg-white border border-(--color-border-light) rounded-2xl hover:bg-(--color-surface-alt) transition-all shadow-sm">
-              <Filter className="w-5 h-5 text-(--color-navy)/60" />
-           </button>
         </div>
       </div>
 
-      {/* 🔹 Patient Grid */}
+      {/* Patient Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {loading ? (
            [1, 2, 3, 4].map(i => (
@@ -71,7 +87,14 @@ const PatientList = () => {
                     <User className="w-8 h-8 text-(--color-sage)" />
                   </div>
                   <div className="text-right">
-                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full uppercase tracking-tighter">Active Monitoring</span>
+                    {patient.latest_status && (
+                      <span className={`text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-tighter ${getStatusColor(patient.latest_status)}`}>
+                        {patient.latest_status === 'pending' ? 'Pending Review' : 
+                         patient.latest_status === 'completed' ? 'Completed' :
+                         patient.latest_status === 'accepted' ? 'In Progress' :
+                         patient.latest_status}
+                      </span>
+                    )}
                     <p className="text-xs text-(--color-navy)/40 font-medium mt-2">ID: {patient.id ? patient.id.slice(0, 8) : 'Pending'}</p>
                   </div>
                 </div>
@@ -79,12 +102,19 @@ const PatientList = () => {
                 <h3 className="text-2xl font-bold text-(--color-navy) mb-4 group-hover:text-(--color-sage) transition-colors">{patient.full_name}</h3>
                 
                 <div className="space-y-3 mb-8">
+                  {patient.email && (
+                    <div className="flex items-center gap-3 text-sm font-medium text-(--color-navy)/60">
+                      <Mail className="w-4 h-4 text-(--color-navy)/30" /> {patient.email}
+                    </div>
+                  )}
                   <div className="flex items-center gap-3 text-sm font-medium text-(--color-navy)/60">
-                    <Mail className="w-4 h-4 text-(--color-navy)/30" /> {patient.email}
+                     <Clock className="w-4 h-4 text-(--color-navy)/30" /> Last activity: {formatTimeAgo(patient.latest_consultation)}
                   </div>
-                  <div className="flex items-center gap-3 text-sm font-medium text-(--color-navy)/60">
-                     <Clock className="w-4 h-4 text-(--color-navy)/30" /> Last activity 2 days ago
-                  </div>
+                  {patient.consultation_count > 0 && (
+                    <div className="flex items-center gap-3 text-sm font-medium text-(--color-navy)/60">
+                      <Users className="w-4 h-4 text-(--color-navy)/30" /> {patient.consultation_count} consultation{patient.consultation_count > 1 ? 's' : ''}
+                    </div>
+                  )}
                 </div>
               </div>
 
