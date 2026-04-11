@@ -17,6 +17,15 @@ from app.services.ai_service import (
     generate_consultation_summary,
     generate_ai_response
 )
+from app.ai_services.ai_orchestrator import orchestrator
+from app.models.ai_orchestrator_requests import (
+    RiskPredictionRequest,
+    TrendAnalysisRequest,
+    SemanticValidationRequest,
+    ClockAnalysisRequest,
+    DoctorInsightRequest,
+    FullAnalysisRequest
+)
 
 router = APIRouter()
 
@@ -228,3 +237,14 @@ async def consultation_summary_endpoint(
         suggested_diagnostics=ai_result.get("suggested_diagnostics", []),
         questions_for_doctor=ai_result.get("questions_for_doctor", []),
     )
+
+
+# ==========================================
+# Orchestrator Phase (Phase 9 Integration)
+# ==========================================
+
+@router.post("/cognitive-report")
+async def cognitive_report(request: FullAnalysisRequest):
+    """Run full, standardized orchestrator cascade generating complete dashboard report."""
+    data = request.model_dump()
+    return await orchestrator.run_full_analysis(data)
