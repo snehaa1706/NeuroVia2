@@ -1,9 +1,20 @@
-"""Screening scoring engine.
+import json
+import logging
+import random
+import uuid
+from datetime import datetime, timezone, timedelta
+from fastapi import HTTPException
+from pydantic import ValidationError
 
-Calculates scores for each test type based on responses.
-"""
+from app.database import get_supabase
+from .model import (
+    SessionStartRequest,
+    TestSubmissionRequest,
+    TestType,
+    Difficulty,
+    TEST_RESPONSE_SCHEMAS,
+)
 
-from app.models.screening import TestType
 
 
 def score_ad8(responses: dict) -> tuple[float, float]:
@@ -76,23 +87,6 @@ def calculate_score(test_type: TestType, responses: dict) -> tuple[float, float]
         return scoring_fn(responses)
     return 0.0, 0.0
 
-
-import json
-import logging
-import random
-import uuid
-from datetime import datetime, timezone, timedelta
-from fastapi import HTTPException
-from pydantic import ValidationError
-
-from app.database import get_supabase
-from app.modules.screening.model import (
-    SessionStartRequest,
-    TestSubmissionRequest,
-    TestType,
-    Difficulty,
-    TEST_RESPONSE_SCHEMAS,
-)
 
 import app.utils.cognitive_tests.memory as memory_test
 import app.utils.cognitive_tests.fluency as fluency_test

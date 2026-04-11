@@ -113,8 +113,13 @@ from datetime import datetime
 
 class TestType(str, Enum):
     __test__ = False
-    memory_recall = "memory_recall"
+    ad8 = "ad8"
+    orientation = "orientation"
     verbal_fluency = "verbal_fluency"
+    trail_making = "trail_making"
+    clock_drawing = "clock_drawing"
+    moca = "moca"
+    memory_recall = "memory_recall"
     reaction_time = "reaction_time"
     sequence_memory = "sequence_memory"
 
