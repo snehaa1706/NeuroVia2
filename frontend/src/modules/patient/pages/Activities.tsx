@@ -203,7 +203,7 @@ const Activities = () => {
       )}
 
       {/* Section 0: Scoreboard */}
-      <section className="bg-white rounded-3xl p-8 shadow-lg border border-(--color-border)">
+      <section className="bg-(--color-bg) rounded-3xl p-8 shadow-lg border border-(--color-border)">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 bg-(--color-sage)/15 rounded-xl flex items-center justify-center">
             <BarChart3 className="w-5 h-5 text-(--color-sage)" />
@@ -258,7 +258,7 @@ const Activities = () => {
       <PersonalDataSetup />
 
       {/* Section 1: Daily Plan */}
-      <section>
+      <section className="bg-(--color-bg) hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-shadow duration-500 rounded-3xl p-8 shadow-lg border border-(--color-border)">
         <div className="flex items-end justify-between mb-6">
           <h2 className="text-3xl font-bold text-(--color-navy)">Daily Plan</h2>
           <div className="text-xl font-medium text-(--color-sage)">
@@ -299,7 +299,7 @@ const Activities = () => {
       </section>
 
       {/* Section 2: Activity Library */}
-      <section>
+      <section className="bg-(--color-bg) hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-shadow duration-500 rounded-3xl p-8 shadow-lg border border-(--color-border)">
         <h2 className="text-3xl font-bold text-(--color-navy) mb-6">Activity Library</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {library.map((act, index) => (
@@ -314,7 +314,7 @@ const Activities = () => {
       </section>
 
       {/* Section 3: Progress History Chart */}
-      <section className="bg-white rounded-3xl p-8 shadow-lg border border-(--color-border)">
+      <section className="bg-(--color-bg) rounded-3xl p-8 shadow-lg border border-(--color-border)">
         <h2 className="text-2xl font-bold text-(--color-navy) mb-6">Progress History</h2>
         {dailyChartData.length > 0 ? (
           <div style={{ width: '100%', height: 320 }}>

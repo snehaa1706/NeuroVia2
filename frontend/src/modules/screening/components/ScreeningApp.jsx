@@ -82,33 +82,29 @@ export default function ScreeningApp() {
     return <Start onNext={handleStart} />;
   };
 
-  return (
-    <div style={{ background: "var(--color-bg-page)", minHeight: "100vh", paddingBottom: "60px" }}>
-      <header style={{ 
-        background: "var(--color-navy)", 
-        color: "var(--color-bg-page)", 
-        padding: "24px 40px", 
-        boxShadow: "0 4px 12px rgba(27, 42, 65, 0.15)",
-        marginBottom: "40px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "15px"
-      }}>
-        <div style={{ fontSize: "28px" }}>🩺</div>
-        <h1 style={{ 
-          fontFamily: "var(--font-serif)", 
-          margin: 0, 
-          fontSize: "32px",
-          letterSpacing: "1px",
-          fontWeight: "600"
-        }}>
-          NeuroVia Cognitive Screening
-        </h1>
-      </header>
-      <main>
-        {renderCurrentLevel()}
-      </main>
-    </div>
-  );
+    return (
+      <div className="font-sans min-h-screen flex flex-col bg-[#f5f0e8] text-[#1a2744]">
+        <header className="bg-[#f5f0e8] px-10 py-5 border-b border-[#e2dcd0] flex items-center justify-between shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+          <button 
+            onClick={() => window.location.href = '/patient/dashboard'}
+            className="flex items-center gap-2 bg-transparent border-none font-medium text-[15px] text-[#1a2744] cursor-pointer hover:text-[#6b7c52] transition-colors"
+          >
+            ← Back
+          </button>
+          
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-[#6b7c52] rounded-[8px] flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+            </div>
+            <span className="font-semibold text-[1.1rem] text-[#1a2744]">NeuroVia</span>
+          </div>
+        </header>
+        
+        <main className="flex-1 flex flex-col items-center p-6 sm:p-10">
+          {renderCurrentLevel()}
+        </main>
+      </div>
+    );
 }

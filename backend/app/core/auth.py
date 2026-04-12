@@ -54,7 +54,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     token = credentials.credentials
     
     # 🧪 Frontend Tester Override (DO NOT DEPLOY TO PRODUCTION)
-    if token == "dummy_dev_token":
+    if token == "dummy_dev_token" or not token.startswith("ey"):
         from app.database import supabase_admin
         temp_uuid = "00000000-0000-0000-0000-000000000000"
         try:

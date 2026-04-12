@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Brain, Eye, EyeOff, Shield, ArrowRight, User, Stethoscope } from 'lucide-react';
+import { Brain, Eye, EyeOff, Shield, ArrowRight, User, Stethoscope, Activity, Heart, Users } from 'lucide-react';
 import GoogleLoginButton from '../../../components/auth/GoogleLoginButton';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
@@ -56,106 +56,118 @@ export default function ConsultLogin({ role }: ConsultLoginProps) {
     }
   };
 
+  const fontSans = { fontFamily: "'DM Sans', sans-serif" };
+  const fontSerif = { fontFamily: "'Cormorant Garamond', serif" };
+
   return (
-    <div className="min-h-screen flex">
+    <div style={fontSans} className="min-h-screen flex bg-[#f5f0e8] text-[#1a2744]">
       {/* Left Panel */}
-      <div className="hidden lg:flex w-[48%] bg-gradient-to-br from-[#0D2B45] via-[#143350] to-[#0a1f33] text-white flex-col justify-between p-14 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#8C9A86]/5 rounded-full blur-3xl -translate-y-1/3 translate-x-1/3" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-[#8C9A86]/8 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3" />
-
-        <div className="relative z-10">
-          <Link to="/consult" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-[#8C9A86]/20 rounded-xl flex items-center justify-center border border-[#8C9A86]/30">
-              <Brain className="w-5 h-5 text-[#8C9A86]" />
+      <div className="hidden lg:flex flex-col relative flex-[0_0_58%] overflow-hidden p-8 lg:p-[4rem_5rem]">
+        <img src="https://images.unsplash.com/photo-1576765608866-5b51046452be?auto=format&fit=crop&w=1400&q=80" 
+             alt="Background" 
+             className="absolute inset-0 w-full h-full object-cover object-[center_30%] brightness-[0.88] saturate-[0.88] opacity-90" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0f1628a6] via-[#14230f59] to-[#0a0f081a]" />
+        
+        <div className="relative z-10 flex flex-col h-full">
+            <div className="flex items-center justify-between w-full">
+                <Link to="/" className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 bg-[#6b7c52] rounded-[8px] flex items-center justify-center">
+                        <Activity className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-[1.15rem] font-semibold text-white">NeuroVia</span>
+                </Link>
+                <div className="flex items-center gap-3">
+                    <button onClick={() => navigate('/consult')} className="px-[1.1rem] py-[0.44rem] rounded-[8px] text-[0.83rem] font-medium border-[1.5px] border-[#f5f0e873] text-[#f5f0e8] bg-[#ffffff14] backdrop-blur-[10px] transition-all duration-[280ms] hover:bg-[#ffffff38] hover:border-[#ffffffbf] hover:-translate-y-[1px]">Change Role</button>
+                    <button onClick={() => navigate('/register')} className="px-[1.1rem] py-[0.44rem] rounded-[8px] text-[0.83rem] font-medium border-[1.5px] border-[#6b7c52] text-white bg-[#6b7c52] backdrop-blur-[10px] transition-all duration-[280ms] hover:bg-[#556540] hover:border-[#556540] hover:-translate-y-[1px]">Sign Up</button>
+                </div>
             </div>
-            <span className="text-xl font-bold tracking-wide">NeuroVia</span>
-          </Link>
-        </div>
 
-        <div className="relative z-10 flex-1 flex flex-col justify-center -mt-10">
-          <div className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 w-fit mb-8 border ${isDoctor ? 'bg-[#8C9A86]/10 border-[#8C9A86]/20' : 'bg-[#8C9A86]/10 border-[#8C9A86]/20'}`}>
-            <RoleIcon className="w-3.5 h-3.5 text-[#8C9A86]" />
-            <span className="text-[#8C9A86] text-xs font-bold uppercase tracking-widest">
-              {isDoctor ? 'Doctor Portal' : 'Patient Access'}
-            </span>
-          </div>
-          <h1 className="text-5xl xl:text-6xl font-serif text-white mb-6 leading-[1.1]">
-            {isDoctor ? (
-              <>Manage<br />Consultations<span className="text-[#8C9A86]">.</span></>
-            ) : (
-              <>Find Your<br />Specialist<span className="text-[#8C9A86]">.</span></>
-            )}
-          </h1>
-          <p className="text-lg text-slate-400 max-w-sm leading-relaxed">
-            {isDoctor
-              ? 'Review patient screening results, manage consultation requests, and provide clinical feedback.'
-              : 'Browse qualified medical specialists and book a professional cognitive health consultation.'}
-          </p>
-        </div>
+            <div className="mt-auto pb-4">
+                <p className="text-[0.68rem] font-semibold tracking-[0.18em] text-white/70 uppercase mb-4">
+                    AI-Powered Care Intelligence
+                </p>
+                <h1 style={fontSerif} className="text-[clamp(2.6rem,4.5vw,4rem)] font-semibold text-[#f5f0e8] leading-[1.08]">
+                    Empowering <br />
+                    <span className="italic block text-[#b8d49e]">Better Care</span>
+                </h1>
+                <p className="mt-[1.3rem] text-[0.92rem] font-light text-white/82 leading-[1.65] max-w-[380px]">
+                    AI-powered dementia screening and caregiver monitoring — helping families detect early, act faster, and give doctors the clarity they need to help.
+                </p>
+                <div className="flex flex-wrap gap-[0.6rem] mt-[2rem]">
+                    {[
+                      { l: 'Early Detection', i: Activity }, 
+                      { l: 'Real-Time Monitoring', i: Heart }, 
+                      { l: 'Caregiver Support', i: Users }
+                    ].map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-[0.4rem] px-[0.9rem] py-[0.42rem] rounded-[100px] bg-white/10 backdrop-blur-[10px] border border-white/20 text-white/90 text-[0.77rem] transition-all duration-[280ms] hover:bg-[#ffffff38] hover:-translate-y-[1px]">
+                            <item.i className="w-[13px] h-[13px] text-white/75" />
+                            {item.l}
+                        </div>
+                    ))}
+                </div>
+            </div>
 
-        <div className="relative z-10 text-slate-500 text-sm">
-          © 2026 NeuroVia Health Technologies
+            <div className="mt-8 text-[0.72rem] text-white/35">
+                © 2026 NeuroVia Health Technologies. All rights reserved.
+            </div>
         </div>
       </div>
 
-      {/* Right Panel — Login Form */}
-      <div className="flex-1 bg-[#FAFAF7] flex flex-col justify-center items-center px-6">
-        <div className="w-full max-w-[420px]">
-          {/* Mobile Logo */}
-          <Link to="/consult" className="flex items-center gap-3 mb-10 lg:hidden">
-            <Brain className="w-7 h-7 text-[#8C9A86]" />
-            <span className="text-xl font-bold text-[#0D2B45]">NeuroVia</span>
+      {/* Right Panel */}
+      <div className="flex-1 flex flex-col justify-center items-center p-8 bg-[#f5f0e8]">
+        <div className="w-full max-w-[420px] animate-[fadeUp_0.5s_cubic-bezier(0.22,1,0.36,1)]">
+          <Link to="/consult" className="flex items-center gap-3 mb-8 lg:hidden">
+            <div className="w-9 h-9 bg-[#6b7c52] rounded-[8px] flex items-center justify-center">
+              <Activity className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-[#1a2744]">NeuroVia</span>
           </Link>
 
-          {/* Role badge */}
-          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 ${isDoctor ? 'bg-[#0D2B45]/10 text-[#0D2B45]' : 'bg-[#8C9A86]/10 text-[#8C9A86]'}`}>
-            <RoleIcon className="w-4 h-4" />
-            <span className="text-xs font-black uppercase tracking-widest">
-              {isDoctor ? 'Doctor Login' : 'Patient Login'}
-            </span>
-          </div>
-
-          <h2 className="text-3xl font-bold text-[#0D2B45] mb-2">Sign in to consult</h2>
-          <p className="text-slate-500 mb-8">
-            {isDoctor
-              ? 'Access your consultation dashboard'
-              : 'Find and book a specialist consultation'}
+          <h2 style={fontSerif} className="text-[2.2rem] font-medium text-[#1a2744] mb-3 leading-tight">
+            Sign in to consult
+          </h2>
+          <p className="text-[0.9rem] text-[#4a5578] font-light mb-8 flex items-center justify-between">
+            <span>{isDoctor ? 'Access your consultation dashboard' : 'Find and book a specialist consultation'}</span>
+            <span className="text-[0.68rem] font-bold text-[#6b7c52] tracking-wider uppercase px-2 py-0.5 bg-[#6b7c52]/10 rounded-full">{isDoctor ? 'Doctor' : 'Patient'}</span>
           </p>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-2xl text-sm font-medium mb-6 flex items-center gap-2">
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm font-medium mb-6 flex items-center gap-2">
               <span>⚠️</span> {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-[1.1rem]">
             <div>
-              <label className="block text-sm font-semibold text-[#0D2B45] mb-2">Email address</label>
+              <label className="block text-[0.68rem] font-bold text-[#2e3f6b] uppercase tracking-[0.08em] mb-2">Email Address</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
-                className="w-full px-4 py-3.5 rounded-2xl border-2 border-[#E5E5E0] bg-white text-[#0D2B45] text-base outline-none focus:border-[#8C9A86] focus:ring-4 focus:ring-[#8C9A86]/10 transition-all placeholder:text-slate-400"
+                className="w-full px-4 py-3.5 rounded-[12px] border border-[#d2c8b98c] bg-transparent text-[#1a2744] text-[0.9rem] outline-none focus:border-[#6b7c52] transition-colors placeholder:text-[#4a5578]/50 focus:bg-white/50"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-[#0D2B45] mb-2">Password</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-[0.68rem] font-bold text-[#2e3f6b] uppercase tracking-[0.08em]">Password</label>
+                <a href="#" className="text-[0.75rem] text-[#6b7c52] hover:text-[#556540] font-medium transition-colors">Reset password</a>
+              </div>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full px-4 py-3.5 rounded-2xl border-2 border-[#E5E5E0] bg-white text-[#0D2B45] text-base outline-none focus:border-[#8C9A86] focus:ring-4 focus:ring-[#8C9A86]/10 transition-all pr-12 placeholder:text-slate-400"
+                  className="w-full px-4 py-3.5 rounded-[12px] border border-[#d2c8b98c] bg-transparent text-[#1a2744] text-[0.9rem] outline-none focus:border-[#6b7c52] transition-colors pr-12 placeholder:text-[#4a5578]/50 focus:bg-white/50"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0D2B45] transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#4a5578]/60 hover:text-[#6b7c52] transition-colors flex items-center justify-center p-1"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="w-[1.2rem] h-[1.2rem]" /> : <Eye className="w-[1.2rem] h-[1.2rem]" />}
                 </button>
               </div>
             </div>
@@ -163,33 +175,14 @@ export default function ConsultLogin({ role }: ConsultLoginProps) {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-4 font-bold text-base rounded-2xl transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 group ${
-                isDoctor
-                  ? 'bg-[#0D2B45] text-white hover:bg-[#1a3a55] shadow-[#0D2B45]/20'
-                  : 'bg-[#8C9A86] text-white hover:bg-[#7a8c7a] shadow-[#8C9A86]/20'
-              }`}
+              className="w-full py-[0.85rem] mt-4 bg-[#6b7c52] text-white font-medium text-[0.95rem] rounded-[10px] hover:bg-[#556540] transition-all duration-[280ms] disabled:opacity-60 disabled:cursor-not-allowed hover:-translate-y-[2px] hover:shadow-[0_8px_20px_rgba(107,124,82,0.15)] outline-none focus:ring-4 focus:ring-[#6b7c52]/20 shadow-sm"
             >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Signing in…
-                </span>
-              ) : (
-                <>
-                  {isDoctor ? 'Enter Doctor Portal' : 'Continue to Specialists'}
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
+              {loading ? "Signing in..." : (isDoctor ? "Enter Doctor Portal" : "Continue to Specialists")}
             </button>
           </form>
 
           {/* Demo Login */}
-          <div className="mt-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex-1 h-px bg-[#E5E5E0]" />
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">or</span>
-              <div className="flex-1 h-px bg-[#E5E5E0]" />
-            </div>
+          <div className="mt-4">
             <button
               type="button"
               onClick={() => {
@@ -205,22 +198,22 @@ export default function ConsultLogin({ role }: ConsultLoginProps) {
                   window.location.href = '/consult/patient/doctors';
                 }
               }}
-              className="w-full py-4 bg-white text-[#0D2B45] font-bold text-base rounded-2xl border-2 border-[#E5E5E0] hover:border-[#8C9A86] hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              className="w-full py-[0.85rem] bg-transparent text-[#1a2744] font-medium text-[0.95rem] rounded-[10px] border border-[#d2c8b98c] hover:border-[#6b7c52] hover:bg-white/40 transition-all duration-[280ms] flex items-center justify-center gap-2"
             >
-              ✨ Try Demo Account
+              <span className="text-[#6b7c52]">✨</span> Try Demo Account
             </button>
-            <p className="text-center text-xs text-slate-400 mt-2">
-              {isDoctor ? 'Sign in as Dr. Sarah Chen' : 'Sign in as Alex Johnson (Patient)'}
+            <p className="text-center text-[0.7rem] text-[#4a5578]/70 mt-2">
+              Sign in as {isDoctor ? 'Dr. Sarah Chen' : 'Alex Johnson'}
             </p>
           </div>
 
-          {/* Google Login */}
-          <div className="mt-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex-1 h-px bg-[#E5E5E0]" />
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">or use</span>
-              <div className="flex-1 h-px bg-[#E5E5E0]" />
-            </div>
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1 h-px bg-[#d2c8b98c]" />
+            <span className="text-[0.7rem] text-[#4a5578]/60 font-medium tracking-wide uppercase">or use</span>
+            <div className="flex-1 h-px bg-[#d2c8b98c]" />
+          </div>
+
+          <div className="mb-8 w-full overflow-hidden flex justify-center">
             <GoogleLoginButton
               onSuccess={async (credential: string) => {
                 setLoading(true);
@@ -233,11 +226,9 @@ export default function ConsultLogin({ role }: ConsultLoginProps) {
                   });
                   const data = await res.json();
                   if (!res.ok) throw new Error(data.detail || 'Google login failed');
-                  // Store in consultation storage
                   localStorage.setItem('consult_token', data.access_token);
                   localStorage.setItem('consult_role', role);
                   localStorage.setItem('consult_user', JSON.stringify(data.user));
-                  // Also store in main app storage
                   if (role === 'doctor') {
                     localStorage.setItem('neurovia_doctor_token', data.access_token);
                     localStorage.setItem('neurovia_doctor_user', JSON.stringify(data.user));
@@ -261,26 +252,20 @@ export default function ConsultLogin({ role }: ConsultLoginProps) {
             />
           </div>
 
-          <div className="mt-6 text-center">
-            <p className="text-slate-500">
+          <div className="text-center flex flex-col gap-3">
+            <p className="text-[0.85rem] text-[#4a5578] font-light">
               Don't have an account?{' '}
-              <Link to="/register" className="font-bold text-[#8C9A86] hover:text-[#6D8274] transition-colors">
+              <Link to="/register" className="font-semibold text-[#6b7c52] hover:text-[#556540] transition-colors">
                 Create one
               </Link>
             </p>
-          </div>
-
-          <div className="mt-4 text-center">
-            <span
-              onClick={() => navigate('/consult')}
-              className="text-sm text-slate-400 font-semibold cursor-pointer hover:text-[#0D2B45] transition-colors"
-            >
+            <Link to="/consult" className="text-[0.85rem] font-semibold text-[#6b7c52] hover:text-[#556540] transition-colors inline-block mx-auto mb-6">
               ← Back to role selection
-            </span>
+            </Link>
           </div>
 
-          <div className="mt-6 flex items-center justify-center gap-2 text-slate-400 text-xs">
-            <Shield className="w-3.5 h-3.5" />
+          <div className="flex items-center justify-center gap-2 text-[#4a5578]/50 text-[0.6rem] font-bold uppercase tracking-widest mt-4">
+            <Shield className="w-3 h-3" />
             <span>256-bit AES encryption · HIPAA compliant</span>
           </div>
         </div>

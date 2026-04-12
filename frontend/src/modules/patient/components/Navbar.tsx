@@ -20,24 +20,24 @@ const Navbar = () => {
   const showFallback = !avatarUrl || imgError;
 
   return (
-    <header className="h-24 bg-white sticky top-0 z-10 flex items-center justify-between px-10 shadow-md rounded-b-3xl mb-8 border-b-2 border-(--color-border)">
+    <header className="h-[4.5rem] bg-transparent relative flex items-center justify-between px-6 shadow-sm rounded-b-[24px] mb-6 border-b border-[#d2c8b9]/60">
       <div>
-        <h2 className="text-2xl font-bold text-(--color-navy)">{t('welcome_back')}, {firstName}</h2>
-        <p className="text-lg text-(--color-navy)/60">{t('daily_overview')}</p>
+        <h2 className="text-[1.2rem] font-bold text-[--color-navy] tracking-wide">{t('welcome_back')}, {firstName}</h2>
+        <p className="text-[0.8rem] mt-0.5 text-[--color-navy]/60">{t('daily_overview')}</p>
       </div>
-      <div className="flex items-center gap-4 cursor-pointer hover:bg-(--color-surface-alt) p-3 rounded-2xl transition-colors">
-        <span className="text-xl font-semibold text-(--color-navy)">{fullName}</span>
+      <div className="flex items-center gap-3 cursor-pointer hover:bg-white/30 backdrop-blur-sm p-2 rounded-[16px] transition-colors">
+        <span className="text-[0.95rem] font-bold text-[--color-navy]">{fullName}</span>
         {!showFallback ? (
           <img
             src={avatarUrl}
             alt={fullName}
-            className="w-12 h-12 rounded-full object-cover border-2 border-(--color-sage)/30"
+            className="w-10 h-10 rounded-full object-cover border border-[--color-sage]/50"
             onError={() => setImgError(true)}
             referrerPolicy="no-referrer"
           />
         ) : (
-          <div className="w-12 h-12 bg-(--color-sage)/15 rounded-full flex items-center justify-center border-2 border-(--color-sage)/30">
-            <span className="text-xl font-bold text-(--color-sage)">{fullName.charAt(0).toUpperCase()}</span>
+          <div className="w-10 h-10 bg-[--color-sage]/15 rounded-full flex items-center justify-center border border-[--color-sage]/50">
+            <span className="text-[1.1rem] font-bold text-[--color-sage]">{fullName.charAt(0).toUpperCase()}</span>
           </div>
         )}
       </div>

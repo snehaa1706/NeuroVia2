@@ -172,10 +172,6 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
     );
   };
 
-  const confirmVrSelection = () => {
-    setVrPhase('done');
-  };
-
   // === SUBMIT ===
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -218,12 +214,12 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
   };
 
   if (!assessment_id) {
-    return <div style={{ padding: "20px", textAlign: "center" }}>No active assessment ID. Go back and Start Screening.</div>;
+    return <div className="p-5 text-center text-[#4a5578]">No active assessment ID. Go back and Start Screening.</div>;
   }
 
   if (!level2Context) {
     return (
-      <div style={{ padding: "40px", textAlign: "center", fontSize: "18px", color: "#666" }}>
+      <div className="p-10 text-center text-[18px] text-[#4a5578]">
         Loading Phase 2 Assessment Context...
       </div>
     );
@@ -231,92 +227,75 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
 
   const fmt = (s) => String(s).padStart(2, '0');
 
-  const selBtnStyle = (isActive) => ({
-    padding: "18px",
-    borderRadius: "12px",
-    border: isActive ? "3px solid #e65100" : "2px solid #e0e0e0",
-    background: isActive ? "linear-gradient(135deg, #ff9800, #f57c00)" : "#fff",
-    color: isActive ? "#fff" : "#333",
-    fontSize: "18px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    transition: "all 0.2s",
-    boxShadow: isActive ? "0 4px 12px rgba(230,81,0,0.3)" : "0 1px 3px rgba(0,0,0,0.08)",
-    transform: isActive ? "scale(1.04)" : "scale(1)",
-    textAlign: "center"
-  });
+  const getSelBtnStyle = (isActive) => {
+    return `w-full flex items-center p-4 rounded-2xl border transition-all duration-300 font-medium ${
+      isActive 
+        ? 'bg-[#6b7c52]/10 border-[#6b7c52] text-[#1a2744] scale-[1.01] shadow-[0_4px_12px_rgba(107,124,82,0.15)]'
+        : 'bg-transparent border-[#e2dcd0] text-[#1a2744] hover:bg-[#6b7c52]/5 hover:border-[#6b7c52]/50 hover:scale-[1.01]'
+    }`;
+  };
 
   return (
-    <div style={{ padding: "40px", maxWidth: "1200px", margin: "auto", display: "flex", gap: "40px", alignItems: "flex-start", flexWrap: "wrap" }}>
+    <div className="w-full max-w-[1200px] mx-auto flex flex-col md:flex-row gap-10 items-start p-4 animate-[fadeIn_0.4s_ease-out]">
       
       {/* === STICKY SIDEBAR === */}
-      <div style={{ 
-        flex: "1 1 300px", 
-        maxWidth: "350px",
-        position: "sticky", 
-        top: "40px", 
-        background: "var(--color-navy)", 
-        color: "white", 
-        padding: "40px", 
-        borderRadius: "24px",
-        boxShadow: "0 10px 30px rgba(27, 42, 65, 0.15)"
-      }}>
-        <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--color-teal)", letterSpacing: "1px", marginBottom: "10px", textTransform: "uppercase" }}>
+      <div className="flex-[1_1_300px] max-w-full md:max-w-[350px] sticky top-10 bg-[#0e1726]/95 backdrop-blur-xl text-white p-10 rounded-[32px] shadow-lg border border-white/5">
+        <div className="text-[0.7rem] font-bold text-[#b8d49e] tracking-[0.15em] uppercase mb-4">
           Level 2 of 3
         </div>
-        <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "36px", marginTop: 0, marginBottom: "20px", lineHeight: "1.2" }}>
+        <h2 className="font-serif text-[36px] mt-0 mb-6 leading-[1.1]">
           MCI Testing
         </h2>
-        <p style={{ color: "var(--color-primary-100)", fontSize: "16px", lineHeight: "1.6", marginBottom: "30px" }}>
+        <p className="text-[#f5f0e8]/70 text-[15px] leading-[1.6] mb-8">
           This phase assesses Mild Cognitive Impairment through verbal fluency, digit span memory, visual recognition, and delayed recall tasks.
         </p>
-        <div style={{ background: "rgba(255,255,255,0.05)", padding: "20px", borderRadius: "12px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
-            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "var(--color-teal)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "bold" }}>1</div>
-            <span style={{ fontSize: "15px", color: "white", fontWeight: "500" }}>Verbal Fluency</span>
+        <div className="bg-white/5 backdrop-blur-md p-6 rounded-[20px] border border-white/10 flex flex-col gap-5">
+          <div className="flex items-center gap-4">
+            <div className="w-8 h-8 rounded-full bg-[#6b7c52]/20 border border-[#b8d49e]/30 flex items-center justify-center text-[13px] font-bold text-[#b8d49e]">1</div>
+            <span className="text-[15px] text-[#f5f0e8] font-medium">Verbal Fluency</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
-            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "var(--color-teal)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "bold" }}>2</div>
-            <span style={{ fontSize: "15px", color: "white", fontWeight: "500" }}>Digit Span</span>
+          <div className="flex items-center gap-4">
+            <div className="w-8 h-8 rounded-full bg-[#6b7c52]/20 border border-[#b8d49e]/30 flex items-center justify-center text-[13px] font-bold text-[#b8d49e]">2</div>
+            <span className="text-[15px] text-[#f5f0e8] font-medium">Digit Span</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
-            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "var(--color-teal)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "bold" }}>3</div>
-            <span style={{ fontSize: "15px", color: "white", fontWeight: "500" }}>Visual Memory</span>
+          <div className="flex items-center gap-4">
+            <div className="w-8 h-8 rounded-full bg-[#6b7c52]/20 border border-[#b8d49e]/30 flex items-center justify-center text-[13px] font-bold text-[#b8d49e]">3</div>
+            <span className="text-[15px] text-[#f5f0e8] font-medium">Visual Memory</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "var(--color-teal)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "bold" }}>4</div>
-            <span style={{ fontSize: "15px", color: "white", fontWeight: "500" }}>Delayed Recall</span>
+          <div className="flex items-center gap-4">
+            <div className="w-8 h-8 rounded-full bg-[#6b7c52]/20 border border-[#b8d49e]/30 flex items-center justify-center text-[13px] font-bold text-[#b8d49e]">4</div>
+            <span className="text-[15px] text-[#f5f0e8] font-medium">Delayed Recall</span>
           </div>
         </div>
       </div>
 
       {/* === MAIN CONTENT === */}
-      <div style={{ flex: "2 1 600px", minWidth: 0 }}>
-
-      <form onSubmit={handleSubmit}>
+      <div className="flex-[2_1_600px] min-w-0">
+        <form onSubmit={handleSubmit}>
 
         {/* ===== SECTION 1: VERBAL FLUENCY ===== */}
-        <div style={{ background: "var(--color-bg-card)", padding: "40px", borderRadius: "20px", marginBottom: "40px", borderTop: "8px solid var(--color-teal)", boxShadow: "0 10px 30px rgba(27, 42, 65, 0.06)" }}>
-          <h3 style={{ marginTop: 0, color: "var(--color-navy)", fontFamily: "var(--font-serif)", fontSize: "28px" }}>1. Semantic Verbal Fluency ({fluencyCategory.charAt(0).toUpperCase() + fluencyCategory.slice(1)})</h3>
-          <p style={{ color: "#666", fontSize: "14px" }}>{fluencyInstruction}</p>
+        <div className="bg-[#fcfaf7] border border-[#e2dcd0] p-8 md:p-12 rounded-[32px] mb-10 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+          <p className="font-sans text-[0.7rem] font-bold tracking-[0.15em] text-[#6b7c52] uppercase mb-2">SECTION 1 OF 5</p>
+          <h3 className="mt-0 text-[#1a2744] font-serif text-[32px] leading-[1.2] mb-4">Semantic Verbal Fluency</h3>
+          <p className="text-[#4a5578] text-[16px] mb-8 leading-[1.6]">{fluencyInstruction}</p>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "15px", marginBottom: "15px" }}>
-            <div style={{ fontSize: "28px", fontWeight: "bold", fontFamily: "monospace", background: "#fff", padding: "8px 16px", borderRadius: "6px", border: "1px solid #ddd" }}>
+          <div className="flex flex-wrap items-center gap-4 mb-6">
+            <div className="font-mono text-[28px] font-bold bg-white text-[#1a2744] px-5 py-2 rounded-[12px] border border-[#e2dcd0] shadow-sm">
               {fmt(Math.floor(timeLeft / 60))}:{fmt(timeLeft % 60)}
             </div>
             {inputMode === 'idle' && (
-              <>
-                <button type="button" onClick={startVoiceMode} disabled={!micAvailable} style={{ padding: "10px 20px", background: micAvailable ? "#28a745" : "#aaa", color: "white", border: "none", borderRadius: "5px", cursor: micAvailable ? "pointer" : "not-allowed", fontSize: "15px", fontWeight: "bold" }}>
+              <div className="flex gap-4">
+                <button type="button" onClick={startVoiceMode} disabled={!micAvailable} className={`px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all ${micAvailable ? 'bg-[#6b7c52] text-white hover:bg-[#556540]' : 'bg-[#e2dcd0] text-[#4a5578] cursor-not-allowed'}`}>
                   🎤 Start with Voice
                 </button>
-                <button type="button" onClick={startTypingMode} style={{ padding: "10px 20px", background: "#17a2b8", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", fontSize: "15px", fontWeight: "bold" }}>
+                <button type="button" onClick={startTypingMode} className="px-6 py-3 rounded-xl font-bold flex items-center gap-2 text-white bg-[#1a2744] hover:bg-[#2e3f6b] transition-all">
                   ⌨️ Start with Typing
                 </button>
-              </>
+              </div>
             )}
           </div>
 
-          {statusMsg && <p style={{ color: "#555", fontStyle: "italic", fontSize: "14px" }}>{statusMsg}</p>}
+          {statusMsg && <p className="text-[#6b7c52] font-semibold text-[14px] mb-4">{statusMsg}</p>}
 
           {(inputMode === 'typing' || inputMode === 'done') && (
             <textarea
@@ -324,88 +303,95 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
               onChange={(e) => setTranscript(e.target.value)}
               placeholder={`Type ${fluencyCategory} separated by commas: item1, item2, item3...`}
               rows={3}
-              style={{ width: "100%", padding: "16px 20px", fontSize: "16px", borderRadius: "12px", border: "2px solid var(--color-primary-100)", boxSizing: "border-box", resize: "vertical", outline: "none", color: "var(--color-navy)" }}
+              className="w-full px-5 py-4 rounded-[16px] border border-[#d2c8b98c] bg-white text-[#1a2744] text-[16px] outline-none focus:border-[#6b7c52] focus:ring-4 focus:ring-[#6b7c52]/10 transition-all shadow-sm"
             />
           )}
 
           {inputMode === 'recording' && !timerDone && (
-            <button type="button" onClick={stopRecordingAndTranscribe} style={{ padding: "10px 20px", background: "#dc3545", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}>
+            <button type="button" onClick={stopRecordingAndTranscribe} className="px-6 py-3 rounded-xl font-bold bg-[#c62828] text-white hover:bg-[#a92222] transition-all shadow-md">
               ⏹️ Stop Recording
             </button>
           )}
 
           {inputMode === 'transcribing' && (
-            <div style={{ background: "#e8f5e9", padding: "12px", borderRadius: "5px", color: "#2e7d32" }}>⏳ Processing your recording...</div>
+            <div className="bg-[#e8f5e9]/50 border border-[#b8d49e] p-4 rounded-xl text-[#2e7d32] font-medium">⏳ Processing your recording...</div>
           )}
 
           {inputMode === 'done' && transcript && (
-            <div style={{ marginTop: "10px" }}>
-              <p style={{ fontWeight: "bold", color: "#333", marginBottom: "5px" }}>Transcribed (edit if needed):</p>
+            <div className="mt-4">
+              <p className="font-semibold text-[#1a2744] mb-2 text-[14px]">Transcribed (edit if needed):</p>
               <textarea
                 value={transcript}
                 onChange={(e) => setTranscript(e.target.value)}
                 rows={3}
-                style={{ width: "100%", padding: "16px 20px", fontSize: "16px", borderRadius: "12px", border: "2px solid var(--color-primary-100)", boxSizing: "border-box", outline: "none", color: "var(--color-navy)" }}
+                className="w-full px-5 py-4 rounded-[16px] border border-[#d2c8b98c] bg-white text-[#1a2744] text-[16px] outline-none focus:border-[#6b7c52] focus:ring-4 focus:ring-[#6b7c52]/10 transition-all shadow-sm"
               />
             </div>
           )}
 
           {processedAnimals.length > 0 && (
-            <p style={{ fontSize: "13px", color: "#888", marginTop: "5px" }}>Words recorded: {processedAnimals.length}</p>
+            <p className="text-[13px] text-[#4a5578]/80 mt-3 font-medium tracking-wide uppercase">{fluencyCategory} detected: {processedAnimals.length}</p>
           )}
         </div>
 
         {/* ===== SECTION 2: DIGIT SPAN ===== */}
-        <div style={{ background: "var(--color-bg-card)", padding: "40px", borderRadius: "20px", marginBottom: "40px", borderTop: "8px solid var(--color-teal)", boxShadow: "0 10px 30px rgba(27, 42, 65, 0.06)" }}>
-          <h3 style={{ marginTop: 0, color: "var(--color-navy)", fontFamily: "var(--font-serif)", fontSize: "28px" }}>2. Digit Span Test</h3>
-          <p style={{ color: "#3949ab", fontSize: "14px" }}>
+        <div className="bg-[#fcfaf7] border border-[#e2dcd0] p-8 md:p-12 rounded-[32px] mb-10 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+          <p className="font-sans text-[0.7rem] font-bold tracking-[0.15em] text-[#6b7c52] uppercase mb-2">SECTION 2 OF 5</p>
+          <h3 className="mt-0 text-[#1a2744] font-serif text-[32px] leading-[1.2] mb-4">Digit Span Test</h3>
+          <p className="text-[#4a5578] text-[16px] mb-8 leading-[1.6]">
             A sequence of numbers will appear briefly. Memorize them, then enter them <strong>forward</strong> and <strong>backward</strong>.
           </p>
 
           {digitSpanPhase === 'ready' && (
-            <div style={{ textAlign: "center", margin: "20px 0" }}>
-              <p style={{ color: "#5c6bc0", fontSize: "14px" }}>
+            <div className="text-center my-6 bg-white border border-[#e2dcd0] p-8 rounded-2xl shadow-sm">
+              <p className="text-[#4a5578] text-[15px] mb-6">
                 When you click the button below, a sequence of <strong>{digitSequence.length} digits</strong> will appear for <strong>{displayDuration / 1000} seconds</strong>. Memorize them carefully.
               </p>
-              <button type="button" onClick={startDigitSpan} style={{ padding: "14px 28px", background: "#3f51b5", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "16px", fontWeight: "bold" }}>
+              <button type="button" onClick={startDigitSpan} className="px-8 py-3 rounded-xl font-bold bg-[#6b7c52] text-white hover:bg-[#556540] transition-all shadow-md">
                 🧠 Begin Digit Span Test
               </button>
             </div>
           )}
 
           {digitSpanPhase === 'showing' && showSequence && (
-            <div style={{ textAlign: "center", margin: "20px 0" }}>
-              <div style={{ fontSize: "48px", fontWeight: "bold", letterSpacing: "20px", color: "#1a237e", background: "#e8eaf6", padding: "25px", borderRadius: "10px", fontFamily: "monospace" }}>
+            <div className="text-center my-6">
+              <div className="font-mono text-[48px] font-bold tracking-[20px] text-[#1a2744] bg-white border border-[#e2dcd0] py-8 rounded-[24px] shadow-sm mb-4">
                 {digitSequence}
               </div>
-              <p style={{ color: "#5c6bc0", marginTop: "10px", fontSize: "16px" }}>⏱️ Memorize — {digitCountdown}s remaining</p>
+              <p className="text-[#6b7c52] font-semibold text-[16px] animate-pulse">⏱️ Memorize — {digitCountdown}s remaining</p>
             </div>
           )}
 
           {digitSpanPhase === 'input' && (
-            <div style={{ margin: "15px 0" }}>
-              <p style={{ fontWeight: "bold", color: "#283593", marginBottom: "10px" }}>The sequence has been hidden. Now enter it:</p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
+            <div className="my-6">
+              <p className="font-semibold text-[#1a2744] mb-6">The sequence has been hidden. Now enter it:</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label style={{ fontWeight: "500", display: "block", marginBottom: "5px", color: "var(--color-navy)" }}>Forward (left to right):</label>
+                  <label className="block text-[14px] font-semibold text-[#4a5578] mb-2 uppercase tracking-wide">Forward (left to right):</label>
                   <input type="text" inputMode="numeric" pattern="[0-9]*" value={digitForward} onChange={(e) => { if (/^\d*$/.test(e.target.value)) setDigitForward(e.target.value); }}
                     disabled={dontRememberDigitForward}
-                    style={{ width: "100%", padding: "16px", fontSize: "20px", boxSizing: "border-box", borderRadius: "12px", border: "2px solid var(--color-primary-100)", fontFamily: "monospace", letterSpacing: "8px", textAlign: "center", backgroundColor: dontRememberDigitForward ? "var(--color-primary-50)" : "white", color: "var(--color-navy)", marginBottom: "12px", outline: "none" }}
+                    className={`w-full px-5 py-4 text-center rounded-[16px] border font-mono tracking-[8px] text-[20px] mb-4 outline-none transition-all ${dontRememberDigitForward ? 'bg-[#f5f0e8]/50 border-[#e2dcd0]/50 text-transparent' : 'bg-white border-[#d2c8b98c] text-[#1a2744] focus:border-[#6b7c52] shadow-sm'}`}
                     placeholder="e.g. 7392" />
-                  <button type="button" onClick={() => { setDontRememberDigitForward(!dontRememberDigitForward); if(!dontRememberDigitForward) setDigitForward(""); }} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: dontRememberDigitForward ? "2px solid #dc3545" : "1px solid var(--color-primary-100)", background: dontRememberDigitForward ? "#dc3545" : "var(--color-bg-card)", color: dontRememberDigitForward ? "white" : "var(--color-navy)", cursor: "pointer", fontWeight: "600", transition: "all 0.2s" }}>I Don't Remember</button>
+                  <button type="button" onClick={() => { setDontRememberDigitForward(!dontRememberDigitForward); if(!dontRememberDigitForward) setDigitForward(""); }} 
+                    className={`w-full p-3 rounded-xl border font-bold transition-all ${dontRememberDigitForward ? 'border-[#c62828] bg-[#c62828] text-white' : 'border-[#e2dcd0] bg-transparent text-[#4a5578] hover:bg-[#f5f0e8]'}`}>
+                    I Don't Remember
+                  </button>
                 </div>
                 <div>
-                  <label style={{ fontWeight: "500", display: "block", marginBottom: "5px", color: "var(--color-navy)" }}>Backward (right to left):</label>
+                  <label className="block text-[14px] font-semibold text-[#4a5578] mb-2 uppercase tracking-wide">Backward (right to left):</label>
                   <input type="text" inputMode="numeric" pattern="[0-9]*" value={digitBackward} onChange={(e) => { if (/^\d*$/.test(e.target.value)) setDigitBackward(e.target.value); }}
                     disabled={dontRememberDigitBackward}
-                    style={{ width: "100%", padding: "16px", fontSize: "20px", boxSizing: "border-box", borderRadius: "12px", border: "2px solid var(--color-primary-100)", fontFamily: "monospace", letterSpacing: "8px", textAlign: "center", backgroundColor: dontRememberDigitBackward ? "var(--color-primary-50)" : "white", color: "var(--color-navy)", marginBottom: "12px", outline: "none" }}
+                    className={`w-full px-5 py-4 text-center rounded-[16px] border font-mono tracking-[8px] text-[20px] mb-4 outline-none transition-all ${dontRememberDigitBackward ? 'bg-[#f5f0e8]/50 border-[#e2dcd0]/50 text-transparent' : 'bg-white border-[#d2c8b98c] text-[#1a2744] focus:border-[#6b7c52] shadow-sm'}`}
                     placeholder="e.g. 2937" />
-                  <button type="button" onClick={() => { setDontRememberDigitBackward(!dontRememberDigitBackward); if(!dontRememberDigitBackward) setDigitBackward(""); }} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: dontRememberDigitBackward ? "2px solid #dc3545" : "1px solid var(--color-primary-100)", background: dontRememberDigitBackward ? "#dc3545" : "var(--color-bg-card)", color: dontRememberDigitBackward ? "white" : "var(--color-navy)", cursor: "pointer", fontWeight: "600", transition: "all 0.2s" }}>I Don't Remember</button>
+                  <button type="button" onClick={() => { setDontRememberDigitBackward(!dontRememberDigitBackward); if(!dontRememberDigitBackward) setDigitBackward(""); }} 
+                    className={`w-full p-3 rounded-xl border font-bold transition-all ${dontRememberDigitBackward ? 'border-[#c62828] bg-[#c62828] text-white' : 'border-[#e2dcd0] bg-transparent text-[#4a5578] hover:bg-[#f5f0e8]'}`}>
+                    I Don't Remember
+                  </button>
                 </div>
               </div>
               {((digitForward || dontRememberDigitForward) && (digitBackward || dontRememberDigitBackward)) && (
-                <div style={{ textAlign: "center", marginTop: "12px" }}>
-                  <button type="button" onClick={() => setDigitSpanPhase('done')} style={{ padding: "10px 24px", background: "#4caf50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}>
+                <div className="text-center mt-8">
+                  <button type="button" onClick={() => setDigitSpanPhase('done')} className="px-8 py-3 bg-[#1a2744] text-white rounded-xl font-bold shadow-md hover:bg-[#2e3f6b] transition-all">
                     ✅ Lock Answers
                   </button>
                 </div>
@@ -414,7 +400,7 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
           )}
 
           {digitSpanPhase === 'done' && (
-            <div style={{ background: "#e8f5e9", padding: "10px 15px", borderRadius: "5px", color: "#2e7d32", fontWeight: "bold", marginTop: "10px" }}>
+            <div className="bg-[#6b7c52]/10 border border-[#6b7c52]/30 p-4 rounded-xl text-[#6b7c52] font-semibold mt-4">
               ✅ Digit Span answers locked (Forward: {digitForward}, Backward: {digitBackward})
             </div>
           )}
@@ -422,35 +408,32 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
 
         {/* ===== SECTION 3: VISUAL RECOGNITION ===== */}
         {vrData && (
-          <div style={{ background: "var(--color-bg-card)", padding: "40px", borderRadius: "20px", marginBottom: "40px", borderTop: "8px solid var(--color-teal)", boxShadow: "0 10px 30px rgba(27, 42, 65, 0.06)" }}>
-            <h3 style={{ marginTop: 0, color: "var(--color-navy)", fontFamily: "var(--font-serif)", fontSize: "28px" }}>3. Visual Recognition</h3>
-            <p style={{ color: "#d32f2f", fontSize: "14px" }}>
+          <div className="bg-[#fcfaf7] border border-[#e2dcd0] p-8 md:p-12 rounded-[32px] mb-10 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+            <p className="font-sans text-[0.7rem] font-bold tracking-[0.15em] text-[#6b7c52] uppercase mb-2">SECTION 3 OF 5</p>
+            <h3 className="mt-0 text-[#1a2744] font-serif text-[32px] leading-[1.2] mb-4">Visual Recognition</h3>
+            <p className="text-[#4a5578] text-[16px] mb-8 leading-[1.6]">
               You will see a set of objects. Memorize them, then identify which ones you saw from a mixed set.
             </p>
 
             {vrPhase === 'ready' && (
-              <div style={{ textAlign: "center", margin: "20px 0" }}>
-                <p style={{ color: "#e53935", fontSize: "14px" }}>
+              <div className="text-center my-6 bg-white border border-[#e2dcd0] p-8 rounded-2xl shadow-sm">
+                <p className="text-[#4a5578] text-[15px] mb-6">
                   You will see <strong>{vrData.targets?.length || 4} objects</strong> for <strong>{(vrData.display_duration || 6000) / 1000} seconds</strong>. Memorize them carefully.
                 </p>
-                <button type="button" onClick={startVisualRecognition} style={{ padding: "14px 28px", background: "#c62828", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "16px", fontWeight: "bold" }}>
+                <button type="button" onClick={startVisualRecognition} className="px-8 py-3 rounded-xl font-bold bg-[#6b7c52] text-white hover:bg-[#556540] transition-all shadow-md">
                   👁️ Begin Visual Recognition
                 </button>
               </div>
             )}
 
             {vrPhase === 'encoding' && (
-              <div style={{ textAlign: "center", margin: "20px 0" }}>
-                <p style={{ color: "#c62828", fontSize: "16px", fontWeight: "bold", marginBottom: "15px" }}>⏱️ Memorize these — {vrCountdown}s remaining</p>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "15px", maxWidth: "400px", margin: "0 auto" }}>
+              <div className="text-center my-6">
+                <p className="text-[#6b7c52] text-[16px] font-bold mb-6 animate-pulse">⏱️ Memorize these — {vrCountdown}s remaining</p>
+                <div className="grid grid-cols-2 gap-4 max-w-[400px] mx-auto">
                   {vrData.targets?.map(obj => (
-                    <div key={obj.id} style={{
-                      background: "#fff", borderRadius: "12px", padding: "20px 10px",
-                      textAlign: "center", border: "2px solid #ef9a9a",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
-                    }}>
-                      <div style={{ fontSize: "52px", marginBottom: "8px" }}>{obj.emoji}</div>
-                      <div style={{ fontSize: "16px", fontWeight: "bold", color: "#333" }}>{obj.label}</div>
+                    <div key={obj.id} className="bg-white rounded-2xl p-6 text-center border-2 border-[#6b7c52]/30 shadow-md">
+                      <div className="text-[52px] mb-2 drop-shadow-sm">{obj.emoji}</div>
+                      <div className="text-[16px] font-bold text-[#1a2744]">{obj.label}</div>
                     </div>
                   ))}
                 </div>
@@ -458,33 +441,24 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
             )}
 
             {vrPhase === 'recognition' && (
-              <div style={{ margin: "15px 0" }}>
-                <p style={{ fontWeight: "bold", color: "#c62828", marginBottom: "12px", fontSize: "15px" }}>
-                  Select ALL the objects you remember seeing:
-                </p>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
+              <div className="my-6">
+                <p className="font-semibold text-[#1a2744] mb-6 text-[16px]">Select ALL the objects you remember seeing:</p>
+                <div className="grid grid-cols-3 gap-4">
                   {vrData.mixed_set?.map(obj => {
                     const isSelected = vrSelected.includes(obj.id);
                     return (
                       <button key={obj.id} type="button" onClick={() => toggleVrSelection(obj.id)}
-                        style={{
-                          padding: "16px 8px", borderRadius: "12px",
-                          border: isSelected ? "3px solid #c62828" : "2px solid #e0e0e0",
-                          background: isSelected ? "#ffebee" : "#fff",
-                          cursor: "pointer", textAlign: "center",
-                          transition: "all 0.2s",
-                          boxShadow: isSelected ? "0 3px 10px rgba(198,40,40,0.2)" : "0 1px 3px rgba(0,0,0,0.08)"
-                        }}>
-                        <div style={{ fontSize: "40px", marginBottom: "6px" }}>{obj.emoji}</div>
-                        <div style={{ fontSize: "14px", fontWeight: isSelected ? "bold" : "500", color: isSelected ? "#c62828" : "#555" }}>{obj.label}</div>
-                        {isSelected && <div style={{ marginTop: "4px", color: "#c62828", fontSize: "12px" }}>✅ Selected</div>}
+                        className={`p-4 rounded-[16px] border-2 transition-all duration-200 text-center ${isSelected ? 'border-[#6b7c52] bg-[#6b7c52]/10 shadow-sm' : 'border-[#e2dcd0] bg-white hover:border-[#6b7c52]/50'}`}>
+                        <div className="text-[40px] mb-2">{obj.emoji}</div>
+                        <div className={`text-[14px] ${isSelected ? 'font-bold text-[#6b7c52]' : 'font-medium text-[#4a5578]'}`}>{obj.label}</div>
+                        {isSelected && <div className="mt-2 text-[#6b7c52] text-[12px] font-bold">✅ Selected</div>}
                       </button>
                     );
                   })}
                 </div>
                 {vrSelected.length > 0 && (
-                  <div style={{ textAlign: "center", marginTop: "15px" }}>
-                    <button type="button" onClick={confirmVrSelection} style={{ padding: "10px 24px", background: "#4caf50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}>
+                  <div className="text-center mt-8">
+                    <button type="button" onClick={() => setVrPhase('done')} className="px-8 py-3 bg-[#1a2744] text-white rounded-xl font-bold shadow-md hover:bg-[#2e3f6b] transition-all">
                       ✅ Confirm Selection ({vrSelected.length} selected)
                     </button>
                   </div>
@@ -493,7 +467,7 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
             )}
 
             {vrPhase === 'done' && (
-              <div style={{ background: "#e8f5e9", padding: "10px 15px", borderRadius: "5px", color: "#2e7d32", fontWeight: "bold", marginTop: "10px" }}>
+              <div className="bg-[#6b7c52]/10 border border-[#6b7c52]/30 p-4 rounded-xl text-[#6b7c52] font-semibold mt-4">
                 ✅ Visual Recognition complete — {vrSelected.length} objects selected
               </div>
             )}
@@ -502,64 +476,46 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
 
         {/* ===== SECTION 4: VISUAL PATTERN RECOGNITION ===== */}
         {patternData && (
-          <div style={{ background: "var(--color-bg-card)", padding: "40px", borderRadius: "20px", marginBottom: "40px", borderTop: "8px solid var(--color-teal)", boxShadow: "0 10px 30px rgba(27, 42, 65, 0.06)" }}>
-            <h3 style={{ marginTop: 0, color: "var(--color-navy)", fontFamily: "var(--font-serif)", fontSize: "28px" }}>4. Pattern Recognition</h3>
-            <p style={{ color: "#bf360c", fontSize: "14px", marginBottom: "15px" }}>
+          <div className="bg-[#fcfaf7] border border-[#e2dcd0] p-8 md:p-12 rounded-[32px] mb-10 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+            <p className="font-sans text-[0.7rem] font-bold tracking-[0.15em] text-[#6b7c52] uppercase mb-2">SECTION 4 OF 5</p>
+            <h3 className="mt-0 text-[#1a2744] font-serif text-[32px] leading-[1.2] mb-4">Pattern Recognition</h3>
+            <p className="text-[#4a5578] text-[16px] mb-8 leading-[1.6]">
               Look at the pattern and select what comes next.
             </p>
 
-            <div style={{
-              background: "#fff8e1", padding: "20px", borderRadius: "10px",
-              border: "1px solid #ffecb3", textAlign: "center", marginBottom: "20px"
-            }}>
-              <p style={{ fontSize: "14px", color: "#795548", marginBottom: "12px", fontWeight: "bold" }}>
+            <div className="bg-white border border-[#e2dcd0] p-6 md:p-8 rounded-[24px] text-center mb-8 shadow-sm">
+              <p className="text-[15px] text-[#4a5578] mb-6 font-bold tracking-wide uppercase">
                 {patternData.instruction || "What comes next?"}
               </p>
-              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+              <div className="flex justify-center flex-wrap gap-4">
                 {patternData.sequence?.map((item, i) => (
-                  <div key={i} style={{
-                    fontSize: "36px", padding: "10px 14px",
-                    background: "#fff", borderRadius: "10px",
-                    border: "2px solid #ffe0b2",
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.08)"
-                  }}>
+                  <div key={i} className="text-[36px] px-5 py-3 bg-[#f5f0e8] rounded-[16px] border border-[#e2dcd0] shadow-sm text-[#1a2744]">
                     {item}
                   </div>
                 ))}
-                <div style={{
-                  fontSize: "36px", padding: "10px 14px",
-                  background: "#fff3e0", borderRadius: "10px",
-                  border: "3px dashed #ff9800",
-                  color: "#ff9800", fontWeight: "bold"
-                }}>
+                <div className="text-[36px] px-6 py-3 bg-white rounded-[16px] border-2 border-dashed border-[#6b7c52] text-[#6b7c52] font-bold">
                   ?
                 </div>
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {patternData.options && Object.entries(patternData.options).map(([key, value]) => {
                 const isActive = selectedPatternAnswer === key;
                 return (
                   <button key={key} type="button" onClick={() => setSelectedPatternAnswer(key)}
-                    style={selBtnStyle(isActive)}>
-                    <span style={{
-                      display: "inline-block", width: "30px", height: "30px",
-                      borderRadius: "50%", lineHeight: "30px", textAlign: "center",
-                      marginRight: "10px", fontSize: "14px",
-                      background: isActive ? "rgba(255,255,255,0.3)" : "#fff3e0",
-                      color: isActive ? "#fff" : "#e65100", fontWeight: "bold"
-                    }}>
+                    className={getSelBtnStyle(isActive)}>
+                    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full border mr-4 text-[13px] font-bold transition-all ${isActive ? 'bg-[#6b7c52] border-[#6b7c52] text-white' : 'bg-transparent border-[#e2dcd0] text-[#1a2744]'}`}>
                       {key}
                     </span>
-                    <span style={{ fontSize: "24px" }}>{value}</span>
+                    <span className="text-[24px]">{value}</span>
                   </button>
                 );
               })}
             </div>
 
             {selectedPatternAnswer && (
-              <div style={{ textAlign: "center", marginTop: "12px", color: "#2e7d32", background: "#e8f5e9", padding: "8px", borderRadius: "5px", fontWeight: "bold", fontSize: "14px" }}>
+              <div className="text-center mt-6 bg-[#6b7c52]/10 border border-[#6b7c52]/30 p-3 rounded-xl text-[#6b7c52] font-semibold">
                 ✅ Selected: Option {selectedPatternAnswer}
               </div>
             )}
@@ -567,19 +523,21 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
         )}
 
         {/* ===== SECTION 5: DELAYED RECALL ===== */}
-        <div style={{ background: "var(--color-bg-card)", padding: "40px", borderRadius: "20px", marginBottom: "40px", borderTop: "8px solid var(--color-teal)", boxShadow: "0 10px 30px rgba(27, 42, 65, 0.06)" }}>
-          <h3 style={{ marginTop: 0, color: "var(--color-navy)", fontFamily: "var(--font-serif)", fontSize: "28px" }}>5. Delayed Recall</h3>
-          <p style={{ color: "#155724", fontSize: "14px", marginBottom: "10px" }}>
-            Earlier in Phase 1, you were asked to remember some words.
-            <br /><strong>Instruction:</strong> Now recall and type them from memory.
+        <div className="bg-[#fcfaf7] border border-[#e2dcd0] p-8 md:p-12 rounded-[32px] mb-10 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+          <p className="font-sans text-[0.7rem] font-bold tracking-[0.15em] text-[#6b7c52] uppercase mb-2">SECTION 5 OF 5</p>
+          <h3 className="mt-0 text-[#1a2744] font-serif text-[32px] leading-[1.2] mb-4">Delayed Recall</h3>
+          <p className="text-[#4a5578] text-[16px] mb-8 leading-[1.6]">
+            Earlier in Phase 1, you were asked to remember some words.<br/>
+            <strong>Now recall and type them from memory.</strong>
           </p>
+
           <input
             type="text"
             placeholder="e.g., word1, word2, word3"
             value={delayedRecall}
             onChange={(e) => setDelayedRecall(e.target.value)}
             disabled={dontRememberDelayedRecall}
-            style={{ width: "100%", padding: "16px 20px", fontSize: "16px", boxSizing: "border-box", borderRadius: "12px", border: "2px solid var(--color-primary-100)", backgroundColor: dontRememberDelayedRecall ? "var(--color-primary-50)" : "white", color: "var(--color-navy)", marginBottom: "15px", outline: "none" }}
+            className={`w-full px-5 py-4 rounded-[16px] border text-[16px] mb-6 outline-none transition-all ${dontRememberDelayedRecall ? 'bg-[#f5f0e8]/50 border-[#e2dcd0]/50 text-[#1a2744]/40' : 'bg-white border-[#d2c8b98c] text-[#1a2744] focus:border-[#6b7c52] focus:ring-4 focus:ring-[#6b7c52]/10 shadow-sm'}`}
           />
           <button
             type="button"
@@ -587,29 +545,21 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
               setDontRememberDelayedRecall(!dontRememberDelayedRecall);
               if (!dontRememberDelayedRecall) setDelayedRecall("");
             }}
-            style={{ width: "100%", padding: "16px", borderRadius: "12px", border: dontRememberDelayedRecall ? "2px solid #dc3545" : "1px solid var(--color-primary-100)", background: dontRememberDelayedRecall ? "#dc3545" : "var(--color-bg-card)", color: dontRememberDelayedRecall ? "white" : "var(--color-navy)", fontSize: "16px", fontWeight: "600", cursor: "pointer", transition: "all 0.2s" }}
+            className={`w-full py-[1.1rem] px-6 text-[1.05rem] font-bold rounded-[16px] border transition-all duration-300 ${dontRememberDelayedRecall ? 'border-[#c62828] bg-[#c62828] text-white' : 'border-[#d2c8b98c] bg-transparent text-[#4a5578] hover:bg-[#f5f0e8]/50 hover:text-[#1a2744]'}`}
           >
             I Don't Remember
           </button>
         </div>
 
         {/* ===== SUBMIT ===== */}
-        <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "12px", alignItems: "center" }}>
+        <div className="text-center flex flex-col gap-4 items-center mb-10">
           <button type="submit" disabled={loading}
-            style={{
-              padding: "16px 40px",
-              background: loading ? "var(--color-primary-100)" : "var(--color-teal)",
-              color: "white", border: "none", borderRadius: "12px",
-              fontSize: "16px", fontWeight: "600",
-              cursor: loading ? "not-allowed" : "pointer",
-              transition: "all 0.2s",
-              boxShadow: "0 4px 12px rgba(143, 163, 150, 0.3)",
-              minWidth: "300px"
-            }}>
+            className="w-full sm:w-[400px] py-[1.15rem] bg-[#6b7c52] text-white font-semibold text-[1.1rem] rounded-[16px] hover:bg-[#556540] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_4px_12px_rgba(107,124,82,0.2)] hover:shadow-[0_8px_20px_rgba(107,124,82,0.25)] hover:-translate-y-[2px]"
+          >
             {loading ? "Analyzing..." : "Submit Level 2 Assessment"}
           </button>
-          <p style={{ fontSize: "13px", color: "#888", margin: 0 }}>
-            You can submit even if some sections are unanswered — unanswered parts will be scored as 0.
+          <p className="text-[13px] text-[#4a5578]/60 m-0 font-medium tracking-wide">
+            You can submit even if some sections are unanswered.
           </p>
         </div>
         </form>

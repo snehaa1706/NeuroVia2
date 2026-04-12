@@ -13,7 +13,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ title, description, isCompl
     <div className={`flex flex-col h-full p-6 rounded-3xl border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
       isCompleted 
         ? 'bg-(--color-surface-alt) border-(--color-sage)/40 shadow-md' 
-        : 'bg-white border-(--color-border) shadow-lg hover:border-(--color-sage)/50'
+        : 'bg-(--color-bg) hover:bg-[#e2dcd0] border-(--color-border) shadow-lg hover:border-(--color-sage)/50'
     }`}>
       <div className="flex-1">
         <h3 className="text-xl font-bold text-(--color-navy) mb-2">{title}</h3>

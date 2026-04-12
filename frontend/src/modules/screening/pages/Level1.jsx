@@ -12,43 +12,26 @@ const AD8_QUESTIONS = [
   "Daily problems with thinking and/or memory?"
 ];
 
-// Styles
-const mcqBtnStyle = (isSelected) => ({
-  padding: "16px 20px",
-  borderRadius: "12px",
-  border: isSelected ? "2px solid var(--color-navy)" : "1px solid var(--color-primary-100)",
-  background: isSelected ? "var(--color-navy)" : "var(--color-bg-card)",
-  color: isSelected ? "#fff" : "var(--color-navy)",
-  fontSize: "16px",
-  fontWeight: isSelected ? "600" : "400",
-  cursor: "pointer",
-  transition: "all 0.2s ease",
-  boxShadow: isSelected ? "0 4px 12px rgba(27, 42, 65, 0.2)" : "0 2px 4px rgba(0,0,0,0.02)",
-  transform: isSelected ? "scale(1.02)" : "scale(1)",
-  minHeight: "54px",
-  textAlign: "center"
-});
+// Glassy Sage Base Button Styles
+const getMcqBtnClass = (isSelected) => {
+  return `w-full text-left p-5 rounded-2xl border transition-all duration-300 font-medium ${
+    isSelected 
+      ? 'bg-[#6b7c52]/15 border-[#6b7c52]/50 text-[#6b7c52] shadow-[0_4px_12px_rgba(107,124,82,0.15)] ring-1 ring-[#6b7c52]/30'
+      : 'bg-white/40 backdrop-blur-md border-white/60 text-[#1a2744] hover:bg-white/70 hover:border-white hover:shadow-sm hover:-translate-y-[1px]'
+  }`;
+};
 
-const ad8BtnStyle = (isSelected) => ({
-  flex: 1,
-  padding: "16px 20px",
-  borderRadius: "12px",
-  border: isSelected ? "2px solid var(--color-navy)" : "1px solid var(--color-primary-100)",
-  background: isSelected ? "var(--color-navy)" : "var(--color-bg-card)",
-  color: isSelected ? "white" : "var(--color-navy)",
-  fontSize: "16px",
-  fontWeight: isSelected ? "600" : "500",
-  cursor: "pointer",
-  transition: "all 0.2s ease",
-  textAlign: "center",
-  boxShadow: isSelected ? "0 4px 12px rgba(27, 42, 65, 0.2)" : "0 2px 4px rgba(0,0,0,0.02)",
-  minHeight: "54px"
-});
+const getAd8BtnClass = (isSelected) => {
+  return `flex-1 p-[1.1rem] rounded-[16px] border transition-all duration-300 font-medium text-center ${
+    isSelected 
+      ? 'bg-[#6b7c52]/15 border-[#6b7c52]/50 text-[#6b7c52] shadow-[0_4px_12px_rgba(107,124,82,0.15)] ring-1 ring-[#6b7c52]/30'
+      : 'bg-white/40 backdrop-blur-md border-white/60 text-[#1a2744] hover:bg-white/70 hover:border-white hover:shadow-sm hover:-translate-y-[1px]'
+  }`;
+};
 
 export default function Level1({ assessmentId, initialContext, onNext }) {
   const assessment_id = assessmentId || localStorage.getItem("screening_assessmentId");
 
-  // Level 1 context from backend
   const [level1Context, setLevel1Context] = useState(initialContext || null);
 
   useEffect(() => {
@@ -64,11 +47,9 @@ export default function Level1({ assessmentId, initialContext, onNext }) {
   const orientationQuestions = level1Context?.orientation?.questions || [];
   const recallWords = level1Context?.recall_words || [];
 
-  // Flow State
   const [step, setStep] = useState('memorize');
   const [loading, setLoading] = useState(false);
 
-  // Form State
   const [ad8, setAd8] = useState(Array(8).fill(null));
   const [orientationAnswers, setOrientationAnswers] = useState({});
   const [recall, setRecall] = useState("");
@@ -117,155 +98,147 @@ export default function Level1({ assessmentId, initialContext, onNext }) {
     }
   };
 
-  if (!assessment_id) return <div style={{ padding: "20px", textAlign: "center" }}>No active assessment ID found. Please go back and hit Start Screening.</div>;
+  if (!assessment_id) return <div className="p-5 text-center text-[#4a5578]">No active assessment ID found. Please go back and hit Start Screening.</div>;
 
-  // --- MEMORY REGISTRATION PHASE ---
   if (step === 'memorize') {
     return (
-      <div style={{ padding: "40px 20px", maxWidth: "600px", margin: "auto", textAlign: "center", background: "var(--color-bg-card)", borderRadius: "20px", marginTop: "30px", borderTop: "8px solid var(--color-teal)", boxShadow: "0 10px 30px rgba(27, 42, 65, 0.05)" }}>
-        <h2 style={{ fontFamily: "var(--font-serif)", color: "var(--color-navy)", fontSize: "36px", marginBottom: "30px" }}>Phase 1: Foundation</h2>
-        <div style={{ padding: "20px" }}>
-          <h3 style={{ color: "var(--color-teal-dark)" }}>Memory Registration</h3>
-          <p style={{ fontSize: "18px", marginBottom: "10px", color: "var(--color-text-secondary)" }}>Please read and remember the following words:</p>
-          <div style={{ fontSize: "28px", fontWeight: "700", color: "var(--color-navy)", background: "var(--color-bg-hover)", padding: "20px", borderRadius: "12px", letterSpacing: "2px", margin: "20px 0", border: "1px solid var(--color-primary-50)" }}>
-            {recallWords.map(w => w.toUpperCase()).join(" - ")}
+      <div className="w-full max-w-[600px] mx-auto text-center mt-8 animate-[fadeIn_0.4s_ease-out]">
+        <div className="bg-[#fcfaf7] border border-[#e2dcd0] rounded-[32px] p-10 md:p-14 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+          <h2 className="font-serif text-[#1a2744] text-[36px] mb-8 leading-[1.2]">Phase 1: Foundation</h2>
+          <div>
+            <p className="font-sans text-[0.75rem] font-bold tracking-[0.15em] text-[#6b7c52] uppercase mb-4">Memory Registration</p>
+            <p className="text-[17px] mb-6 text-[#4a5578]">Please read and remember the following words:</p>
+            
+            <div className="bg-white border border-[#e2dcd0] py-8 px-4 rounded-[20px] shadow-sm mb-8">
+              <p className="font-sans text-[22px] md:text-[26px] font-bold text-[#1a2744] tracking-[0.1em] leading-relaxed">
+                {recallWords.map(w => w.toUpperCase()).join(" - ")}
+              </p>
+            </div>
+            
+            <button
+              onClick={() => setStep('test')}
+              className="w-full sm:w-auto px-8 py-4 bg-[#6b7c52] text-white font-semibold text-[1.05rem] rounded-[16px] hover:bg-[#556540] transition-all duration-300 hover:-translate-y-[2px] shadow-[0_4px_12px_rgba(107,124,82,0.2)] hover:shadow-[0_8px_20px_rgba(107,124,82,0.25)]"
+            >
+              I have memorized the words
+            </button>
           </div>
-          <button
-            onClick={() => setStep('test')}
-            style={{ padding: "16px 30px", background: "var(--color-teal)", color: "white", border: "none", borderRadius: "12px", cursor: "pointer", fontSize: "16px", fontWeight: "600", boxShadow: "0 4px 12px rgba(143, 163, 150, 0.3)" }}>
-            I have memorized the words
-          </button>
         </div>
       </div>
     );
   }
 
-  // --- TESTING PHASE ---
   return (
-    <div style={{ padding: "40px", maxWidth: "1200px", margin: "auto", display: "flex", gap: "40px", alignItems: "flex-start", flexWrap: "wrap" }}>
+    <div className="w-full max-w-[1200px] mx-auto flex flex-col md:flex-row gap-10 items-start p-4 animate-[fadeIn_0.4s_ease-out]">
       
       {/* === STICKY SIDEBAR === */}
-      <div style={{ 
-        flex: "1 1 300px", 
-        maxWidth: "350px",
-        position: "sticky", 
-        top: "40px", 
-        background: "var(--color-navy)", 
-        color: "white", 
-        padding: "40px", 
-        borderRadius: "24px",
-        boxShadow: "0 10px 30px rgba(27, 42, 65, 0.15)"
-      }}>
-        <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--color-teal)", letterSpacing: "1px", marginBottom: "10px", textTransform: "uppercase" }}>
+      <div className="flex-[1_1_300px] max-w-full md:max-w-[350px] sticky top-10 bg-[#0e1726]/95 backdrop-blur-xl text-white p-10 rounded-[32px] shadow-lg border border-white/5">
+        <div className="text-[0.7rem] font-bold text-[#b8d49e] tracking-[0.15em] uppercase mb-4">
           Level 1 of 3
         </div>
-        <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "36px", marginTop: 0, marginBottom: "20px", lineHeight: "1.2" }}>
-          Foundation Testing
+        <h2 className="font-serif text-[36px] mt-0 mb-6 leading-[1.1]">
+          Foundation<br/><span className="text-[#f5f0e8]/90 italic">Testing</span>
         </h2>
-        <p style={{ color: "var(--color-primary-100)", fontSize: "16px", lineHeight: "1.6", marginBottom: "30px" }}>
+        <p className="text-[#f5f0e8]/70 text-[15px] leading-[1.6] mb-8">
           This phase assesses basic cognitive function through informant feedback, orientation questions, and immediate memory recall.
         </p>
-        <div style={{ background: "rgba(255,255,255,0.05)", padding: "20px", borderRadius: "12px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
-            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "var(--color-teal)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "bold" }}>1</div>
-            <span style={{ fontSize: "15px", color: "white", fontWeight: "500" }}>AD8 Interview</span>
+        <div className="bg-white/5 backdrop-blur-md p-6 rounded-[20px] border border-white/10 flex flex-col gap-5">
+          <div className="flex items-center gap-4">
+            <div className="w-8 h-8 rounded-full bg-[#6b7c52]/20 border border-[#b8d49e]/30 flex items-center justify-center text-[13px] font-bold text-[#b8d49e]">1</div>
+            <span className="text-[15px] text-[#f5f0e8] font-medium">AD8 Interview</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
-            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "var(--color-teal)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "bold" }}>2</div>
-            <span style={{ fontSize: "15px", color: "white", fontWeight: "500" }}>Orientation</span>
+          <div className="flex items-center gap-4">
+            <div className="w-8 h-8 rounded-full bg-[#6b7c52]/20 border border-[#b8d49e]/30 flex items-center justify-center text-[13px] font-bold text-[#b8d49e]">2</div>
+            <span className="text-[15px] text-[#f5f0e8] font-medium">Orientation</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "var(--color-teal)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "bold" }}>3</div>
-            <span style={{ fontSize: "15px", color: "white", fontWeight: "500" }}>Memory Recall</span>
+          <div className="flex items-center gap-4">
+            <div className="w-8 h-8 rounded-full bg-[#6b7c52]/20 border border-[#b8d49e]/30 flex items-center justify-center text-[13px] font-bold text-[#b8d49e]">3</div>
+            <span className="text-[15px] text-[#f5f0e8] font-medium">Memory Recall</span>
           </div>
         </div>
       </div>
 
       {/* === MAIN CONTENT === */}
-      <div style={{ flex: "2 1 600px", minWidth: 0 }}>
-        <form onSubmit={handleSubmit}>
+      <div className="flex-[2_1_600px] min-w-0">
+        <form onSubmit={(e) => handleSubmit(e, false)}>
 
         {/* === AD8 === */}
-        <div style={{ background: "var(--color-bg-card)", padding: "40px", borderRadius: "20px", marginBottom: "40px", borderTop: "8px solid var(--color-teal)", boxShadow: "0 10px 30px rgba(27, 42, 65, 0.06)" }}>
-          <h3 style={{ marginTop: 0, color: "var(--color-navy)", fontFamily: "var(--font-serif)", fontSize: "28px" }}>1. Eight-item Informant Interview (AD8)</h3>
-          <p style={{ color: "var(--color-text-secondary)", fontSize: "16px", marginBottom: "25px", lineHeight: "1.6" }}>Has there been a change in the patient's memory, problem-solving abilities, or orientation?</p>
+        <div className="bg-[#fcfaf7] border border-[#e2dcd0] p-8 md:p-12 rounded-[32px] mb-10 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+          <p className="font-sans text-[0.7rem] font-bold tracking-[0.15em] text-[#6b7c52] uppercase mb-2">SECTION 1 OF 3</p>
+          <h3 className="mt-0 text-[#1a2744] font-serif text-[32px] leading-[1.2] mb-4">Eight-item Informant Interview</h3>
+          <p className="text-[#4a5578] text-[16px] mb-8 leading-[1.6]">Has there been a change in the patient's memory, problem-solving abilities, or orientation?</p>
 
-          {AD8_QUESTIONS.map((question, i) => (
-            <div key={i} style={{ marginBottom: "24px", background: "var(--color-bg-hover)", padding: "24px", borderRadius: "16px", border: "1px solid var(--color-primary-50)" }}>
-              <p style={{ margin: "0 0 20px 0", fontWeight: "600", fontSize: "18px", color: "var(--color-navy)", lineHeight: "1.5" }}>{i + 1}. {question}</p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                <button type="button" onClick={() => handleAd8Change(i, true)} style={ad8BtnStyle(ad8[i] === true)}>
-                  Yes (A change)
-                </button>
-                <button type="button" onClick={() => handleAd8Change(i, false)} style={ad8BtnStyle(ad8[i] === false)}>
-                  No (No change)
-                </button>
+          <div className="space-y-6">
+            {AD8_QUESTIONS.map((question, i) => (
+              <div key={i} className="bg-[#f5f0e8] border border-[#e2dcd0]/50 p-6 rounded-[24px] shadow-sm">
+                <p className="m-0 mb-5 font-semibold text-[17px] text-[#1a2744] leading-[1.5]">{i + 1}. {question}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button type="button" onClick={() => handleAd8Change(i, true)} className={getAd8BtnClass(ad8[i] === true)}>
+                    Yes <span className="opacity-60 text-[13px] font-normal block mt-1">(A change)</span>
+                  </button>
+                  <button type="button" onClick={() => handleAd8Change(i, false)} className={getAd8BtnClass(ad8[i] === false)}>
+                    No <span className="opacity-60 text-[13px] font-normal block mt-1">(No change)</span>
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        {/* === ORIENTATION (MCQ) === */}
-        <div style={{ background: "var(--color-bg-card)", padding: "40px", borderRadius: "20px", marginBottom: "40px", borderTop: "8px solid var(--color-teal)", boxShadow: "0 10px 30px rgba(27, 42, 65, 0.06)" }}>
-          <h3 style={{ marginTop: 0, color: "var(--color-navy)", fontFamily: "var(--font-serif)", fontSize: "28px" }}>2. Orientation</h3>
-          <p style={{ color: "var(--color-text-secondary)", fontSize: "16px", marginBottom: "25px", lineHeight: "1.6" }}>Please select the best answer for each question.</p>
+        {/* === ORIENTATION === */}
+        <div className="bg-[#fcfaf7] border border-[#e2dcd0] p-8 md:p-12 rounded-[32px] mb-10 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+          <p className="font-sans text-[0.7rem] font-bold tracking-[0.15em] text-[#6b7c52] uppercase mb-2">SECTION 2 OF 3</p>
+          <h3 className="mt-0 text-[#1a2744] font-serif text-[32px] leading-[1.2] mb-4">Orientation</h3>
+          <p className="text-[#4a5578] text-[16px] mb-8 leading-[1.6]">Please select the best answer for each question.</p>
 
           {orientationQuestions.length === 0 && (
-            <div style={{ background: "#fff3cd", padding: "12px", borderRadius: "5px", color: "#856404", fontSize: "14px", marginBottom: "15px" }}>
+            <div className="bg-[#f5eef8] p-4 rounded-xl text-[#6c3483] text-sm mb-6 border border-[#e8daef]">
               ⚠️ Orientation questions were not loaded. Please go back and start a new screening.
             </div>
           )}
 
-          {orientationQuestions.map((q, idx) => (
-            <div key={q.id} style={{ marginBottom: "24px", background: "var(--color-bg-hover)", padding: "24px", borderRadius: "16px", border: "1px solid var(--color-primary-50)" }}>
-              <p style={{ fontWeight: "600", fontSize: "18px", marginBottom: "20px", color: "var(--color-navy)" }}>
-                {idx + 1}. {q.label}
-              </p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                {q.options.map(opt => (
-                  <button
-                    key={opt}
-                    type="button"
-                    onClick={() => handleOrientationSelect(q.id, opt)}
-                    style={mcqBtnStyle(orientationAnswers[q.id] === opt)}
-                  >
-                    {opt}
-                  </button>
-                ))}
+          <div className="space-y-6">
+            {orientationQuestions.map((q, idx) => (
+              <div key={q.id} className="bg-[#f5f0e8] border border-[#e2dcd0]/50 p-6 rounded-[24px] shadow-sm">
+                <p className="font-semibold text-[17px] mb-5 text-[#1a2744] leading-[1.4]">
+                  {idx + 1}. {q.label}
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {q.options.map(opt => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => handleOrientationSelect(q.id, opt)}
+                      className={getMcqBtnClass(orientationAnswers[q.id] === opt)}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* === MEMORY RECALL === */}
-        <div style={{ background: "var(--color-bg-card)", padding: "40px", borderRadius: "20px", marginBottom: "40px", borderTop: "8px solid var(--color-teal)", boxShadow: "0 10px 30px rgba(27, 42, 65, 0.06)" }}>
-          <h3 style={{ marginTop: 0, color: "var(--color-navy)", fontFamily: "var(--font-serif)", fontSize: "28px" }}>3. Memory Recall</h3>
-          <p style={{ color: "var(--color-text-secondary)", fontSize: "16px", marginBottom: "25px", lineHeight: "1.6" }}>Enter the words you memorized earlier.</p>
+        <div className="bg-[#fcfaf7] border border-[#e2dcd0] p-8 md:p-12 rounded-[32px] mb-10 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+          <p className="font-sans text-[0.7rem] font-bold tracking-[0.15em] text-[#6b7c52] uppercase mb-2">SECTION 3 OF 3</p>
+          <h3 className="mt-0 text-[#1a2744] font-serif text-[32px] leading-[1.2] mb-4">Memory Recall</h3>
+          <p className="text-[#4a5578] text-[16px] mb-8 leading-[1.6]">Enter the words you memorized earlier.</p>
+          
           <input
             type="text"
             placeholder="e.g., word1, word2, word3"
             value={recall}
             onChange={(e) => setRecall(e.target.value)}
             disabled={dontRememberRecall}
-            style={{ width: "100%", padding: "16px 20px", boxSizing: "border-box", borderRadius: "12px", border: "2px solid var(--color-primary-100)", fontSize: "16px", backgroundColor: dontRememberRecall ? "var(--color-primary-50)" : "white", marginBottom: "24px", outline: "none", transition: "border 0.2s", color: "var(--color-navy)" }}
+            className={`w-full px-5 py-4 rounded-[16px] border text-[16px] mb-6 outline-none transition-all ${dontRememberRecall ? 'bg-[#f5f0e8]/50 border-[#e2dcd0]/50 text-[#1a2744]/40' : 'bg-white border-[#d2c8b98c] text-[#1a2744] focus:border-[#6b7c52] focus:ring-4 focus:ring-[#6b7c52]/10 shadow-sm'}`}
           />
-          <div style={{ display: "flex", gap: "16px" }}>
+          
+          <div className="flex flex-col sm:flex-row gap-4">
             <button
               type="submit"
               disabled={loading}
-              style={{
-                flex: 1,
-                padding: "16px",
-                borderRadius: "12px",
-                border: "none",
-                background: loading ? "var(--color-primary-100)" : "var(--color-teal)",
-                color: "white",
-                fontSize: "16px",
-                fontWeight: "600",
-                cursor: loading ? "not-allowed" : "pointer",
-                transition: "all 0.2s",
-                boxShadow: "0 4px 12px rgba(143, 163, 150, 0.3)"
-              }}
+              className="flex-1 py-[1.1rem] px-6 bg-[#6b7c52] text-white font-semibold text-[1.05rem] rounded-[16px] hover:bg-[#556540] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_4px_12px_rgba(107,124,82,0.2)] hover:shadow-[0_8px_20px_rgba(107,124,82,0.25)] hover:-translate-y-[2px]"
             >
               {loading ? "Analyzing..." : "Submit Phase 1"}
             </button>
@@ -277,26 +250,16 @@ export default function Level1({ assessmentId, initialContext, onNext }) {
                 setRecall("");
                 handleSubmit(null, true);
               }}
-              style={{
-                flex: 1,
-                padding: "16px",
-                borderRadius: "12px",
-                border: "1px solid var(--color-primary-100)",
-                background: loading ? "var(--color-primary-100)" : "var(--color-bg-card)",
-                color: "var(--color-navy)",
-                fontSize: "16px",
-                fontWeight: "600",
-                cursor: loading ? "not-allowed" : "pointer",
-                transition: "all 0.2s"
-              }}
+              className="flex-1 py-[1.1rem] px-6 bg-transparent border-[1.5px] border-[#d2c8b98c] text-[#4a5578] font-semibold text-[1.05rem] rounded-[16px] hover:bg-[#f5f0e8]/50 hover:text-[#1a2744] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed hover:-translate-y-[2px]"
             >
               {loading ? "Analyzing..." : "I Don't Remember"}
             </button>
           </div>
-          <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: "16px 0 0 0", textAlign: "center" }}>
+          <p className="text-[13px] text-[#4a5578]/60 mt-6 text-center font-medium">
             You can submit even if some sections are unanswered — unanswered parts will be scored as 0.
           </p>
-          </div>
+        </div>
+        
         </form>
       </div>
     </div>

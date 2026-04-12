@@ -14,3 +14,6 @@ __pycache__/
 .git_branches.txt
 _gitinfo.py
 _gitinfo2.py
+
+__pycache__/
+*.pyc

@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
 @theme {
-  --color-sage: #84A59D;
-  --color-sage-dark: #6b8c84;
-  --color-sage-light: #a8c5be;
-  --color-navy: #003049;
-  --color-navy-light: #0a4a6e;
+  --color-sage: #6b7c52;
+  --color-sage-dark: #556540;
+  --color-sage-light: #b8d49e;
+  --color-navy: #1a2744;
+  --color-navy-light: #2e3f6b;
   
   /* Darker background tones for real contrast against white cards */
-  --color-bg: #E8E4DA;
-  --color-bg-dark: #DDD8CC;
+  --color-bg: #f5f0e8;
+  --color-bg-dark: #e2dcd0;
   
   /* Card & surface colors */
-  --color-surface: #FFFFFF;
-  --color-surface-alt: #F5F3EE;
-  --color-border: #CCC8BB;
-  --color-border-light: #DDD9CE;
+  --color-surface: rgba(255, 255, 255, 0.4);
+  --color-surface-alt: rgba(255, 255, 255, 0.15);
+  --color-border: rgba(226, 220, 208, 0.8);
+  --color-border-light: rgba(226, 220, 208, 0.4);
 }
 
 /* Screening module CSS variables (used by inline styles in JSX files) */
@@ -46,14 +46,14 @@
   --color-text-muted: #9BB8CD;
 
   /* Typography */
-  --font-sans: 'Outfit', 'Inter', system-ui, sans-serif;
-  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'DM Sans', -apple-system, system-ui, sans-serif;
+  --font-serif: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
 }
 
 body {
   background-color: var(--color-bg);
   color: var(--color-navy);
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'DM Sans', -apple-system, sans-serif;
 }
 
 /* Global fade-in animation */
