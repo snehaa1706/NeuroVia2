@@ -13,7 +13,7 @@ const Sidebar = () => {
     { name: t('activities'), path: '/activities', icon: Brain },
     { name: t('medications'), path: '/medications', icon: Pill },
     { name: t('consultations'), path: '/patient/doctors', icon: MessageSquare },
-    { name: t('alerts'), path: '/alerts', icon: Bell },
+    { name: 'Notifications', path: '/alerts', icon: Bell },
   ];
 
   return (

@@ -65,7 +65,7 @@ def send_alert_sms(phone_number: str, message: str) -> bool:
 
     # Mock fallback
     print("\n" + "═" * 60)
-    print(" 📱 MOCK SMS DISPATCHED")
+    print(" [SMS] MOCK SMS DISPATCHED")
     print("═" * 60)
     print(f" To:      {phone_number}")
     print(f" Message: {message}")

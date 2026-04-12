@@ -226,10 +226,11 @@ export default function ConsultLogin({ role }: ConsultLoginProps) {
                 setLoading(true);
                 setError('');
                 try {
+                  const backendRole = role === 'patient' ? 'user' : role;
                   const res = await fetch(`${API_URL}/auth/google`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: credential, role }),
+                    body: JSON.stringify({ token: credential, role: backendRole }),
                   });
                   const data = await res.json();
                   if (!res.ok) throw new Error(data.detail || 'Google login failed');

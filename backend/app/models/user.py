@@ -8,6 +8,7 @@ class UserRole(str, Enum):
     user = "user"
     doctor = "doctor"
     admin = "admin"
+    patient = "patient"
 
 
 class UserRegister(BaseModel):

@@ -102,11 +102,11 @@ const Dashboard = () => {
   ];
 
   const dailyActivities = [
-    { id: 1, title: t('memory_match'), desc: t('find_pairs'), emoji: '🧠' },
-    { id: 2, title: t('word_recall'), desc: t('remember_words'), emoji: '🗣️' },
-    { id: 3, title: t('family_faces'), desc: t('identify_loved_ones'), emoji: '👨‍👩‍👧' },
-    { id: 4, title: t('sequence_play'), desc: t('order_steps'), emoji: '📋' },
-    { id: 5, title: t('daily_objects'), desc: t('identify_household'), emoji: '🔍' },
+    { id: 1, title: t('memory_match'), type: 'memory_recall', desc: t('find_pairs'), emoji: '🧠' },
+    { id: 2, title: t('word_recall'), type: 'semantic_fluency', desc: t('remember_words'), emoji: '🗣️' },
+    { id: 3, title: t('family_faces'), type: 'family_recognition', desc: t('identify_loved_ones'), emoji: '👨‍👩‍👧' },
+    { id: 4, title: t('sequence_play'), type: 'task_sequencing', desc: t('order_steps'), emoji: '📋' },
+    { id: 5, title: t('daily_objects'), type: 'object_matching', desc: t('identify_household'), emoji: '🔍' },
   ];
 
   const moodIcon = todayLog.mood === t('happy') || todayLog.mood === t('calm') ? <Smile className="w-8 h-8" /> : todayLog.mood === t('neutral') ? <Meh className="w-8 h-8" /> : <Frown className="w-8 h-8" />;
@@ -219,7 +219,7 @@ const Dashboard = () => {
                 <h4 className="text-lg font-bold text-(--color-navy) mb-1">{act.title}</h4>
                 <p className="text-sm text-(--color-navy)/50 mb-4">{act.desc}</p>
               </div>
-              <Link to="/activities" className="w-full py-3 bg-white text-(--color-sage) text-center block font-bold text-base border-2 border-(--color-sage)/30 rounded-xl hover:bg-(--color-sage) hover:text-white hover:border-(--color-sage) transition-all">
+              <Link to="/activities" state={{ play: act.type }} className="w-full py-3 bg-white text-(--color-sage) text-center block font-bold text-base border-2 border-(--color-sage)/30 rounded-xl hover:bg-(--color-sage) hover:text-white hover:border-(--color-sage) transition-all">
                 {t('start')}
               </Link>
             </div>

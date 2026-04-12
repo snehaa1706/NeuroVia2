@@ -60,6 +60,7 @@ const DoctorSchedule = () => {
   const [selectedDate, setSelectedDate] = useState<string>(toDateKey(today));
   const [consultations, setConsultations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -106,7 +107,22 @@ const DoctorSchedule = () => {
   };
 
   // Compute stats
-  const selectedConsultations = grouped[selectedDate] || [];
+  const rawSelectedConsultations = grouped[selectedDate] || [];
+  const selectedConsultations = statusFilter === 'all' 
+    ? rawSelectedConsultations 
+    : rawSelectedConsultations.filter((c: any) => c.status === statusFilter);
+
+  const handleQuickAction = async (e: React.MouseEvent, id: string, newStatus: string) => {
+    e.stopPropagation();
+    try {
+      await doctorApi.updateConsultationStatus(id, newStatus);
+      const data = await doctorApi.getConsultations();
+      setConsultations(data);
+    } catch (err) {
+      alert("Failed to update status.");
+    }
+  };
+
   const totalThisMonth = Object.entries(grouped)
     .filter(([key]) => key.startsWith(`${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`))
     .reduce((sum, [, arr]) => sum + arr.length, 0);
@@ -248,9 +264,26 @@ const DoctorSchedule = () => {
               <h3 className="text-xl font-bold text-(--color-navy)">
                 {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
               </h3>
-              <p className="text-sm text-(--color-navy)/40 font-medium mt-1">
-                {selectedConsultations.length} consultation{selectedConsultations.length !== 1 ? 's' : ''} scheduled
+              <p className="text-sm text-(--color-navy)/40 font-medium mt-1 mb-4">
+                {rawSelectedConsultations.length} consultation{rawSelectedConsultations.length !== 1 ? 's' : ''} scheduled
               </p>
+              
+              {/* Status Filters */}
+              <div className="flex bg-(--color-surface-alt) p-1 rounded-xl w-fit">
+                {['all', 'pending', 'accepted', 'completed'].map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setStatusFilter(f)}
+                    className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${
+                      statusFilter === f 
+                        ? 'bg-white text-(--color-navy) shadow-sm' 
+                        : 'text-(--color-navy)/50 hover:text-(--color-navy)'
+                    }`}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {loading ? (
@@ -289,6 +322,24 @@ const DoctorSchedule = () => {
                             {time}
                           </div>
                         </div>
+                        {c.status === 'pending' && (
+                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                            <button
+                              onClick={(e) => handleQuickAction(e, c.id, 'accepted')}
+                              className="p-2 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
+                              title="Accept"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => handleQuickAction(e, c.id, 'cancelled')}
+                              className="p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                              title="Decline"
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
