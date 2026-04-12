@@ -102,10 +102,11 @@ def evaluate_clock_drawing(base64_image: str) -> dict:
             logger.warning(f"Ollama Attempt {attempt + 1} failed. Error: {e_ollama}")
             if attempt == 1:
                 logger.error("Ollama fallback failed completely. Firing default safety wrapper.")
-                # HARD FALLBACK (Guarantees system remains functional)
+                # HARD FALLBACK — give neutral-positive score so AI unavailability
+                # does not penalize the patient's cognitive assessment
                 return {
-                    "clock_score": 2.5,
-                    "normalized_score": 0.5,
+                    "clock_score": 3,
+                    "normalized_score": 0.6,
                     "scoring_method": "fallback",
                     "confidence": "low"
                 }

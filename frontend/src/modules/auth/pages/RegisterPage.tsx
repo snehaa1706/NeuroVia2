@@ -1,9 +1,8 @@
 import { useState, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Brain, Eye, EyeOff, Shield, ArrowRight, Sparkles, User, Mail, Phone, Calendar, Stethoscope, MapPin, FileText, Image, Upload, Camera, Clock, Users } from 'lucide-react';
+import { Brain, Eye, EyeOff, Shield, ArrowRight, Sparkles, User, Mail, Phone, Calendar, Stethoscope, MapPin, FileText, Image, Upload, Camera, Clock, Users, Activity, Heart } from 'lucide-react';
 import GoogleLoginButton from '@/components/auth/GoogleLoginButton';
 import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -18,7 +17,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  // Common fields
+  // Common fields (preserved logic)
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -26,7 +25,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState(initialState.role || 'user');
+  const [role, setRole] = useState(initialState.role || 'patient');
   const [googleToken, setGoogleToken] = useState(initialState.googleToken || '');
 
   // Doctor-specific fields
@@ -40,6 +39,9 @@ export default function RegisterPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [experience, setExperience] = useState('');
   const [gender, setGender] = useState('');
+
+  const fontSans = { fontFamily: "'DM Sans', sans-serif" };
+  const fontSerif = { fontFamily: "'Cormorant Garamond', serif" };
 
   const totalSteps = role === 'doctor' ? 3 : 2;
 
@@ -89,9 +91,7 @@ export default function RegisterPage() {
       if (!googleToken && phone.trim()) payload.phone = phone;
       if (!googleToken && dob) payload.date_of_birth = dob;
 
-      // Doctor-specific fields
       if (role === 'doctor') {
-        // Upload avatar image first if selected
         if (avatarFile) {
           setUploading(true);
           try {
@@ -106,7 +106,7 @@ export default function RegisterPage() {
               payload.avatar_url = uploadData.url;
             }
           } catch (uploadErr) {
-            console.warn('Avatar upload failed, continuing without it:', uploadErr);
+            console.warn('Avatar upload failed:', uploadErr);
           } finally {
             setUploading(false);
           }
@@ -146,285 +146,241 @@ export default function RegisterPage() {
     }
   };
 
+  const handleGoogleSuccess = async (credential: string) => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch(`${API_URL}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: credential }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Google login failed');
+      
+      setSuccess(true);
+      const userRole = data.user.role?.toLowerCase() || 'patient';
+      if (userRole === 'doctor') {
+        localStorage.setItem('neurovia_doctor_token', data.access_token);
+        localStorage.setItem('neurovia_doctor_user', JSON.stringify(data.user));
+        setTimeout(() => navigate('/doctor/dashboard'), 1500);
+      } else {
+        localStorage.setItem('neurovia_patient_token', data.access_token);
+        localStorage.setItem('neurovia_patient_user', JSON.stringify(data.user));
+        setTimeout(() => navigate('/patient/dashboard'), 1500);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Google registration failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (step === 2 && role !== 'doctor') {
       if (!validateStep2()) return;
       doSubmit();
     } else if (step === 3) {
-      // Step 3 is doctor profile — no required fields, just submit
       doSubmit();
     }
   };
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center px-6">
+      <div style={fontSans} className="min-h-screen bg-[#f5f0e8] flex items-center justify-center px-6">
         <div className="text-center max-w-md">
-          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-4xl">🎉</span>
+          <div className="w-20 h-20 bg-[#6b7c52]/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span className="text-4xl text-[#6b7c52]">✓</span>
           </div>
-          <h1 className="text-3xl font-bold text-[#0D2B45] mb-3">Welcome to NeuroVia!</h1>
-          <p className="text-slate-500 text-lg mb-2">Your account has been created successfully.</p>
-          <p className="text-slate-400 text-sm">Redirecting to your dashboard...</p>
-          <div className="mt-6 flex justify-center">
-            <div className="w-8 h-8 border-3 border-[#8C9A86]/30 border-t-[#8C9A86] rounded-full animate-spin" />
-          </div>
+          <h1 style={fontSerif} className="text-3xl font-bold text-[#1a2744] mb-3">Welcome to NeuroVia!</h1>
+          <p className="text-[#4a5578] text-lg mb-2">Your account has been created successfully.</p>
+          <p className="text-[#4a5578]/60 text-sm">Redirecting to your dashboard...</p>
         </div>
       </div>
     );
   }
 
+  const inputClass = "w-full px-4 py-3.5 rounded-[12px] border border-[#d2c8b98c] bg-transparent text-[#1a2744] text-[0.9rem] outline-none focus:border-[#6b7c52] transition-colors placeholder:text-[#4a5578]/50 focus:bg-white/50";
+  const labelClass = "block text-[0.68rem] font-bold text-[#2e3f6b] uppercase tracking-[0.08em] mb-2";
+
   return (
-    <div className="min-h-screen flex">
-      {/* Left Panel — Hero */}
-      <div className="hidden lg:flex w-[48%] bg-gradient-to-br from-[#0D2B45] via-[#143350] to-[#0a1f33] text-white flex-col justify-between p-14 relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-20 right-10 w-64 h-64 bg-[#8C9A86]/8 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-10 w-48 h-48 bg-[#8C9A86]/6 rounded-full blur-2xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#8C9A86]/3 rounded-full blur-[100px]" />
-
-        <div className="relative z-10">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-[#8C9A86]/20 rounded-xl flex items-center justify-center border border-[#8C9A86]/30 group-hover:bg-[#8C9A86]/30 transition-colors">
-              <Brain className="w-5 h-5 text-[#8C9A86]" />
-            </div>
-            <span className="text-xl font-bold tracking-wide">NeuroVia</span>
-          </Link>
-        </div>
-
-        <div className="relative z-10 flex-1 flex flex-col justify-center -mt-10">
-          <div className="inline-flex items-center gap-2 bg-[#8C9A86]/10 border border-[#8C9A86]/20 rounded-full px-4 py-1.5 w-fit mb-8">
-            <Sparkles className="w-3.5 h-3.5 text-[#8C9A86]" />
-            <span className="text-[#8C9A86] text-xs font-bold uppercase tracking-widest">Join Thousands</span>
-          </div>
-          <h1 className="text-5xl xl:text-6xl font-serif text-white mb-6 leading-[1.1]">
-            {step === 3 ? (
-              <>Build Your<br />Profile<span className="text-[#8C9A86]">.</span></>
-            ) : (
-              <>Start Your<br />Journey<span className="text-[#8C9A86]">.</span></>
-            )}
-          </h1>
-          <p className="text-lg text-slate-400 max-w-sm leading-relaxed mb-10">
-            {step === 3
-              ? 'Tell patients about your expertise, where they can find you, and upload a professional photo.'
-              : 'Create a free account to access cognitive screening, daily exercises, and personalized health insights.'}
-          </p>
-
-          {/* Step indicators */}
-          <div className="flex items-center gap-3">
-            {Array.from({ length: totalSteps }, (_, i) => i + 1).map(s => (
-              <div key={s} className="flex items-center gap-2">
-                <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all ${step === s ? 'bg-[#8C9A86] text-white' : step > s ? 'bg-[#8C9A86]/30 text-[#8C9A86]' : 'bg-[#8C9A86]/10 text-[#8C9A86]'}`}>
-                  <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs">{s}</span>
-                  {s === 1 ? 'Your Info' : s === 2 ? 'Security' : 'Profile'}
+    <div style={fontSans} className="min-h-screen flex bg-[#f5f0e8] text-[#1a2744]">
+      {/* Left Panel - Reusing exact layout from LoginPage and Image 1 & 2 */}
+      <div className="hidden lg:flex flex-col relative flex-[0_0_58%] overflow-hidden p-8 lg:p-[4rem_5rem]">
+        <img src="https://images.unsplash.com/photo-1576765608866-5b51046452be?auto=format&fit=crop&w=1400&q=80" 
+             alt="Background" 
+             className="absolute inset-0 w-full h-full object-cover object-[center_30%] brightness-[0.88] saturate-[0.88] opacity-90" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0f1628a6] via-[#14230f59] to-[#0a0f081a]" />
+        
+        <div className="relative z-10 flex flex-col h-full">
+            <div className="flex items-center justify-between w-full">
+                <Link to="/" className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 bg-[#6b7c52] rounded-[8px] flex items-center justify-center">
+                        <Activity className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-[1.15rem] font-semibold text-white">NeuroVia</span>
+                </Link>
+                <div className="flex items-center gap-3">
+                    <button onClick={() => navigate('/login')} className="px-[1.1rem] py-[0.44rem] rounded-[8px] text-[0.83rem] font-medium border-[1.5px] border-[#f5f0e873] text-[#f5f0e8] bg-[#ffffff14] backdrop-blur-[10px] transition-all duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#ffffff38] hover:-translate-y-[1px]">Login</button>
+                    <button className="px-[1.1rem] py-[0.44rem] rounded-[8px] text-[0.83rem] font-medium border-[1.5px] border-[#6b7c52] text-white bg-[#6b7c52] backdrop-blur-[10px] transition-all duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#556540] hover:border-[#556540] hover:-translate-y-[1px]">Sign Up</button>
                 </div>
-                {s < totalSteps && <div className="w-8 h-0.5 bg-slate-600" />}
-              </div>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        <div className="relative z-10 text-slate-500 text-sm">
-          © 2026 NeuroVia Health Technologies
+            <div className="mt-auto pb-4">
+                <p className="text-[0.68rem] font-semibold tracking-[0.18em] text-white/70 uppercase mb-4">
+                    AI-Powered Care Intelligence
+                </p>
+                <h1 style={fontSerif} className="text-[clamp(2.6rem,4.5vw,4rem)] font-semibold text-[#f5f0e8] leading-[1.08]">
+                    Empowering <br />
+                    <span className="italic block text-[#b8d49e]">Better Care</span>
+                </h1>
+                <p className="mt-[1.3rem] text-[0.92rem] font-light text-white/82 leading-[1.65] max-w-[380px]">
+                    AI-powered dementia screening and caregiver monitoring — helping families detect early, act faster, and give doctors the clarity they need to help.
+                </p>
+                <div className="flex flex-wrap gap-[0.6rem] mt-[2rem]">
+                    {[
+                      { l: 'Early Detection', i: Activity }, 
+                      { l: 'Real-Time Monitoring', i: Heart }, 
+                      { l: 'Caregiver Support', i: Users }
+                    ].map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-[0.4rem] px-[0.9rem] py-[0.42rem] rounded-[100px] bg-white/10 backdrop-blur-[10px] border border-white/20 text-white/90 text-[0.77rem] transition-all duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#ffffff38] hover:-translate-y-[1px]">
+                            <item.i className="w-[13px] h-[13px] text-white/75" />
+                            {item.l}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="mt-8 text-[0.72rem] text-white/35">
+                © 2026 NeuroVia Health Technologies. All rights reserved.
+            </div>
         </div>
       </div>
 
-      {/* Right Panel — Register Form */}
-      <div className="flex-1 bg-[#FAFAF7] flex flex-col justify-center items-center px-6">
-        <div className="w-full max-w-[420px]">
-          {/* Mobile Logo */}
-          <Link to="/" className="flex items-center gap-3 mb-8 lg:hidden">
-            <Brain className="w-7 h-7 text-[#8C9A86]" />
-            <span className="text-xl font-bold text-[#0D2B45]">NeuroVia</span>
-          </Link>
-
-          <h2 className="text-3xl font-bold text-[#0D2B45] mb-2">
-            {step === 3 ? 'Your Doctor Profile' : 'Create an account'}
+      {/* Right Panel */}
+      <div className="flex-1 flex flex-col items-center p-8 bg-[#f5f0e8] overflow-y-auto">
+        <div className="w-full max-w-[420px] animate-[fadeUp_0.5s_cubic-bezier(0.22,1,0.36,1)] pb-8 pt-8 m-auto flex flex-col justify-center">
+          
+          <h2 style={fontSerif} className="text-[2.2rem] font-medium text-[#1a2744] mb-3 leading-tight">
+            {step === 3 ? 'Your Profile' : 'Create your account'}
           </h2>
-          <p className="text-slate-500 mb-6">
-            {step === 1 ? 'Start with your basic information' : step === 2 ? 'Set up your password to secure your account' : 'Tell your patients about yourself'}
+          <p className="text-[0.9rem] text-[#4a5578] font-light mb-8 leading-[1.6] max-w-[340px]">
+            {step === 3 
+              ? 'Tell your patients about yourself.'
+              : 'Free to start. No credit card. Your health data stays private.'}
           </p>
 
-          {/* Mobile step indicator */}
-          <div className="flex items-center gap-2 mb-6 lg:hidden">
-            {Array.from({ length: totalSteps }, (_, i) => (
-              <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${step >= i + 1 ? 'bg-[#8C9A86]' : 'bg-[#E5E5E0]'}`} />
-            ))}
-          </div>
-
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-2xl text-sm font-medium mb-5 flex items-center gap-2">
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm font-medium mb-6 flex items-center gap-2">
               <span>⚠️</span> {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            {/* STEP 1: Personal Info */}
+          <form onSubmit={handleSubmit} className="space-y-[1.1rem]">
             {step === 1 && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-[#0D2B45] mb-2">Full name *</label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
-                    <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Doe"
-                      className="w-full pl-11 pr-4 py-3.5 rounded-2xl border-2 border-[#E5E5E0] bg-white text-[#0D2B45] text-base outline-none focus:border-[#8C9A86] focus:ring-4 focus:ring-[#8C9A86]/10 transition-all placeholder:text-slate-400" />
+              <>
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label className={labelClass}>First & Last Name</label>
+                    <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Jane Doe" className={inputClass} />
                   </div>
                 </div>
+                
                 <div>
-                  <label className="block text-sm font-semibold text-[#0D2B45] mb-2">Email address *</label>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com"
-                      className="w-full pl-11 pr-4 py-3.5 rounded-2xl border-2 border-[#E5E5E0] bg-white text-[#0D2B45] text-base outline-none focus:border-[#8C9A86] focus:ring-4 focus:ring-[#8C9A86]/10 transition-all placeholder:text-slate-400" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-[#0D2B45] mb-2">Phone number <span className="text-slate-400 font-normal">(optional)</span></label>
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
-                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 000-0000"
-                      className="w-full pl-11 pr-4 py-3.5 rounded-2xl border-2 border-[#E5E5E0] bg-white text-[#0D2B45] text-base outline-none focus:border-[#8C9A86] focus:ring-4 focus:ring-[#8C9A86]/10 transition-all placeholder:text-slate-400" />
-                  </div>
+                  <label className={labelClass}>Email Address</label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className={inputClass} />
                 </div>
 
-                {/* Role selector */}
-                <div className="pt-2">
-                  <label className="block text-sm font-semibold text-[#0D2B45] mb-3">I am a...</label>
+                <div>
+                  <label className={labelClass}>Phone <span className="text-[#4a5578]/50 font-normal lowercase">(Optional)</span></label>
+                  <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 000-0000" className={inputClass} />
+                </div>
+
+                <div>
+                  <label className={labelClass}>I am a...</label>
                   <div className="grid grid-cols-2 gap-3">
-                    <button type="button" onClick={() => setRole('user')}
-                      className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${role === 'user' ? 'border-[#8C9A86] bg-[#8C9A86]/5 ring-4 ring-[#8C9A86]/10' : 'border-[#E5E5E0] bg-white hover:border-[#8C9A86]/30'}`}>
-                      <User className={`w-6 h-6 ${role === 'user' ? 'text-[#8C9A86]' : 'text-slate-400'}`} />
-                      <span className={`text-xs font-bold ${role === 'user' ? 'text-[#0D2B45]' : 'text-slate-500'}`}>Patient</span>
+                    <button type="button" onClick={() => setRole('patient')}
+                      className={`py-3 rounded-[12px] border transition-all text-[0.85rem] font-semibold ${role === 'patient' ? 'border-[#6b7c52] bg-[#6b7c52]/10 text-[#6b7c52]' : 'border-[#d2c8b98c] bg-transparent text-[#4a5578] hover:border-[#6b7c52]/50'}`}>
+                      Patient
                     </button>
                     <button type="button" onClick={() => setRole('doctor')}
-                      className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${role === 'doctor' ? 'border-[#8C9A86] bg-[#8C9A86]/5 ring-4 ring-[#8C9A86]/10' : 'border-[#E5E5E0] bg-white hover:border-[#8C9A86]/30'}`}>
-                      <Stethoscope className={`w-6 h-6 ${role === 'doctor' ? 'text-[#8C9A86]' : 'text-slate-400'}`} />
-                      <span className={`text-xs font-bold ${role === 'doctor' ? 'text-[#0D2B45]' : 'text-slate-500'}`}>Doctor</span>
+                      className={`py-3 rounded-[12px] border transition-all text-[0.85rem] font-semibold ${role === 'doctor' ? 'border-[#6b7c52] bg-[#6b7c52]/10 text-[#6b7c52]' : 'border-[#d2c8b98c] bg-transparent text-[#4a5578] hover:border-[#6b7c52]/50'}`}>
+                      Doctor
                     </button>
                   </div>
                 </div>
 
                 <button type="button" onClick={handleNext}
-                  className="w-full py-4 bg-[#0D2B45] text-white font-bold text-base rounded-2xl hover:bg-[#1a3a55] transition-all shadow-lg shadow-[#0D2B45]/20 hover:shadow-xl hover:shadow-[#0D2B45]/30 active:scale-[0.98] flex items-center justify-center gap-2 group mt-2">
-                  Continue <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  className="w-full mt-4 py-[0.85rem] bg-[#6b7c52] text-white font-medium text-[0.95rem] rounded-[10px] hover:bg-[#556540] transition-all duration-[280ms] flex items-center justify-center gap-2">
+                  Continue to Password <ArrowRight className="w-4 h-4" />
                 </button>
-              </div>
+              </>
             )}
 
-            {/* STEP 2: Password */}
             {step === 2 && (
-              <div className="space-y-4">
-                {/* Summary card */}
-                <div className="bg-white border-2 border-[#E5E5E0] rounded-2xl p-4 flex items-center gap-4 mb-2">
-                  <div className="w-11 h-11 bg-[#8C9A86]/10 rounded-xl flex items-center justify-center shrink-0">
-                    {role === 'doctor' ? <Stethoscope className="w-5 h-5 text-[#8C9A86]" /> : <User className="w-5 h-5 text-[#8C9A86]" />}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-bold text-[#0D2B45] text-sm truncate">{fullName}</p>
-                    <p className="text-slate-400 text-xs truncate">{email} · {role === 'doctor' ? 'Doctor' : 'Patient'}</p>
-                  </div>
-                  <button type="button" onClick={() => setStep(1)} className="ml-auto text-xs text-[#8C9A86] font-semibold hover:text-[#6D8274] transition-colors shrink-0">Edit</button>
-                </div>
-
+              <>
                 <div>
-                  <label className="block text-sm font-semibold text-[#0D2B45] mb-2">Password *</label>
+                  <label className={labelClass}>Password</label>
                   <div className="relative">
-                    <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min. 6 characters"
-                      className="w-full px-4 py-3.5 rounded-2xl border-2 border-[#E5E5E0] bg-white text-[#0D2B45] text-base outline-none focus:border-[#8C9A86] focus:ring-4 focus:ring-[#8C9A86]/10 transition-all pr-12 placeholder:text-slate-400" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0D2B45] transition-colors">
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Create a strong password" className={inputClass} />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#4a5578]/60 hover:text-[#6b7c52]">
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
-                  {password && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <div className="flex-1 flex gap-1">
-                        <div className={`h-1 flex-1 rounded-full ${password.length >= 6 ? 'bg-emerald-400' : 'bg-red-400'}`} />
-                        <div className={`h-1 flex-1 rounded-full ${password.length >= 8 ? 'bg-emerald-400' : 'bg-[#E5E5E0]'}`} />
-                        <div className={`h-1 flex-1 rounded-full ${password.length >= 10 && /[^a-zA-Z0-9]/.test(password) ? 'bg-emerald-400' : 'bg-[#E5E5E0]'}`} />
-                      </div>
-                      <span className="text-xs text-slate-400">
-                        {password.length < 6 ? 'Too short' : password.length < 8 ? 'Fair' : password.length >= 10 && /[^a-zA-Z0-9]/.test(password) ? 'Strong' : 'Good'}
-                      </span>
-                    </div>
-                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-[#0D2B45] mb-2">Confirm password *</label>
-                  <input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password"
-                    className="w-full px-4 py-3.5 rounded-2xl border-2 border-[#E5E5E0] bg-white text-[#0D2B45] text-base outline-none focus:border-[#8C9A86] focus:ring-4 focus:ring-[#8C9A86]/10 transition-all placeholder:text-slate-400" />
-                  {confirmPassword && password !== confirmPassword && (
-                    <p className="text-red-500 text-xs mt-1.5 font-medium">Passwords don't match</p>
-                  )}
+                  <label className={labelClass}>Confirm Password</label>
+                  <input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter password" className={inputClass} />
                 </div>
 
-                <div className="flex gap-3 mt-2">
-                  <button type="button" onClick={() => { setStep(1); setError(''); }}
-                    className="flex-1 py-4 bg-white text-[#0D2B45] font-bold text-base rounded-2xl border-2 border-[#E5E5E0] hover:border-[#8C9A86] transition-all active:scale-[0.98]">
+                <div className="flex gap-3 mt-4">
+                  <button type="button" onClick={() => setStep(1)}
+                    className="flex-1 py-[0.85rem] bg-transparent text-[#4a5578] font-medium text-[0.95rem] rounded-[10px] border border-[#d2c8b98c] hover:border-[#6b7c52] transition-colors">
                     Back
                   </button>
                   <button type="button" onClick={handleStep2Next} disabled={loading}
-                    className="flex-[2] py-4 bg-[#0D2B45] text-white font-bold text-base rounded-2xl hover:bg-[#1a3a55] transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-[#0D2B45]/20 hover:shadow-xl active:scale-[0.98] flex items-center justify-center gap-2 group">
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Creating…
-                      </span>
-                    ) : (
-                      <>{role === 'doctor' ? 'Next: Your Profile' : 'Create Account'} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></>
-                    )}
+                    className="flex-[2] py-[0.85rem] bg-[#6b7c52] text-white font-medium text-[0.95rem] rounded-[10px] hover:bg-[#556540] transition-all duration-[280ms] flex items-center justify-center gap-2">
+                    {loading ? "Creating..." : (role === 'doctor' ? "Next Step" : "Create My Free Account")}
                   </button>
                 </div>
-              </div>
+              </>
             )}
 
-            {/* STEP 3: Doctor Profile (only for doctors) */}
-            {step === 3 && (
-              <div className="space-y-4">
+                {/* Step 3: Doctor Details */}
+                {step === 3 && (
+                  <>
                 {/* Profile Photo Upload */}
-                <div>
-                  <label className="block text-sm font-semibold text-[#0D2B45] mb-2">
-                    Profile Photo <span className="text-slate-400 font-normal">(optional)</span>
-                  </label>
-                  <div className="flex items-start gap-4">
-                    <div className="shrink-0">
-                      {avatarPreview ? (
-                        <img src={avatarPreview} alt="Preview" className="w-24 h-24 rounded-2xl object-cover border-2 border-[#8C9A86]/30 shadow-lg" />
-                      ) : (
-                        <div className="w-24 h-24 rounded-2xl bg-[#8C9A86]/10 border-2 border-dashed border-[#8C9A86]/30 flex items-center justify-center">
-                          <Camera className="w-8 h-8 text-[#8C9A86]/40" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp,image/gif"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            setAvatarFile(file);
-                            const reader = new FileReader();
-                            reader.onloadend = () => setAvatarPreview(reader.result as string);
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                      />
-                      <button type="button" onClick={() => fileInputRef.current?.click()}
-                        className="w-full px-4 py-3 rounded-2xl border-2 border-dashed border-[#8C9A86]/30 bg-[#FAFAF7] text-sm font-semibold text-[#8C9A86] hover:border-[#8C9A86] hover:bg-[#8C9A86]/5 transition-all flex items-center justify-center gap-2">
-                        <Upload className="w-4 h-4" />
-                        {avatarFile ? 'Change Photo' : 'Upload Photo'}
-                      </button>
-                      {avatarFile && (
-                        <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                          ✓ {avatarFile.name}
-                        </p>
-                      )}
-                      <p className="text-xs text-slate-400">JPG, PNG, WebP or GIF — max 5MB</p>
+                <div className="flex flex-col items-center mb-6">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setAvatarFile(file);
+                        setAvatarPreview(URL.createObjectURL(file));
+                      }
+                    }}
+                  />
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="relative w-24 h-24 rounded-full border-[3px] border-[#6b7c52]/20 bg-white shadow-sm flex items-center justify-center cursor-pointer group overflow-hidden transition-all duration-300 hover:border-[#6b7c52]"
+                  >
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <Camera className="w-8 h-8 text-[#6b7c52]/40 group-hover:text-[#6b7c52] transition-colors" />
+                    )}
+                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Upload className="w-5 h-5 text-white mb-1" />
+                      <span className="text-[0.6rem] font-bold text-white uppercase tracking-wider">Upload</span>
                     </div>
                   </div>
+                  <p className="text-[0.75rem] text-[#4a5578]/70 mt-3 font-medium">Profile Photo (Optional)</p>
                 </div>
 
                 {/* Specialty */}
@@ -480,41 +436,32 @@ export default function RegisterPage() {
                     className="w-full px-4 py-3.5 rounded-2xl border-2 border-[#E5E5E0] bg-white text-[#0D2B45] text-base outline-none focus:border-[#8C9A86] focus:ring-4 focus:ring-[#8C9A86]/10 transition-all resize-none placeholder:text-slate-400" />
                 </div>
 
-                <div className="flex gap-3 mt-2">
+                <div className="flex gap-3 mt-4">
                   <button type="button" onClick={() => { 
                       if (googleToken) { setGoogleToken(''); setStep(1); } else { setStep(2); }
                       setError(''); 
                     }}
-                    className="flex-1 py-4 bg-white text-[#0D2B45] font-bold text-base rounded-2xl border-2 border-[#E5E5E0] hover:border-[#8C9A86] transition-all active:scale-[0.98]">
+                    className="flex-1 py-[0.85rem] bg-transparent text-[#4a5578] font-medium text-[0.95rem] rounded-[10px] border border-[#d2c8b98c] hover:border-[#6b7c52] transition-colors">
                     Back
                   </button>
-                  <button type="submit" disabled={loading}
-                    className="flex-[2] py-4 bg-[#8C9A86] text-white font-bold text-base rounded-2xl hover:bg-[#7a8c7a] transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-[#8C9A86]/20 hover:shadow-xl active:scale-[0.98] flex items-center justify-center gap-2 group">
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Creating…
-                      </span>
-                    ) : (
-                      <>Create Doctor Account <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></>
-                    )}
+                  <button type="submit" disabled={loading} className="flex-[2] py-[0.85rem] bg-[#6b7c52] text-white font-medium text-[0.95rem] rounded-[10px] hover:bg-[#556540] transition-all flex items-center justify-center">
+                    {loading ? "Creating..." : "Complete Profile"}
                   </button>
                 </div>
-
-                <p className="text-center text-xs text-slate-400 mt-1">
-                  You can update these details anytime from your dashboard settings.
-                </p>
-              </div>
+              </>
             )}
           </form>
 
           {step === 1 && (
             <>
-              <div className="flex items-center gap-3 my-6">
-                <div className="flex-1 h-px bg-[#E5E5E0]" />
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('or')}</span>
-                <div className="flex-1 h-px bg-[#E5E5E0]" />
+              <div className="flex items-center gap-4 my-8">
+                <div className="flex-1 h-px bg-[#d2c8b98c]" />
+                <span className="text-[0.7rem] text-[#4a5578]/60 font-medium tracking-wide">or sign up with</span>
+                <div className="flex-1 h-px bg-[#d2c8b98c]" />
               </div>
-              <GoogleLoginButton
+              <div className="mb-10 w-full overflow-hidden flex justify-center">
+                <GoogleLoginButton
+
                 onSuccess={async (credential: string) => {
                   if (role === 'doctor') {
                     setGoogleToken(credential);
@@ -528,7 +475,7 @@ export default function RegisterPage() {
                     const res = await fetch(`${API_URL}/auth/google`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ token: credential, role: 'user' }),
+                      body: JSON.stringify({ token: credential, role: 'patient' }),
                     });
                     const data = await res.json();
                     if (!res.ok) throw new Error(data.detail || 'Google sign-up failed');
@@ -550,22 +497,27 @@ export default function RegisterPage() {
                 }}
                 text="signup_with"
               />
+              </div>
             </>
           )}
 
-          <div className="mt-8 text-center">
-            <p className="text-slate-500">
+          <div className="text-center flex flex-col gap-3 mt-6">
+            <p className="text-[0.85rem] text-[#4a5578] font-light">
               Already have an account?{' '}
-              <Link to="/login" className="font-bold text-[#8C9A86] hover:text-[#6D8274] transition-colors">
+              <Link to="/login" className="font-semibold text-[#6b7c52] hover:text-[#556540] transition-colors">
                 Sign in
               </Link>
             </p>
+            <Link to="/" className="text-[0.85rem] font-semibold text-[#6b7c52] hover:text-[#556540] transition-colors inline-block mx-auto mb-6">
+              ← Back to home
+            </Link>
           </div>
 
-          <div className="mt-6 flex items-center justify-center gap-2 text-slate-400 text-xs">
-            <Shield className="w-3.5 h-3.5" />
-            <span>256-bit AES encryption · HIPAA compliant</span>
+          <div className="flex items-center justify-center gap-2 text-[#4a5578]/50 text-[0.6rem] font-bold uppercase tracking-widest mt-auto pb-4">
+            <Shield className="w-3 h-3" />
+            <span>We will never share your data with third parties</span>
           </div>
+
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { startAssessment } from '../services/screeningApi';
+import { Brain, Check } from 'lucide-react';
 
 export default function Start({ onNext }) {
   const [loading, setLoading] = useState(false);
@@ -18,58 +19,47 @@ export default function Start({ onNext }) {
   };
 
   return (
-    <div style={{ textAlign: "center", maxWidth: "600px", margin: "80px auto", padding: "40px" }}>
-      <div style={{ 
-        background: "var(--color-bg-card)",
-        padding: "60px 40px",
-        borderRadius: "24px",
-        boxShadow: "0 10px 30px rgba(27, 42, 65, 0.06)",
-        borderTop: "8px solid var(--color-teal)"
-      }}>
-        <div style={{ 
-          width: "60px", height: "60px", background: "var(--color-teal-50)", 
-          color: "var(--color-teal)", display: "flex", alignItems: "center", justifyContent: "center",
-          borderRadius: "50%", margin: "0 auto 24px", fontSize: "24px"
-        }}>
-          🧠
+    <div className="w-full max-w-[600px] mx-auto text-center animate-[fadeIn_0.4s_ease-out]">
+      <div className="bg-[#fcfaf7] border border-[#e2dcd0] rounded-[32px] p-10 md:p-14 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+        <div className="w-16 h-16 bg-[#6b7c52]/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <Brain className="w-8 h-8 text-[#6b7c52]" />
         </div>
-        <h1 style={{ 
-          fontFamily: "var(--font-serif)", 
-          color: "var(--color-navy)", 
-          fontSize: "44px", 
-          marginBottom: "20px",
-          fontWeight: "600"
-        }}>
-          Dementia Screening
-        </h1>
-        <p style={{ 
-          color: "var(--color-text-secondary)", 
-          fontSize: "18px", 
-          marginBottom: "40px", 
-          lineHeight: "1.7" 
-        }}>
-          Take a short, research-backed cognitive assessment. Five questions, under five minutes. Our AI identifies patterns that may need a closer look.
+        
+        <p className="font-sans text-[0.75rem] font-bold tracking-[0.15em] text-[#6b7c52] uppercase mb-4">
+          Cognitive Screening
         </p>
+
+        <h1 className="font-serif text-[#1a2744] text-[36px] md:text-[42px] leading-[1.15] mb-6">
+          A Simple Memory & Thinking<br/>Assessment
+        </h1>
+
+        <p className="font-sans text-[#4a5578] text-[16px] leading-[1.6] mb-10 max-w-[420px] mx-auto">
+          Five short questions to help identify patterns in memory and cognition.<br/>
+          <strong>This is not a medical diagnosis.</strong> Results help connect you with the right care, faster.
+        </p>
+
+        <div className="text-left mb-12 flex flex-col gap-4 max-w-[420px] mx-auto pl-2">
+          {[
+            "Takes under 5 minutes",
+            "Completely confidential — your data stays yours",
+            "No right or wrong answers",
+            "Results shared only with your explicit consent"
+          ].map((text, i) => (
+            <div key={i} className="flex items-center gap-4">
+              <div className="w-[22px] h-[22px] rounded-full bg-[#6b7c52] flex items-center justify-center shrink-0">
+                <Check className="w-[12px] h-[12px] text-white" strokeWidth={3} />
+              </div>
+              <span className="text-[#4a5578] text-[15px] font-medium">{text}</span>
+            </div>
+          ))}
+        </div>
+
         <button 
           onClick={handleStart} 
           disabled={loading}
-          style={{ 
-            padding: "16px 40px", 
-            fontSize: "16px", 
-            fontFamily: "var(--font-sans)",
-            background: "var(--color-teal)", 
-            color: "white", 
-            border: "none", 
-            borderRadius: "12px", 
-            cursor: loading ? "not-allowed" : "pointer",
-            fontWeight: "600",
-            boxShadow: "0 8px 16px rgba(143, 163, 150, 0.3)",
-            transition: "transform 0.2s ease, box-shadow 0.2s ease"
-          }}
-          onMouseOver={e => !loading && (e.currentTarget.style.transform = "scale(1.02)")}
-          onMouseOut={e => !loading && (e.currentTarget.style.transform = "scale(1)")}
+          className="w-full sm:w-[85%] py-[1.1rem] bg-[#6b7c52] text-white font-semibold text-[1.05rem] rounded-[16px] hover:bg-[#556540] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed hover:-translate-y-[2px] shadow-[0_4px_12px_rgba(107,124,82,0.2)] hover:shadow-[0_8px_20px_rgba(107,124,82,0.25)]"
         >
-          {loading ? "INITIALIZING..." : "START YOUR SCREENING →"}
+          {loading ? "Initializing..." : "Run My Screening →"}
         </button>
       </div>
     </div>

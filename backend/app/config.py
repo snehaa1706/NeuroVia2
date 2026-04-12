@@ -17,7 +17,7 @@ class Settings:
     SUPABASE_SERVICE_KEY: str = os.getenv("SUPABASE_SERVICE_KEY", "")
     JWT_SECRET: str = os.getenv("JWT_SECRET", "neurovia-secret-key")
     SUPABASE_JWKS_URL: str = os.getenv("SUPABASE_JWKS_URL", "")
-    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3001")
     GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
 
 

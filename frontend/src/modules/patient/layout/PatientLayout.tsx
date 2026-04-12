@@ -13,7 +13,7 @@ const PatientLayout = () => {
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-(--color-bg)">
+    <div className="flex h-screen w-full overflow-hidden bg-[#f5f0e8]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto w-full">

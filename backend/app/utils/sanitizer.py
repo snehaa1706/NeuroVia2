@@ -8,7 +8,9 @@ MAX_TEXT_LENGTH = 500
 MAX_ARRAY_SIZE = 10
 
 
-def sanitize_text(value: str | None, max_length: int = MAX_TEXT_LENGTH) -> str:
+from typing import Optional
+
+def sanitize_text(value: Optional[str], max_length: int = MAX_TEXT_LENGTH) -> str:
     """Trim and truncate a text field."""
     if not value:
         return ""
@@ -18,7 +20,7 @@ def sanitize_text(value: str | None, max_length: int = MAX_TEXT_LENGTH) -> str:
     return cleaned
 
 
-def sanitize_list(items: list | None, max_size: int = MAX_ARRAY_SIZE) -> list:
+def sanitize_list(items: Optional[list], max_size: int = MAX_ARRAY_SIZE) -> list:
     """Cap list size and remove None entries."""
     if not items:
         return []

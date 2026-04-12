@@ -58,7 +58,7 @@ class OpenAIProvider(BaseAIProvider):
         if not settings.OPENAI_API_KEY or settings.OPENAI_API_KEY == "your_openai_key_here":
             logger.warning("OpenAI Initialized without valid key. API calls will fail.")
         self.client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
-        self.timeout = 5.0 # Fixed timeout limits
+        self.timeout = 15.0 # Generous timeout for cloud API
 
     async def _safe_call(self, system_prompt: str, user_prompt: str, is_vision: bool = False, image_b64: str = "") -> dict:
         for attempt in range(2):
@@ -124,10 +124,10 @@ class OpenAIProvider(BaseAIProvider):
 class OllamaProvider(BaseAIProvider):
     def __init__(self):
         self.host = settings.OLLAMA_HOST
-        self.timeout = 5.0 # Enforce fast timeout
+        self.timeout = 30.0 # Local LLM inference needs adequate time
 
     async def _safe_call(self, prompt: str, is_vision: bool = False, image_b64: str = "") -> dict:
-        model = "llava" if is_vision else "llama3.2"
+        model = "llava" if is_vision else "llama3"
         payload = {
             "model": model,
             "prompt": prompt + " Return pure JSON.",
@@ -154,7 +154,7 @@ class OllamaProvider(BaseAIProvider):
                     logger.info(f"[AI_METRIC] event=successful_inference provider=ollama endpoint=generate timeout={self.timeout}")
                     return {
                         "result": result_data,
-                        "confidence": "medium", # Local models yield strictly medium
+                        "confidence": "high", 
                         "method": "ollama"
                     }
                 except Exception as e:
@@ -189,9 +189,33 @@ class OllamaProvider(BaseAIProvider):
 class DisabledProvider(BaseAIProvider):
     """Smart Fallback Provider that generates realistic contextual responses based on risk."""
     async def analyze_clock(self, image: str) -> dict: return fallback_response()
-    async def semantic_match_batch(self, expected: List[str], user: List[str]) -> dict: return fallback_response()
-    async def validate_animals_batch(self, words: List[str]) -> dict: return fallback_response()
-    async def validate_category_batch(self, category: str, words: List[str]) -> dict: return fallback_response()
+
+    def _fuzzy_match(self, word: str, pool: set) -> bool:
+        import difflib
+        word = str(word).lower().strip()
+        if word in pool:
+            return True
+        closest = difflib.get_close_matches(word, pool, n=1, cutoff=0.8)
+        return bool(closest)
+
+    async def semantic_match_batch(self, expected: List[str], user: List[str]) -> dict: 
+        expected_set = set(str(e).lower().strip() for e in expected if e)
+        result_map = {}
+        for w in user:
+            result_map[w] = self._fuzzy_match(w, expected_set)
+        return {"result": result_map, "confidence": "medium", "method": "fallback_fuzzy_match"}
+
+    async def validate_animals_batch(self, words: List[str]) -> dict: 
+        return await self.validate_category_batch("animals", words)
+
+    async def validate_category_batch(self, category: str, words: List[str]) -> dict: 
+        from app.ai_services.semantic_validation import SemanticValidator
+        cat_lower = category.lower().strip()
+        expected_set = SemanticValidator.CATEGORIES.get(cat_lower, SemanticValidator.CATEGORIES["animals"])
+        result_map = {}
+        for w in words:
+            result_map[w] = self._fuzzy_match(w, expected_set)
+        return {"result": result_map, "confidence": "medium", "method": "fallback_dictionary_match"}
     
     async def generate_explanation(self, data: dict) -> dict:
         band = data.get("risk_band", "Low").upper()
@@ -202,7 +226,7 @@ class DisabledProvider(BaseAIProvider):
         else:
             exp = "Neural response metrics demonstrate robust cognitive functioning. Memory registration, semantic retrieval, and executive processing are operating seamlessly within healthy neurological parameters."
             
-        return {"result": {"explanation": exp}, "confidence": "high", "method": "neural_mock_engine"}
+        return {"result": {"explanation": exp}, "confidence": "medium", "method": "neural_mock_engine"}
 
     async def generate_recommendation(self, data: dict) -> dict:
         band = data.get("risk_band", "Low").upper()
@@ -213,7 +237,7 @@ class DisabledProvider(BaseAIProvider):
         else:
             rec = "No clinical intervention is indicated. Continue engaging in your routine mentally stimulating activities and maintain a healthy, active lifestyle."
             
-        return {"result": {"recommendation": rec}, "confidence": "high", "method": "neural_mock_engine"}
+        return {"result": {"recommendation": rec}, "confidence": "medium", "method": "neural_mock_engine"}
 
 # Central Routing Gateway
 def get_provider() -> BaseAIProvider:

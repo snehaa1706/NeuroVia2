@@ -22,6 +22,22 @@ const DoctorNavbar = () => {
   const [avatarSrc, setAvatarSrc] = useState(resolveAvatar(user?.avatar_url));
   const [avatarFailed, setAvatarFailed] = useState(false);
 
+  // Listen for local updates to instantly refresh avatar
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      const freshStored = localStorage.getItem('neurovia_doctor_user');
+      if (freshStored) {
+        const freshUser = JSON.parse(freshStored);
+        if (freshUser.avatar_url) {
+          setAvatarSrc(resolveAvatar(freshUser.avatar_url));
+          setAvatarFailed(false);
+        }
+      }
+    };
+    window.addEventListener('neurovia_profile_updated', handleProfileUpdate);
+    return () => window.removeEventListener('neurovia_profile_updated', handleProfileUpdate);
+  }, []);
+
   // Fetch fresh avatar from backend ONLY if localStorage is missing avatar_url
   useEffect(() => {
     if (user?.avatar_url) return; // already have it locally

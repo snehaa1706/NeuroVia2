@@ -5,6 +5,7 @@ import logging
 import time
 from collections import defaultdict
 from uuid import uuid4
+from typing import Optional
 
 from app.config import settings
 
@@ -43,7 +44,7 @@ def _make_token(user_id: str) -> str:
     return f"{header}.{payload}.{signature}"
 
 
-def _decode_token(token: str) -> dict | None:
+def _decode_token(token: str) -> Optional[dict]:
     """Decode the simple JWT-like token and return the payload (or None)."""
     import base64
     try:
@@ -63,7 +64,7 @@ def _decode_token(token: str) -> dict | None:
 
 class _DummyUser:
     """Mimics the Supabase user object returned by auth calls."""
-    def __init__(self, id: str, email: str, user_metadata: dict | None = None):
+    def __init__(self, id: str, email: str, user_metadata: Optional[dict] = None):
         self.id = id
         self.email = email
         self.user_metadata = user_metadata or {}
@@ -77,14 +78,14 @@ class _DummySession:
 
 class _DummyAuthResponse:
     """Mimics the combined auth response from Supabase (user + session)."""
-    def __init__(self, user: _DummyUser, session: _DummySession | None):
+    def __init__(self, user: _DummyUser, session: Optional[_DummySession]):
         self.user = user
         self.session = session
 
 
 class _DummyUserResponse:
     """Mimics the response from get_user (user only, no session)."""
-    def __init__(self, user: _DummyUser | None):
+    def __init__(self, user: Optional[_DummyUser]):
         self.user = user
 
 
@@ -327,9 +328,52 @@ except Exception as exc:
     supabase, supabase_admin = _build_dummy_clients()
 
 
-def get_supabase():
-    return supabase
+import os
+CONSULTATIONS_FILE = os.path.join(os.path.dirname(__file__), "consultations_db.json")
 
+_fallback_db = DummyClient()
+try:
+    if os.path.exists(CONSULTATIONS_FILE):
+        with open(CONSULTATIONS_FILE, "r") as f:
+            _fallback_db.tables["consultations"] = json.load(f)
+except Exception:
+    pass
+
+def save_consultations():
+    try:
+        with open(CONSULTATIONS_FILE, "w") as f:
+            json.dump(_fallback_db.tables["consultations"], f)
+    except Exception:
+        pass
+
+original_insert = _fallback_db._insert
+def save_insert(*args, **kwargs):
+    res = original_insert(*args, **kwargs)
+    save_consultations()
+    return res
+_fallback_db._insert = save_insert
+
+original_update = _fallback_db._update
+def save_update(*args, **kwargs):
+    res = original_update(*args, **kwargs)
+    save_consultations()
+    return res
+_fallback_db._update = save_update
+
+class SupabasePatch:
+    def __init__(self, real_client):
+        self._real = real_client
+    
+    def __getattr__(self, name):
+        return getattr(self._real, name)
+        
+    def table(self, name):
+        if name == "consultations":
+            return _fallback_db.table("consultations")
+        return getattr(self._real, "table")(name)
+
+def get_supabase():
+    return SupabasePatch(supabase)
 
 def get_supabase_admin():
-    return supabase_admin
+    return SupabasePatch(supabase_admin)

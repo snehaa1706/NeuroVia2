@@ -7,11 +7,17 @@ class PatientSummary(BaseModel):
     id: str
     full_name: str
     email: str
+    phone: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    created_at: Optional[str] = None
 
 class PatientDashboard(BaseModel):
     patient: PatientSummary
     latest_report: Optional[Dict[str, Any]] = None
     history: List[Dict[str, Any]] = []
+    assessments: List[Dict[str, Any]] = []
+    ai_analysis: Optional[Dict[str, Any]] = None
+    consultations: List[Dict[str, Any]] = []
     activities: List[Dict[str, Any]] = []
     domain_scores: Dict[str, float] = {}
 

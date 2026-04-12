@@ -71,8 +71,11 @@ _ACTIVITY_LIBRARY: dict = {
         {"content": {"category": "Furniture"}}
     ],
     "family_recognition": [
-        {"content": {"image": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200", "options": ["Mother", "Sister", "Aunt"], "answer": "Mother"}},
-        {"content": {"image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200", "options": ["Brother", "Father", "Uncle"], "answer": "Brother"}}
+        {"content": {"image": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&h=300&fit=crop&crop=face", "options": ["Mother", "Sister", "Aunt"], "answer": "Mother", "memberName": "Mom"}},
+        {"content": {"image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&h=300&fit=crop&crop=face", "options": ["Brother", "Father", "Uncle"], "answer": "Brother", "memberName": "Sibling"}},
+        {"content": {"image": "https://images.unsplash.com/photo-1581579438747-104c53d7fbc4?w=300&h=300&fit=crop&crop=face", "options": ["Grandmother", "Neighbor", "Teacher"], "answer": "Grandmother", "memberName": "Grandma"}},
+        {"content": {"image": "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=300&h=300&fit=crop&crop=face", "options": ["Father", "Cousin", "Friend"], "answer": "Father", "memberName": "Dad"}},
+        {"content": {"image": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&h=300&fit=crop&crop=face", "options": ["Daughter", "Niece", "Student"], "answer": "Daughter", "memberName": "Daughter"}}
     ],
     "phone_recognition": [
         {"content": {"name": "Emergency", "number": "911"}},
@@ -92,13 +95,79 @@ _ACTIVITY_LIBRARY: dict = {
     ]
 }
 
-def _get_fallback_activity(activity_type: str, difficulty: str) -> dict:
-    options = _ACTIVITY_LIBRARY.get(activity_type, _ACTIVITY_LIBRARY["memory_recall"])
-    chosen = random.choice(options)
+def _mutate_activity(activity_type: str, chosen: dict, level: int) -> dict:
+    import copy
+    import random
+    import string
+
+    content = copy.deepcopy(chosen["content"])
+    level = min(level, 3)  # Hard cap at 3
+
+    # Shuffle internal lists everywhere for NON-REPETITIVE randomness
+    if "options" in content:
+        random.shuffle(content["options"])
+        # Level 3: add extra distractor options to make it harder
+        if level == 3 and len(content["options"]) < 6:
+            extras = ["Diamond", "Feather", "Lantern", "Compass", "Anchor", "Violin"]
+            for e in random.sample(extras, min(2, 6 - len(content["options"]))):
+                if e not in content["options"]:
+                    content["options"].append(e)
+            random.shuffle(content["options"])
+    
+    if "words" in content:
+        random.shuffle(content["words"])
+        # Level scaling: L1=base(3), L2=+3 words(6), L3=+5 words(8)
+        extra_pool = ["Tree", "Bird", "House", "Car", "Ocean", "Mountain", "Pencil",
+                      "Coffee", "Train", "Bridge", "Feather", "Lantern", "Mirror", "Compass"]
+        pool = [x for x in extra_pool if x not in content["words"]]
+        if level == 2:
+            adds = min(3, len(pool))
+        elif level == 3:
+            adds = min(5, len(pool))
+        else:
+            adds = 0
+        if adds > 0:
+            content["words"].extend(random.sample(pool, adds))
+            random.shuffle(content["words"])
+            
+    if "sequence" in content:
+        first = content["sequence"][0]
+        if isinstance(first, str) and len(first) > 0 and first[0] not in string.digits:
+            # Pattern sequences: extend pattern length
+            if level == 2:
+                content["sequence"].extend([random.choice(["⭐", "♦"]), first])
+            elif level == 3:
+                content["sequence"].extend([random.choice(["🔶", "🔺"]), first, random.choice(["⭐", "♦"]), first])
+        elif isinstance(first, (int,)):
+            # Digit span: L1=base(3-4), L2=+2 digits, L3=+4 digits
+            extra_digits = level - 1 if level == 2 else 4 if level == 3 else 0
+            content["sequence"].extend([random.randint(0, 9) for _ in range(extra_digits)])
+
+    if "steps" in content and level == 3:
+        # Add extra steps at Level 3 to make sequencing harder
+        bonus_steps = ["Check the result", "Clean up afterwards"]
+        content["steps"].extend(random.sample(bonus_steps, min(len(bonus_steps), 1)))
+
+    if "story" in content and level >= 2:
+        # Make story longer at higher levels
+        extras = [
+            " Later, she met her friend Tom at the park.",
+            " The weather was sunny with a gentle breeze.",
+            " On the way home, she stopped at the library."
+        ]
+        content["story"] += random.choice(extras)
+
     return {
         "type": activity_type,
-        "content": chosen["content"]
+        "content": content,
+        "level": level
     }
+
+def _get_fallback_activity(activity_type: str, difficulty: str, level: int = 1) -> dict:
+    import random
+    options = _ACTIVITY_LIBRARY.get(activity_type, _ACTIVITY_LIBRARY["memory_recall"])
+    chosen = random.choice(options)
+    return _mutate_activity(activity_type, chosen, level)
 
 async def generate_ai_response(system_prompt: str, user_prompt: str) -> str:
     """Generate a response using the configured AI provider."""
@@ -173,26 +242,32 @@ async def generate_health_guidance(
     return await _get_json_response(HEALTH_GUIDANCE_SYSTEM, user_prompt)
 
 
-async def generate_activity(activity_type: str, difficulty: str, severity: str = "mild") -> dict:
+async def generate_activity(activity_type: str, difficulty: str, severity: str = "mild", level: int = 1, language: str = "en") -> dict:
     """Generate a cognitive activity — uses pre-built library when Ollama is the provider."""
     provider = get_ai_provider()
 
     # Ollama is rarely running locally — skip the 60s timeout and use the library instantly
     if provider == "ollama":
-        return _get_fallback_activity(activity_type, difficulty)
+        return _get_fallback_activity(activity_type, difficulty, level)
 
     # OpenAI: try AI first, fall back to library on error
     try:
         from app.prompts.activity_prompts import ACTIVITY_GENERATION_SYSTEM, ACTIVITY_GENERATION_USER
         user_prompt = ACTIVITY_GENERATION_USER.format(
-            severity=severity, activity_type=activity_type, difficulty=difficulty
+            severity=severity, activity_type=activity_type, difficulty=difficulty, level=level, language=language
         )
-        result = await _get_json_response(ACTIVITY_GENERATION_SYSTEM, user_prompt)
+        sys_prompt = ACTIVITY_GENERATION_SYSTEM.format(language=language) if "{language}" in ACTIVITY_GENERATION_SYSTEM else ACTIVITY_GENERATION_SYSTEM
+        
+        result = await _get_json_response(sys_prompt, user_prompt)
         if "error" in result:
-            return _get_fallback_activity(activity_type, difficulty)
+            return _get_fallback_activity(activity_type, difficulty, level)
+        if "content" not in result:
+             # Ensure format matches frontend expectations if AI drifted
+             return {"type": activity_type, "content": result, "level": level}
+        result["level"] = level
         return result
     except Exception:
-        return _get_fallback_activity(activity_type, difficulty)
+        return _get_fallback_activity(activity_type, difficulty, level)
 
 
 async def generate_consultation_summary(screening_data: str, ai_analysis: str) -> dict:

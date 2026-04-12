@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import ActivityCard from '../components/ActivityCard';
 import ActivityPlayer, { PersonalDataSetup } from '../components/ActivityPlayer';
 import { X, Loader2, BarChart3, Trophy, Target, Zap, Brain } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Area, AreaChart } from 'recharts';
 import Confetti from 'react-confetti';
 import { useWindowSize } from 'react-use';
@@ -21,6 +21,16 @@ const Activities = () => {
   const [dailyPlan, setDailyPlan] = useState<any[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const { width, height } = useWindowSize();
+  const location = useLocation();
+
+  // Handle deep linking to specific activities
+  useEffect(() => {
+    if (location.state?.play) {
+      setActiveActivityType(location.state.play);
+      // Clean up the state so it doesn't re-trigger on simple refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Load progress data from localStorage
   useEffect(() => {
@@ -34,17 +44,15 @@ const Activities = () => {
         const data: ScoreEntry[] = JSON.parse(raw);
         setChartData(data);
 
-        // Calculate today's completions reliably using ISO date string mapping
-        const todayStr = new Date().toISOString().split('T')[0];
+        // Calculate today's completions checking against local timezone string
+        const todayStr = new Date().toLocaleDateString();
         const todayEntries: Record<string, number> = {};
         
         data.forEach(d => {
-          // Normalise any historic dates to YYYY-MM-DD for checking
-          let dDateStr = d.date;
-          try { dDateStr = new Date(d.date).toISOString().split('T')[0]; } catch(e){}
-          
-          if (dDateStr === todayStr) {
-            todayEntries[d.type] = d.score;
+          if (d.date === todayStr) {
+            // Normalize activity type to underscores so it correctly matches `titleToType`
+            const normType = d.type.toLowerCase().replace(/ /g, '_');
+            todayEntries[normType] = d.score;
           }
         });
         setCompletedToday(todayEntries);
@@ -110,19 +118,18 @@ const Activities = () => {
     const byDate: Record<string, any> = {};
     chartData.forEach(d => {
       let dDateStr = d.date;
-      try { dDateStr = new Date(d.date).toISOString().split('T')[0]; } catch(e){}
       
       if (!byDate[dDateStr]) byDate[dDateStr] = { date: dDateStr, scores: [], breakdown: {} };
       byDate[dDateStr].scores.push(d.score);
       // Average duplicate activities within the same day for a cleaner breakdown or keep last
-      byDate[dDateStr].breakdown[d.type] = d.score;
+      byDate[dDateStr].breakdown[d.type.toLowerCase().replace(/ /g, '_')] = d.score;
     });
     return Object.values(byDate).map((dayData: any) => ({
       date: dayData.date,
       avgScore: Math.round(dayData.scores.reduce((a: number, b: number) => a + b, 0) / dayData.scores.length),
       sessions: dayData.scores.length,
       breakdown: dayData.breakdown
-    })).sort((a: any, b: any) => a.date.localeCompare(b.date)).slice(-10);
+    })).sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(-10);
   };
   
   const dailyChartData = buildDailyChartData();
@@ -203,7 +210,7 @@ const Activities = () => {
       )}
 
       {/* Section 0: Scoreboard */}
-      <section className="bg-white rounded-3xl p-8 shadow-lg border border-(--color-border)">
+      <section className="bg-(--color-bg) rounded-3xl p-8 shadow-lg border border-(--color-border)">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 bg-(--color-sage)/15 rounded-xl flex items-center justify-center">
             <BarChart3 className="w-5 h-5 text-(--color-sage)" />
@@ -258,7 +265,7 @@ const Activities = () => {
       <PersonalDataSetup />
 
       {/* Section 1: Daily Plan */}
-      <section>
+      <section className="bg-(--color-bg) hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-shadow duration-500 rounded-3xl p-8 shadow-lg border border-(--color-border)">
         <div className="flex items-end justify-between mb-6">
           <h2 className="text-3xl font-bold text-(--color-navy)">Daily Plan</h2>
           <div className="text-xl font-medium text-(--color-sage)">
@@ -298,8 +305,13 @@ const Activities = () => {
         </div>
       </section>
 
-      {/* Section 2: Activity Library */}
+      {/* Section 1.5: Personal Data Setup (Family Photos & Phone Numbers) */}
       <section>
+        <PersonalDataSetup />
+      </section>
+
+      {/* Section 2: Activity Library */}
+      <section className="bg-(--color-bg) hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-shadow duration-500 rounded-3xl p-8 shadow-lg border border-(--color-border)">
         <h2 className="text-3xl font-bold text-(--color-navy) mb-6">Activity Library</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {library.map((act, index) => (
@@ -314,7 +326,7 @@ const Activities = () => {
       </section>
 
       {/* Section 3: Progress History Chart */}
-      <section className="bg-white rounded-3xl p-8 shadow-lg border border-(--color-border)">
+      <section className="bg-(--color-bg) rounded-3xl p-8 shadow-lg border border-(--color-border)">
         <h2 className="text-2xl font-bold text-(--color-navy) mb-6">Progress History</h2>
         {dailyChartData.length > 0 ? (
           <div style={{ width: '100%', height: 320 }}>

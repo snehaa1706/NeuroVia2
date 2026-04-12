@@ -3,7 +3,12 @@ Audio transcription endpoint using Google's free Web Speech API (via SpeechRecog
 This bypasses the browser's broken webkitSpeechRecognition by processing audio server-side.
 """
 from fastapi import APIRouter, UploadFile, File, HTTPException
-import speech_recognition as sr
+try:
+    import speech_recognition as sr
+    _sr_available = True
+except ImportError:
+    sr = None
+    _sr_available = False
 import tempfile
 import subprocess
 import os
@@ -87,6 +92,8 @@ async def transcribe_audio(audio: UploadFile = File(...)):
     Uses Google's free speech recognition API (no API key needed for basic use).
     """
     try:
+        if not _sr_available:
+            raise HTTPException(status_code=503, detail="Speech recognition not available. Install SpeechRecognition package.")
         audio_bytes = await audio.read()
         
         if len(audio_bytes) < 100:

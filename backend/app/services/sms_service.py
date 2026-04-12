@@ -1,8 +1,14 @@
 import logging
 import os
 from dotenv import load_dotenv
-from twilio.rest import Client
-from twilio.base.exceptions import TwilioRestException
+try:
+    from twilio.rest import Client
+    from twilio.base.exceptions import TwilioRestException
+    _twilio_available = True
+except ImportError:
+    Client = None
+    TwilioRestException = Exception
+    _twilio_available = False
 
 load_dotenv()
 
@@ -15,7 +21,7 @@ twilio_phone = os.getenv("TWILIO_PHONE_NUMBER")
 account_sid = os.getenv("TWILIO_ACCOUNT_SID")
 auth_token = os.getenv("TWILIO_AUTH_TOKEN")
 
-if account_sid and auth_token and twilio_phone:
+if _twilio_available and account_sid and auth_token and twilio_phone:
     try:
         twilio_client = Client(account_sid, auth_token)
         twilio_configured = True
@@ -65,7 +71,7 @@ def send_alert_sms(phone_number: str, message: str) -> bool:
 
     # Mock fallback
     print("\n" + "═" * 60)
-    print(" 📱 MOCK SMS DISPATCHED")
+    print(" [SMS] MOCK SMS DISPATCHED")
     print("═" * 60)
     print(f" To:      {phone_number}")
     print(f" Message: {message}")

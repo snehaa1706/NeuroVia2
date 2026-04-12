@@ -26,6 +26,7 @@ export default function Result({ resultData, onReset }) {
     ai_confidence,
     assessment_id
   } = resultData;
+  const level_scores = resultData.level_scores || {};
 
   const getThemeColor = (band) => {
     if(band === "low") return { bg: "var(--color-teal)", text: "#fff" };
@@ -56,6 +57,24 @@ export default function Result({ resultData, onReset }) {
         </div>
       </div>
 
+      <div style={{ background: "var(--color-bg-card)", padding: "20px", borderRadius: "16px", marginBottom: "30px", border: "1px solid var(--color-primary-50)", boxShadow: "0 4px 12px rgba(0,0,0,0.02)" }}>
+        <h4 style={{ margin: "0 0 15px 0", fontFamily: "var(--font-serif)", fontSize: "18px", color: "var(--color-text-primary)" }}>Score Breakdown</h4>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "10px", flexWrap: "wrap" }}>
+          <div style={{ flex: 1, minWidth: "120px", textAlign: "center", padding: "10px", background: "#f8f9fa", borderRadius: "8px" }}>
+            <div style={{ fontSize: "13px", color: "#666", marginBottom: "5px" }}>Level 1 (AD8/Subj)</div>
+            <div style={{ fontSize: "18px", fontWeight: "600", color: "var(--color-navy)" }}>{((level_scores.ad8 || 0) * 100).toFixed(0)}%</div>
+          </div>
+          <div style={{ flex: 1, minWidth: "120px", textAlign: "center", padding: "10px", background: "#f8f9fa", borderRadius: "8px" }}>
+            <div style={{ fontSize: "13px", color: "#666", marginBottom: "5px" }}>Level 2 (Fluency)</div>
+            <div style={{ fontSize: "18px", fontWeight: "600", color: "var(--color-navy)" }}>{((level_scores.verbal_fluency || 0) * 100).toFixed(0)}%</div>
+          </div>
+          <div style={{ flex: 1, minWidth: "120px", textAlign: "center", padding: "10px", background: "#f8f9fa", borderRadius: "8px" }}>
+            <div style={{ fontSize: "13px", color: "#666", marginBottom: "5px" }}>Level 3 (Clock/Exec)</div>
+            <div style={{ fontSize: "18px", fontWeight: "600", color: "var(--color-navy)" }}>{((level_scores.clock_drawing || 0) * 100).toFixed(0)}%</div>
+          </div>
+        </div>
+      </div>
+
       <div style={{ background: "var(--color-bg-hover)", padding: "30px", borderRadius: "16px", marginBottom: "30px", border: "1px solid var(--color-primary-50)" }}>
         <h4 style={{ margin: "0 0 15px 0", fontFamily: "var(--font-serif)", fontSize: "22px", color: "var(--color-navy)" }}>Clinical Baseline</h4>
         <p style={{ margin: 0, color: "var(--color-text-secondary)", fontSize: "16px", lineHeight: "1.6" }}>{clinical_recommendation}</p>
@@ -65,7 +84,9 @@ export default function Result({ resultData, onReset }) {
         <div style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-primary-100)", borderLeft: "6px solid var(--color-navy)", padding: "30px", borderRadius: "16px", boxShadow: "0 8px 24px rgba(27, 42, 65, 0.05)" }}>
           <h4 style={{ margin: "0 0 20px 0", fontFamily: "var(--font-serif)", fontSize: "22px", color: "var(--color-navy)", display: "flex", alignItems: "center", gap: "10px" }}>
             <span>NeuroVia AI Diagnostics</span>
-            {ai_confidence && <span style={{ fontSize: "12px", background: "var(--color-teal-50)", color: "var(--color-teal-dark)", padding: "4px 10px", borderRadius: "20px", fontFamily: "var(--font-sans)", fontWeight: "600" }}>{ai_confidence.toUpperCase()} CONFIDENCE</span>}
+            {ai_confidence && <span style={{ fontSize: "12px", background: ai_confidence === "high" ? "var(--color-teal-50)" : "#f3f4f6", color: ai_confidence === "high" ? "var(--color-teal-dark)" : "#4b5563", padding: "4px 10px", borderRadius: "20px", fontFamily: "var(--font-sans)", fontWeight: "600" }}>
+              {ai_confidence === "medium" ? "CLINICAL RULES ENGINE" : "AI ANALYSIS"}
+            </span>}
           </h4>
           <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
             <p style={{ margin: 0, fontSize: "15px", lineHeight: "1.6" }}>

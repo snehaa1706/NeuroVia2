@@ -101,7 +101,7 @@ class Level2Request(BaseModel):
 
 
 class Level3Request(BaseModel):
-    clock_image_url: str = Field(..., min_length=10, description="Valid Cloud URL for the uploaded drawing")
+    clock_image_url: str = Field(default="", description="Valid Cloud URL for the uploaded drawing. Can be empty if skipped.")
     stroop_responses: List[Dict[str, Any]] = Field(default=[], description="List of Stroop trial responses with answer, reaction_time_ms, timed_out")
 
 
@@ -209,8 +209,8 @@ class CognitiveResultResponse(BaseModel):
 
 class CognitiveSummaryResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    avg_score: float | None = None
-    latest_score: float | None = None
+    avg_score: Optional[float] = None
+    latest_score: Optional[float] = None
     trend: str  # "no_data" | "improving" | "stable" | "declining"
     recent_scores: List[float] = Field(default_factory=list)
     recent_results: List[Dict[str, Any]] = Field(default_factory=list)

@@ -130,14 +130,17 @@ const Settings = () => {
             body: JSON.stringify(payload),
           });
         }
-      } catch (err) {
+      } catch (err: any) {
         console.warn('Failed to sync profile to backend:', err);
+        alert('Error syncing profile to server: ' + err.message);
       }
     }
 
     setProfileSaving(false);
     setProfileSaved(true);
     setAvatarFile(null);
+    window.dispatchEvent(new Event('neurovia_profile_updated'));
+    alert('Profile saved successfully! Changes are now active.');
     setTimeout(() => setProfileSaved(false), 3000);
   };
 
@@ -183,7 +186,7 @@ const Settings = () => {
         <div className="flex items-center gap-6 mb-6 p-4 bg-(--color-surface-alt) rounded-2xl">
           <div className="shrink-0">
             {displayAvatar ? (
-              <img src={displayAvatar} alt="Profile" className="w-20 h-20 rounded-2xl object-cover border-2 border-(--color-sage)/30 shadow-lg" />
+              <img src={displayAvatar} alt="Profile" className="w-20 h-20 rounded-2xl object-cover border-2 border-(--color-sage)/30 shadow-lg" onError={() => { setAvatarUrl(''); setAvatarPreview(''); }} />
             ) : (
               <div className="w-20 h-20 rounded-2xl bg-(--color-sage)/15 flex items-center justify-center border-2 border-dashed border-(--color-sage)/30">
                 <Camera className="w-8 h-8 text-(--color-sage)/40" />
@@ -192,13 +195,44 @@ const Settings = () => {
           </div>
           <div className="flex-1 space-y-2">
             <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden"
-              onChange={(e) => {
+              onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (file) {
                   setAvatarFile(file);
                   const reader = new FileReader();
                   reader.onloadend = () => setAvatarPreview(reader.result as string);
                   reader.readAsDataURL(file);
+
+                  // AUTO-SAVE: instantly persist image
+                  setProfileSaving(true);
+                  try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    const uploadRes = await fetch(`${API_URL}/doctors/upload/avatar`, {
+                      method: 'POST',
+                      body: formData,
+                    });
+                    const uploadData = await uploadRes.json();
+                    
+                    const updatedUser = { ...user, avatar_url: uploadData.url };
+                    if (isDoctor) {
+                      localStorage.setItem('neurovia_doctor_user', JSON.stringify(updatedUser));
+                    } else {
+                      localStorage.setItem('neurovia_patient_user', JSON.stringify(updatedUser));
+                    }
+
+                    await fetch(`${API_URL}/auth/profile`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                      body: JSON.stringify({ avatar_url: uploadData.url }),
+                    });
+                    
+                    window.dispatchEvent(new Event('neurovia_profile_updated'));
+                  } catch (err) {
+                    console.error("Auto upload failed", err);
+                  } finally {
+                    setProfileSaving(false);
+                  }
                 }
               }} />
             <button type="button" onClick={() => fileInputRef.current?.click()}

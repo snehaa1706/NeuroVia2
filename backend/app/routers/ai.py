@@ -17,8 +17,21 @@ from app.services.ai_service import (
     generate_consultation_summary,
     generate_ai_response
 )
+from app.ai_services.ai_orchestrator import orchestrator
+from app.models.ai_orchestrator_requests import (
+    RiskPredictionRequest,
+    TrendAnalysisRequest,
+    SemanticValidationRequest,
+    ClockAnalysisRequest,
+    DoctorInsightRequest,
+    FullAnalysisRequest
+)
+
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 @router.get("/test-ai")
 async def test_ai_endpoint(prompt: str = "Explain early warning signs of dementia."):
@@ -41,6 +54,7 @@ def _get_user_id(request: Request) -> str:
 
 
 @router.post("/analyze-screening", response_model=AIAnalysisResponse)
+@limiter.limit("10/minute")
 async def analyze_screening_endpoint(request: Request, data: AIAnalysisRequest):
     """Analyze screening results using OpenAI."""
     sb = get_supabase()
@@ -106,8 +120,10 @@ async def generate_activity_endpoint(request: Request, data: ActivityGenerationR
 
     activity_type = data.activity_type or "memory_recall"
     difficulty = data.difficulty or "easy"
+    level = data.level
+    language = data.language
 
-    ai_result = await generate_activity(activity_type, difficulty)
+    ai_result = await generate_activity(activity_type, difficulty, level=level, language=language)
 
     if "error" in ai_result:
         raise HTTPException(status_code=500, detail=ai_result["error"])
@@ -129,6 +145,8 @@ async def generate_activity_endpoint(request: Request, data: ActivityGenerationR
         "activity_type": activity_type,
         "content": ai_result,
         "difficulty": difficulty,
+        "level": level,
+        "language": language
     }
     result = sb.table("activities").insert(activity_record).execute()
 
@@ -188,6 +206,7 @@ async def health_guidance_endpoint(
 
 
 @router.post("/consultation-summary", response_model=ConsultationSummaryResponse)
+@limiter.limit("10/minute")
 async def consultation_summary_endpoint(
     request: Request, data: ConsultationSummaryRequest
 ):
@@ -228,3 +247,15 @@ async def consultation_summary_endpoint(
         suggested_diagnostics=ai_result.get("suggested_diagnostics", []),
         questions_for_doctor=ai_result.get("questions_for_doctor", []),
     )
+
+
+# ==========================================
+# Orchestrator Phase (Phase 9 Integration)
+# ==========================================
+
+@router.post("/cognitive-report")
+@limiter.limit("10/minute")
+async def cognitive_report(request: Request, analysis_request: FullAnalysisRequest):
+    """Run full, standardized orchestrator cascade generating complete dashboard report."""
+    data = analysis_request.model_dump()
+    return await orchestrator.run_full_analysis(data)

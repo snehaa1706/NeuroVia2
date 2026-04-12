@@ -28,6 +28,8 @@ class ActivityGenerationRequest(BaseModel):
     user_id: Optional[str] = None
     activity_type: Optional[str] = None
     difficulty: Optional[str] = "easy"
+    level: int = 1
+    language: str = "en"
 
 
 class HealthGuidanceRequest(BaseModel):

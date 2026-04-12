@@ -47,47 +47,109 @@ class SupabaseIntegrationService:
     def get_patient_dashboard(self, patient_id: str) -> Dict[str, Any]:
         """
         Comprehensive data fetch for a specific patient (for doctor use).
+        Uses actual database tables: health_logs, assessments, consultations.
         """
+        from app.database import get_supabase
+        sb = get_supabase()
+
         # Fetch patient profile
         patient = supabase_helpers.get_user_by_id(patient_id)
         if not patient:
-            # Degraded mode fallback for ghost sessions caused by dummy backend hot reloads
             patient = {
                 "id": patient_id,
                 "full_name": "Unknown Patient (Ghost Session)",
                 "email": "ghost@neurovia.com"
             }
 
-        # Fetch patient's health and cognitive data
-        reports = supabase_helpers.get_patient_records_for_doctor(self.user_id, patient_id, "daily_reports", limit=7)
-        activities = supabase_helpers.get_patient_records_for_doctor(self.user_id, patient_id, "activity_results", limit=20)
-        
+        # Fetch health logs (replaces non-existent daily_reports)
+        reports = []
+        try:
+            result = sb.table("health_logs").select("*").eq("user_id", patient_id).order("created_at", desc=True).limit(7).execute()
+            reports = result.data or []
+        except Exception:
+            pass
+
+        # Fetch assessment/screening data
+        assessments = []
+        try:
+            result = sb.table("assessments").select("*").eq("user_id", patient_id).order("started_at", desc=True).limit(10).execute()
+            assessments = result.data or []
+        except Exception:
+            pass
+
+        # Fetch assessment results for each assessment
+        assessment_details = []
+        for a in assessments:
+            try:
+                result = sb.table("assessment_results").select("*").eq("assessment_id", a["id"]).execute()
+                assessment_details.append({
+                    **a,
+                    "results": result.data or []
+                })
+            except Exception:
+                assessment_details.append(a)
+
+        # Fetch AI analyses for the latest assessment
+        ai_analysis = None
+        if assessments:
+            try:
+                result = sb.table("ai_analyses").select("*").eq("assessment_id", assessments[0]["id"]).execute()
+                if result.data:
+                    ai_analysis = result.data[0]
+            except Exception:
+                pass
+
+        # Fetch consultations between this doctor and patient
+        consultations = []
+        try:
+            result = sb.table("consultations").select("*").eq("patient_id", patient_id).order("created_at", desc=True).limit(20).execute()
+            consultations = result.data or []
+        except Exception:
+            pass
+
         return {
             "patient": {
                 "id": patient.get("id", patient_id),
                 "full_name": patient.get("full_name", "Unknown Patient"),
-                "email": patient.get("email", "")
+                "email": patient.get("email", ""),
+                "phone": patient.get("phone", ""),
+                "date_of_birth": patient.get("date_of_birth"),
+                "created_at": patient.get("created_at"),
             },
             "latest_report": reports[0] if reports else None,
             "history": reports,
-            "activities": activities,
-            "domain_scores": self.compute_domain_scores(activities)
+            "assessments": assessment_details,
+            "ai_analysis": ai_analysis,
+            "consultations": consultations,
+            "activities": [],
+            "domain_scores": self._compute_domain_scores_from_assessments(assessment_details)
         }
 
-    def compute_domain_scores(self, activities: List[Dict[str, Any]]) -> Dict[str, float]:
+    def _compute_domain_scores_from_assessments(self, assessments: List[Dict[str, Any]]) -> Dict[str, float]:
         """
-        Compute average scores across cognitive domains (Memory, Attention, etc.).
+        Compute cognitive domain scores from assessment results.
         """
         domains = ["Memory", "Attention", "Language", "Executive", "Recognition"]
-        scores = {d: [] for d in domains}
-        
-        for act in activities:
-            meta = act.get("metadata", {})
-            for d in domains:
-                # If activities have domain scores in their result
-                if d in meta:
-                    scores[d].append(float(meta[d]))
-                # Fallback to simple logic based on activity type if exists
-        
-        # Calculate averages (default to 0.0)
-        return {d: (sum(vals) / len(vals)) if vals else 0.0 for d, vals in scores.items()}
+        scores = {d: 0.0 for d in domains}
+
+        if not assessments:
+            return scores
+
+        # Map test types to cognitive domains
+        test_domain_map = {
+            "verbal_fluency": "Language",
+            "orientation": "Memory",
+            "trail_making": "Executive",
+            "clock_drawing": "Executive",
+            "ad8": "Memory",
+            "moca": "Attention",
+        }
+
+        for assessment in assessments:
+            for result in assessment.get("results", []):
+                test_type = result.get("test_type", "")
+                domain = test_domain_map.get(test_type)
+                if domain and result.get("max_score", 0) > 0:
+                    scores[domain] = max(scores[domain], result["score"] / result["max_score"])
+
+        return scores

@@ -14,7 +14,9 @@ async function apiFetch(endpoint, options = {}) {
 
   if (!res.ok) {
     if (res.status === 401 && token !== "dummy_dev_token") {
-      return apiFetch(endpoint, options);
+      localStorage.removeItem("neurovia_patient_token");
+      window.location.href = "/login";
+      throw new Error("Session expired. Please log in again.");
     }
     const error = await res.text();
     throw new Error(error || "API Error");
@@ -54,6 +56,13 @@ export const getResult = async (assessmentId) => {
 
 export const resumeAssessment = async () => {
   return await apiFetch('/screening/resume');
+};
+
+export const validateSemanticLive = async (category, words) => {
+  return await apiFetch('/screening/validate-semantic', {
+    method: "POST",
+    body: JSON.stringify({ category, words }),
+  });
 };
 
 export const transcribeAudio = async (blob) => {
