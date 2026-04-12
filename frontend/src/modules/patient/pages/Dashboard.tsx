@@ -113,59 +113,59 @@ const Dashboard = () => {
   const completedToday = activityData.filter(a => a.date === today).length;
 
   return (
-    <div className="space-y-8 fade-in">
+    <div className="space-y-6 fade-in text-[#1a2744]">
       {/* Editable Daily Input */}
-      <div className="bg-white rounded-3xl p-6 border border-(--color-border) shadow-lg">
+      <div className="bg-transparent rounded-[24px] p-5 border border-[#d2c8b9]/60 shadow-[0_4px_12px_rgba(0,0,0,0.03)]">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-xl font-bold text-(--color-navy) flex items-center gap-2">
-            <div className="w-9 h-9 bg-(--color-sage)/15 rounded-xl flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-(--color-sage)" />
+          <h3 className="text-[1.1rem] font-bold text-(--color-navy) flex items-center gap-2">
+            <div className="w-8 h-8 bg-(--color-sage)/15 rounded-xl flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-(--color-sage)" />
             </div>
             {t('todays_checkin')}
           </h3>
-          <div className="flex gap-3">
-            <Link to="/consult/patient/doctors" className="flex items-center gap-2 px-6 py-2.5 bg-(--color-navy) rounded-xl text-white font-bold text-sm hover:bg-(--color-navy-light) transition-all shadow-md">
-              <Activity className="w-4 h-4 text-(--color-sage)" /> {t('book_consultation')}
+          <div className="flex gap-2">
+            <Link to="/consult/patient/doctors" className="flex items-center gap-1.5 px-4 py-2 bg-[#1a2744] rounded-[10px] text-white font-medium text-[0.85rem] transition-all duration-300 hover:-translate-y-[2px] shadow-[0_4px_12px_rgba(26,39,68,0.25)] hover:shadow-[0_8px_20px_rgba(26,39,68,0.4)] border border-[#1a2744]">
+              <Activity className="w-3.5 h-3.5 text-[#b8d49e]" /> {t('book_consultation')}
             </Link>
             {!editing ? (
-              <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-5 py-2.5 bg-(--color-surface-alt) rounded-xl text-(--color-sage) font-bold text-sm border border-(--color-border) hover:bg-(--color-sage) hover:text-white hover:border-(--color-sage) transition-all">
-                <Edit3 className="w-4 h-4" /> {t('update')}
+              <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 px-4 py-2 bg-[#f5f0e8] backdrop-blur-sm rounded-[10px] text-[#1a2744] font-medium text-[0.85rem] border border-[--color-border] hover:bg-[#e2dcd0] hover:shadow-[0_0_15px_rgba(26,39,68,0.2)] transition-all duration-300 hover:-translate-y-[2px]">
+                <Edit3 className="w-3.5 h-3.5" /> {t('update')}
               </button>
             ) : (
-              <button onClick={saveLog} className="flex items-center gap-2 px-5 py-2.5 bg-(--color-sage) rounded-xl text-white font-bold text-sm hover:bg-(--color-sage-dark) transition-all shadow-md">
-                <Check className="w-4 h-4" /> {t('save')}
+              <button onClick={saveLog} className="flex items-center gap-1.5 px-4 py-2 bg-[#6b7c52] rounded-[10px] text-white font-medium text-[0.85rem] transition-all duration-300 hover:-translate-y-[2px] shadow-sm hover:shadow-[0_0_15px_rgba(107,124,82,0.4)]">
+                <Check className="w-3.5 h-3.5" /> {t('save')}
               </button>
             )}
           </div>
         </div>
 
         {editing ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {/* Mood Selector */}
-            <div className="bg-(--color-surface-alt) rounded-2xl p-5 border border-(--color-border-light)">
-              <label className="text-sm font-bold text-(--color-navy)/50 uppercase tracking-wider mb-3 block">{t('mood')}</label>
-              <div className="flex flex-wrap gap-2">
+            <div className="bg-transparent rounded-[16px] p-4 border border-[#d2c8b9]/60">
+              <label className="text-[0.7rem] font-bold text-(--color-navy)/50 uppercase tracking-wider mb-2 block">{t('mood')}</label>
+              <div className="flex flex-wrap gap-1.5">
                 {MOOD_OPTIONS.map(m => (
                   <button key={m} onClick={() => setTodayLog({ ...todayLog, mood: m })}
-                    className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${todayLog.mood === m ? 'bg-(--color-sage) text-white shadow-md' : 'bg-white text-(--color-navy)/70 border border-(--color-border-light) hover:border-(--color-sage)'}`}>{m}</button>
+                    className={`px-3 py-1.5 rounded-full text-[0.8rem] font-bold transition-all ${todayLog.mood === m ? 'bg-[#6b7c52] text-white shadow-[0_4px_12px_rgba(107,124,82,0.3)] scale-105' : 'bg-white/50 text-[#1a2744]/70 border border-[#d2c8b9]/60 hover:border-[#6b7c52] hover:bg-[#e2dcd0]'}`}>{m}</button>
                 ))}
               </div>
             </div>
             {/* Sleep Slider */}
-            <div className="bg-(--color-surface-alt) rounded-2xl p-5 border border-(--color-border-light)">
-              <label className="text-sm font-bold text-(--color-navy)/50 uppercase tracking-wider mb-3 block">{t('sleep')}: {todayLog.sleep} {t('hrs')}</label>
+            <div className="bg-transparent rounded-[16px] p-4 border border-[#d2c8b9]/60">
+              <label className="text-[0.7rem] font-bold text-(--color-navy)/50 uppercase tracking-wider mb-2 block">{t('sleep')}: {todayLog.sleep} {t('hrs')}</label>
               <input type="range" min="0" max="12" step="0.5" value={todayLog.sleep}
                 onChange={e => setTodayLog({ ...todayLog, sleep: parseFloat(e.target.value) })}
-                className="w-full accent-[#84A59D] h-2 rounded-full" />
-              <div className="flex justify-between text-xs text-(--color-navy)/40 mt-2"><span>0h</span><span>6h</span><span>12h</span></div>
+                className="w-full accent-[#d19e9e] h-1.5 rounded-full bg-[#d2c8b9]/40 outline-none hover:accent-[#c48c8c] transition-colors" />
+              <div className="flex justify-between text-[0.65rem] font-bold text-[#1a2744]/40 mt-1"><span>0h</span><span>6h</span><span>12h</span></div>
             </div>
             {/* Confusion Selector */}
-            <div className="bg-(--color-surface-alt) rounded-2xl p-5 border border-(--color-border-light)">
-              <label className="text-sm font-bold text-(--color-navy)/50 uppercase tracking-wider mb-3 block">{t('confusion')}</label>
-              <div className="flex flex-wrap gap-2">
+            <div className="bg-transparent rounded-[16px] p-4 border border-[#d2c8b9]/60">
+              <label className="text-[0.7rem] font-bold text-(--color-navy)/50 uppercase tracking-wider mb-2 block">{t('confusion')}</label>
+              <div className="flex flex-wrap gap-1.5">
                 {CONFUSION_OPTIONS.map(c => (
                   <button key={c} onClick={() => setTodayLog({ ...todayLog, confusion: c })}
-                    className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${todayLog.confusion === c ? 'bg-(--color-navy) text-white shadow-md' : 'bg-white text-(--color-navy)/70 border border-(--color-border-light) hover:border-(--color-navy)'}`}>{c}</button>
+                    className={`px-3 py-1.5 rounded-full text-[0.8rem] font-bold transition-all ${todayLog.confusion === c ? 'bg-[#1a2744] text-white shadow-[0_4px_12px_rgba(26,39,68,0.3)] scale-105' : 'bg-white/50 text-[#1a2744]/70 border border-[#d2c8b9]/60 hover:border-[#1a2744] hover:bg-[#e2dcd0]'}`}>{c}</button>
                 ))}
               </div>
             </div>
@@ -182,21 +182,21 @@ const Dashboard = () => {
       </div>
 
       {/* Comprehensive Progress Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white rounded-3xl p-6 shadow-lg border border-(--color-border)">
-          <h3 className="text-2xl font-bold text-(--color-navy) mb-4">{t('overall_wellness')}</h3>
-          <div style={{ width: '100%', height: 260 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-transparent rounded-[24px] p-5 border border-[#d2c8b9]/60 shadow-[0_4px_12px_rgba(0,0,0,0.03)]">
+          <h3 className="text-lg font-bold text-[--color-navy] mb-4">{t('overall_wellness')}</h3>
+          <div style={{ width: '100%', height: 220 }}>
             <ResponsiveContainer>
               <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#CCC8BB" vertical={false} />
-                <XAxis dataKey="day" stroke="#003049" tick={{ fontSize: 13, fontWeight: 600, fill: '#003049' }} tickLine={false} axisLine={{ stroke: '#CCC8BB', strokeWidth: 2 }} />
-                <YAxis stroke="#003049" tick={{ fontSize: 13, fontWeight: 600, fill: '#003049' }} tickLine={false} axisLine={{ stroke: '#CCC8BB', strokeWidth: 2 }} domain={[0, 100]} />
-                <Tooltip contentStyle={{ borderRadius: '16px', border: '2px solid #CCC8BB', boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.2)', padding: '12px 16px', backgroundColor: '#fff' }} />
-                <Legend wrapperStyle={{ fontSize: 12, fontWeight: 'bold' }} />
-                <Line type="monotone" dataKey={t('activities')} stroke="#84A59D" strokeWidth={3} dot={{ r: 5, strokeWidth: 2, stroke: '#fff', fill: '#84A59D' }} connectNulls />
-                <Line type="monotone" dataKey={t('mood')} stroke="#F28482" strokeWidth={2.5} dot={{ r: 4, strokeWidth: 2, stroke: '#fff', fill: '#F28482' }} connectNulls />
-                <Line type="monotone" dataKey={t('sleep')} stroke="#003049" strokeWidth={2.5} dot={{ r: 4, strokeWidth: 2, stroke: '#fff', fill: '#003049' }} connectNulls />
-                <Line type="monotone" dataKey={t('mental_clarity')} stroke="#D4A373" strokeWidth={2.5} dot={{ r: 4, strokeWidth: 2, stroke: '#fff', fill: '#D4A373' }} connectNulls />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(210, 200, 185, 0.4)" vertical={false} />
+                <XAxis dataKey="day" stroke="#1a2744" tick={{ fontSize: 13, fontWeight: 600, fill: '#1a2744' }} tickLine={false} axisLine={{ stroke: 'rgba(210, 200, 185, 0.6)', strokeWidth: 2 }} />
+                <YAxis stroke="#1a2744" tick={{ fontSize: 13, fontWeight: 600, fill: '#1a2744' }} tickLine={false} axisLine={{ stroke: 'rgba(210, 200, 185, 0.6)', strokeWidth: 2 }} domain={[0, 100]} />
+                <Tooltip contentStyle={{ borderRadius: '16px', border: '1px solid rgba(226, 220, 208, 0.8)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', padding: '12px 16px', backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)' }} />
+                <Legend wrapperStyle={{ fontSize: 12, fontWeight: 'bold', color: '#1a2744' }} />
+                <Line type="monotone" dataKey={t('activities')} stroke="#6b7c52" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, stroke: '#fff', fill: '#6b7c52' }} connectNulls />
+                <Line type="monotone" dataKey={t('mood')} stroke="#D4A373" strokeWidth={2.5} dot={{ r: 4, strokeWidth: 2, stroke: '#fff', fill: '#D4A373' }} connectNulls />
+                <Line type="monotone" dataKey={t('sleep')} stroke="#1a2744" strokeWidth={2.5} dot={{ r: 4, strokeWidth: 2, stroke: '#fff', fill: '#1a2744' }} connectNulls />
+                <Line type="monotone" dataKey={t('mental_clarity')} stroke="#b8d49e" strokeWidth={2.5} dot={{ r: 4, strokeWidth: 2, stroke: '#fff', fill: '#b8d49e' }} connectNulls />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -205,21 +205,21 @@ const Dashboard = () => {
       </div>
 
       {/* Daily Activities Preview */}
-      <div className="bg-white rounded-3xl p-8 shadow-lg border border-(--color-border)">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-2xl font-bold text-(--color-navy)">{t('todays_activities')}</h3>
-          <Link to="/activities" className="text-lg font-bold text-(--color-sage) hover:text-(--color-sage-dark) hover:underline transition-colors">{t('view_all')} →</Link>
+      <div className="bg-transparent rounded-[24px] p-6 border border-[#d2c8b9]/60 shadow-[0_4px_12px_rgba(0,0,0,0.03)]">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-lg font-bold text-[--color-navy]">{t('todays_activities')}</h3>
+          <Link to="/activities" className="text-[0.85rem] font-bold text-[--color-sage] hover:text-[--color-sage-dark] hover:underline transition-colors">{t('view_all')} →</Link>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4">
           {dailyActivities.map(act => (
-            <div key={act.id} className="bg-(--color-surface-alt) p-5 rounded-2xl flex flex-col justify-between border border-(--color-border-light) hover:shadow-lg hover:-translate-y-1 hover:border-(--color-sage)/50 transition-all duration-300 group">
+            <div key={act.id} className="bg-[#f5f0e8] hover:bg-[#e2dcd0] p-4 rounded-[16px] flex flex-col justify-between border border-[#d2c8b9]/60 shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_-8px_rgba(26,39,68,0.12)] hover:-translate-y-[2px] transition-all duration-300 group">
               <div>
-                <span className="text-3xl mb-3 block">{act.emoji}</span>
-                <h4 className="text-lg font-bold text-(--color-navy) mb-1">{act.title}</h4>
-                <p className="text-sm text-(--color-navy)/50 mb-4">{act.desc}</p>
+                <span className="text-2xl mb-2 block transition-transform duration-300 group-hover:scale-110 origin-left">{act.emoji}</span>
+                <h4 className="text-[0.95rem] font-bold text-[#1a2744] mb-1">{act.title}</h4>
+                <p className="text-[0.75rem] text-[#1a2744]/60 mb-3">{act.desc}</p>
               </div>
-              <Link to="/activities" className="w-full py-3 bg-white text-(--color-sage) text-center block font-bold text-base border-2 border-(--color-sage)/30 rounded-xl hover:bg-(--color-sage) hover:text-white hover:border-(--color-sage) transition-all">
+              <Link to="/activities" className="w-full py-2 bg-[#f5f0e8] hover:bg-[#e2dcd0] text-[#1a2744] text-center block font-bold text-[0.8rem] rounded-[10px] shadow-sm hover:shadow-[0_0_15px_rgba(26,39,68,0.25)] hover:scale-[1.02] transition-all duration-300 border border-[#e2dcd0]/50">
                 {t('start')}
               </Link>
             </div>

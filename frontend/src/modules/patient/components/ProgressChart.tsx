@@ -8,7 +8,7 @@ interface ProgressChartProps {
 
 const ProgressChart: React.FC<ProgressChartProps> = ({ data, title = 'Recent Progress' }) => {
   return (
-    <div className="w-full bg-white rounded-3xl p-6 shadow-lg border border-(--color-border)">
+    <div className="w-full bg-transparent rounded-[24px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-[#d2c8b9]/60">
       <h3 className="text-2xl font-bold text-(--color-navy) mb-4">{title}</h3>
       <div style={{ width: '100%', height: 240 }}>
         <ResponsiveContainer width="100%" height="100%">

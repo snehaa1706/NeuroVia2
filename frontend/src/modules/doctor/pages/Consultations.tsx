@@ -30,18 +30,18 @@ const Consultations = () => {
     return (
         <div className="max-w-6xl mx-auto space-y-8 fade-in pb-20">
             {/* 🔹 Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                    <h2 className="text-4xl font-bold text-(--color-navy) mb-2">Consultation Inbox</h2>
-                    <p className="text-lg text-(--color-navy)/60 font-medium">Review and respond to new patient requests and screening results.</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                <div className="group cursor-default transition-all duration-300 hover:scale-[1.01]">
+                    <h2 className="text-4xl font-bold text-[#1a2744] mb-2 transition-colors duration-300 group-hover:text-[#6b7c52]" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Consultation Inbox</h2>
+                    <p className="text-lg text-[#1a2744]/60 font-medium transition-colors duration-300 group-hover:text-[#1a2744]/80">Review and respond to new patient requests and screening results.</p>
                 </div>
                 
-                <div className="flex bg-white p-1.5 rounded-2xl border border-(--color-border-light) shadow-sm">
+                <div className="flex bg-[#ede7d9] p-1.5 rounded-2xl border border-[#d2c8b98c] shadow-sm">
                     {['all', 'pending', 'completed'].map((f) => (
                         <button
                             key={f}
                             onClick={() => setFilter(f)}
-                            className={`px-6 py-2.5 rounded-xl text-sm font-bold capitalize transition-all ${filter === f ? 'bg-(--color-navy) text-white shadow-lg shadow-(--color-navy)/20' : 'text-(--color-navy)/40 hover:bg-(--color-surface-alt)'}`}
+                            className={`px-6 py-2.5 rounded-xl text-sm font-bold capitalize transition-all duration-300 ${filter === f ? 'bg-[#6b7c52] text-white shadow-lg shadow-[#6b7c52]/30 scale-105' : 'text-[#1a2744]/60 hover:bg-[#f5f0e8] hover:text-[#1a2744] hover:-translate-y-[1px]'}`}
                         >
                             {f}
                         </button>
@@ -61,7 +61,7 @@ const Consultations = () => {
                         const linkBase = isConsultModule ? '/consult/doctor' : '/doctor';
                         return (
                         <Link to={`${linkBase}/consultation/${consult.id}`} key={consult.id} 
-                            className="bg-white p-6 rounded-3xl border border-(--color-border-light) shadow-sm hover:shadow-md hover:border-(--color-sage) transition-all group flex items-center justify-between">
+                            className="bg-[#ede7d9] p-6 rounded-3xl border border-[#d2c8b98c] shadow-sm hover:shadow-xl hover:bg-[#f5f0e8] hover:-translate-y-[3px] hover:border-[#6b7c52] transition-all duration-300 group flex items-center justify-between">
                             <div className="flex items-center gap-6">
                                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${consult.status === 'pending' ? 'bg-amber-50 text-amber-500' : 'bg-emerald-50 text-emerald-500'}`}>
                                     {consult.status === 'pending' ? <Clock className="w-7 h-7" /> : <CheckCircle2 className="w-7 h-7" />}
@@ -99,18 +99,18 @@ const Consultations = () => {
                         );
                     })
                 ) : (
-                    <div className="py-24 text-center bg-white rounded-[40px] border border-(--color-border-light) shadow-inner">
-                        <div className="w-20 h-20 bg-(--color-surface-alt) rounded-full flex items-center justify-center mx-auto mb-6">
-                            <Inbox className="w-10 h-10 text-(--color-navy)/20" />
+                    <div className="py-24 text-center bg-[#ede7d9] rounded-[40px] border border-[#d2c8b98c] shadow-sm group hover:scale-[1.01] hover:bg-[#f5f0e8] transition-all duration-300">
+                        <div className="w-20 h-20 bg-[#f5f0e8] rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-[#d2c8b98c] group-hover:-translate-y-2 group-hover:shadow-md transition-all duration-500">
+                            <Inbox className="w-10 h-10 text-[#6b7c52]/40 group-hover:text-[#6b7c52] transition-colors duration-500" />
                         </div>
-                        <h3 className="text-2xl font-bold text-(--color-navy) mb-2">Your inbox is empty</h3>
-                        <p className="text-(--color-navy)/40 max-w-sm mx-auto">No new {filter !== 'all' ? filter : ''} consultations found. Great job staying on top of your work!</p>
+                        <h3 className="text-2xl font-bold text-[#1a2744] mb-2 font-serif transition-colors" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Your inbox is empty</h3>
+                        <p className="text-[#1a2744]/60 max-w-sm mx-auto" style={{ fontFamily: "'DM Sans', sans-serif" }}>No new {filter !== 'all' ? filter : ''} consultations found. Great job staying on top of your work!</p>
                     </div>
                 )}
             </div>
             
             {/* 🔹 Summary Footnote */}
-            <div className="p-8 bg-(--color-navy) rounded-3xl text-white flex items-center justify-between shadow-2xl shadow-(--color-navy)/30">
+            <div className="p-8 bg-[#1a2744] rounded-3xl text-white flex items-center justify-between shadow-2xl hover:shadow-[#1a2744]/40 hover:-translate-y-1 transition-all duration-300">
                <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center">
                      <MessageSquare className="w-6 h-6" />

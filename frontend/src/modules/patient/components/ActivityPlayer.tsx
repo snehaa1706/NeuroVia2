@@ -640,7 +640,7 @@ export const PersonalDataSetup = () => {
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-(--color-border-light) overflow-hidden">
+    <div className="bg-[#f5f0e8] rounded-3xl shadow-sm border border-(--color-border-light) overflow-hidden">
       <button onClick={() => setShowPanel(!showPanel)} className="w-full flex items-center justify-between p-6 hover:bg-(--color-surface-alt) transition-colors">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-sm"><Users className="w-5 h-5 text-white" /></div>

@@ -86,103 +86,103 @@ const Medications = () => {
   const takenCount = todayMeds.filter(m => m.taken).length;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 fade-in">
+    <div className="max-w-5xl mx-auto space-y-6 fade-in text-[#1a2744]">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-4xl font-bold text-(--color-navy)">{t('medication_schedule')}</h2>
-          <p className="text-(--color-navy)/50 mt-1">{todayMeds.length} {t('meds_scheduled_for')} {todayName}</p>
+          <h2 className="text-[1.8rem] font-bold text-[--color-navy] tracking-wide">{t('medication_schedule')}</h2>
+          <p className="text-[--color-navy]/60 mt-0.5 text-[0.9rem]">{todayMeds.length} {t('meds_scheduled_for')} {todayName}</p>
         </div>
         <button 
           onClick={() => setIsAdding(true)}
-          className="flex items-center gap-2 bg-(--color-sage) text-white px-6 py-3 rounded-2xl text-lg font-bold hover:bg-[#6b8c84] transition-colors shadow-sm"
+          className="flex items-center gap-1.5 bg-[#6b7c52] text-white px-4 py-2 rounded-[12px] text-[0.9rem] font-bold hover:bg-[#556540] transition-all duration-300 hover:scale-105 hover:-translate-y-[2px] shadow-md hover:shadow-lg"
         >
-          <PlusCircle className="w-6 h-6" />
+          <PlusCircle className="w-5 h-5" />
           {t('add_medication')}
         </button>
       </div>
 
       {/* Next Pill Indicator */}
       {nextMed && (
-        <div className="bg-gradient-to-r from-[#003049] to-[#003049]/80 rounded-3xl p-6 text-white flex items-center justify-between">
+        <div className="bg-gradient-to-r from-[#1a2744] to-[#2e3f6b] rounded-[24px] p-5 text-white flex items-center justify-between shadow-[0_4px_12px_rgba(26,39,68,0.15)]">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
-              <ArrowRight className="w-8 h-8" />
+            <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-[14px] flex items-center justify-center border border-white/20">
+              <ArrowRight className="w-6 h-6 text-[#b8d49e]" />
             </div>
             <div>
-              <p className="text-white/70 text-sm font-bold uppercase tracking-wider">{t('next_pill')}</p>
-              <p className="text-2xl font-bold">{nextMed.name} — {nextMed.dosage}</p>
+              <p className="text-[#b8d49e]/80 text-[0.7rem] font-bold uppercase tracking-wider">{t('next_pill')}</p>
+              <p className="text-[1.2rem] font-bold mt-0.5">{nextMed.name} — <span className="font-medium opacity-80">{nextMed.dosage}</span></p>
             </div>
           </div>
-          <div className="flex items-center gap-3 bg-white/10 px-5 py-3 rounded-2xl">
-            <Clock className="w-5 h-5 text-white/80" />
-            <span className="text-xl font-bold">{formatTime(nextMed.time)}</span>
+          <div className="flex items-center gap-2.5 bg-white/10 backdrop-blur-sm px-4 py-2.5 rounded-[16px] border border-white/10">
+            <Clock className="w-4 h-4 text-white/80" />
+            <span className="text-[1.05rem] font-bold">{formatTime(nextMed.time)}</span>
           </div>
         </div>
       )}
 
       {/* Progress Bar */}
-      <div className="bg-white rounded-2xl p-5 shadow-sm border border-(--color-border-light)">
-        <div className="flex justify-between items-center mb-3">
-          <span className="font-bold text-(--color-navy)">{t('todays_progress')}</span>
-          <span className="text-sm font-bold text-(--color-sage)">{takenCount} / {todayMeds.length} {t('taken')}</span>
+      <div className="bg-[#f5f0e8] hover:bg-[#e2dcd0] transition-all duration-300 rounded-[20px] p-4 shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-[#d2c8b9]/60">
+        <div className="flex justify-between items-center mb-2">
+          <span className="font-bold text-[--color-navy] text-[0.9rem]">{t('todays_progress')}</span>
+          <span className="text-[0.8rem] font-bold text-[--color-sage]">{takenCount} / {todayMeds.length} {t('taken')}</span>
         </div>
-        <div className="w-full bg-(--color-border-light) rounded-full h-3 overflow-hidden">
-          <div className="bg-gradient-to-r from-(--color-sage) to-[#6b8c84] h-3 rounded-full transition-all duration-700" style={{ width: todayMeds.length > 0 ? `${(takenCount / todayMeds.length) * 100}%` : '0%' }} />
+        <div className="w-full bg-[--color-border-light] rounded-full h-2 overflow-hidden">
+          <div className="bg-gradient-to-r from-[--color-sage] to-[--color-sage-light] h-2 rounded-full transition-all duration-700" style={{ width: todayMeds.length > 0 ? `${(takenCount / todayMeds.length) * 100}%` : '0%' }} />
         </div>
       </div>
 
       {/* Add Medication Form */}
       {isAdding && (
-        <div className="bg-white rounded-3xl p-6 shadow-md border-2 border-(--color-sage)/30 fade-in">
-          <h3 className="text-2xl font-bold text-(--color-navy) mb-5">{t('new_medication')}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        <div className="bg-transparent rounded-[24px] p-5 shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-[--color-sage]/30 fade-in">
+          <h3 className="text-xl font-bold text-[--color-navy] mb-4">{t('new_medication')}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
             <div>
-              <label className="text-xs font-bold text-(--color-navy)/50 uppercase tracking-wider mb-1 block">{t('med_name')}</label>
+              <label className="text-[0.7rem] font-bold text-[--color-navy]/60 uppercase tracking-wider mb-1 block">{t('med_name')}</label>
               <input type="text" placeholder="e.g. Aspirin" value={newMed.name}
                 onChange={e => setNewMed({...newMed, name: e.target.value})}
-                className="w-full p-3 border-2 border-(--color-border-light) rounded-xl bg-(--color-surface-alt) outline-none focus:border-(--color-sage) text-(--color-navy) font-medium" />
+                className="w-full p-2.5 border border-[--color-border-light] rounded-[12px] bg-white/50 outline-none focus:border-[--color-sage] text-[--color-navy] font-medium text-[0.85rem]" />
             </div>
             <div>
-              <label className="text-xs font-bold text-(--color-navy)/50 uppercase tracking-wider mb-1 block">{t('dosage')}</label>
+              <label className="text-[0.7rem] font-bold text-[--color-navy]/60 uppercase tracking-wider mb-1 block">{t('dosage')}</label>
               <input type="text" placeholder="e.g. 50mg" value={newMed.dosage}
                 onChange={e => setNewMed({...newMed, dosage: e.target.value})}
-                className="w-full p-3 border-2 border-(--color-border-light) rounded-xl bg-(--color-surface-alt) outline-none focus:border-(--color-sage) text-(--color-navy) font-medium" />
+                className="w-full p-2.5 border border-[--color-border-light] rounded-[12px] bg-white/50 outline-none focus:border-[--color-sage] text-[--color-navy] font-medium text-[0.85rem]" />
             </div>
             <div>
-              <label className="text-xs font-bold text-(--color-navy)/50 uppercase tracking-wider mb-1 block">{t('time')}</label>
+              <label className="text-[0.7rem] font-bold text-[--color-navy]/60 uppercase tracking-wider mb-1 block">{t('time')}</label>
               <input type="time" value={newMed.time}
                 onChange={e => setNewMed({...newMed, time: e.target.value})}
-                className="w-full p-3 border-2 border-(--color-border-light) rounded-xl bg-(--color-surface-alt) outline-none focus:border-(--color-sage) text-(--color-navy) font-medium" />
+                className="w-full p-2.5 border border-[--color-border-light] rounded-[12px] bg-white/50 outline-none focus:border-[--color-sage] text-[--color-navy] font-medium text-[0.85rem]" />
             </div>
           </div>
           {/* Day Selector */}
           <div className="mb-5">
-            <label className="text-xs font-bold text-(--color-navy)/50 uppercase tracking-wider mb-2 block flex items-center gap-2">
-              <CalendarDays className="w-4 h-4" /> {t('days')}
+            <label className="text-[0.7rem] font-bold text-[--color-navy]/60 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <CalendarDays className="w-3.5 h-3.5" /> {t('days')}
             </label>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               {DAYS.map(day => (
                 <button key={day} onClick={() => toggleDay(day)}
-                  className={`w-12 h-12 rounded-xl text-sm font-bold transition-all ${
+                  className={`w-10 h-10 rounded-[10px] text-[0.8rem] font-bold transition-all ${
                     newMed.days.includes(day)
-                      ? 'bg-(--color-navy) text-white shadow-md'
-                      : 'bg-(--color-surface-alt) text-(--color-navy)/50 border border-(--color-border-light) hover:border-(--color-navy)/30'
+                      ? 'bg-[--color-navy] text-white shadow-sm'
+                      : 'bg-white/40 text-[--color-navy]/60 border border-[--color-border-light] hover:border-[--color-navy]/30'
                   }`}>{day}</button>
               ))}
             </div>
           </div>
-          <div className="flex gap-4 justify-end">
-            <button onClick={() => setIsAdding(false)} className="px-6 py-2 text-(--color-navy) font-bold hover:bg-(--color-surface-alt) rounded-xl transition-colors">{t('cancel')}</button>
-            <button onClick={handleAdd} className="px-6 py-2 bg-(--color-sage) text-white font-bold rounded-xl hover:bg-[#6b8c84] transition-colors">{t('save_medication')}</button>
+          <div className="flex gap-3 justify-end">
+            <button onClick={() => setIsAdding(false)} className="px-5 py-2 text-[--color-navy] font-bold hover:bg-white/40 rounded-[12px] transition-colors text-[0.85rem]">{t('cancel')}</button>
+            <button onClick={handleAdd} className="px-5 py-2 bg-[#1a2744] text-white font-bold rounded-[12px] hover:bg-[#2e3f6b] transition-all duration-300 text-[0.85rem] shadow-md hover:shadow-lg hover:-translate-y-[1px]">{t('save_medication')}</button>
           </div>
         </div>
       )}
 
       {/* Today's Medication List */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-(--color-border-light)">
-        <h3 className="text-xl font-bold text-(--color-navy) mb-4 flex items-center gap-2">
-          <CalendarDays className="w-5 h-5 text-(--color-sage)" /> {t('today')} — {todayName}
+      <div className="bg-[#f5f0e8] hover:bg-[#e2dcd0] transition-all duration-300 rounded-[24px] p-5 shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-[#d2c8b9]/60">
+        <h3 className="text-lg font-bold text-[--color-navy] mb-3 flex items-center gap-1.5">
+          <CalendarDays className="w-4 h-4 text-[--color-sage]" /> {t('today')} — {todayName}
         </h3>
         <div className="space-y-3">
           {todayMeds.map((med) => {
@@ -190,41 +190,41 @@ const Medications = () => {
             return (
               <div 
                 key={med.id} 
-                className={`flex items-center justify-between p-5 rounded-2xl border-2 transition-all cursor-pointer group ${
+                className={`flex items-center justify-between p-4 rounded-[16px] border transition-all cursor-pointer group ${
                   med.taken
-                    ? 'bg-(--color-surface-alt)/50 border-(--color-border-light)'
+                    ? 'bg-[#e2dcd0]/50 backdrop-blur-sm border-[--color-border-light]/50'
                     : isNext
-                      ? 'bg-gradient-to-r from-(--color-sage)/5 to-transparent border-(--color-sage) shadow-md'
-                      : 'bg-white border-(--color-border-light) hover:border-(--color-sage)/50'
+                      ? 'bg-[--color-sage]/5 border-[--color-sage]/40 shadow-sm'
+                      : 'bg-[#f5f0e8] backdrop-blur-sm border-[--color-border-light] hover:bg-[#e2dcd0] hover:border-[--color-sage]/50 hover:-translate-y-[2px] hover:shadow-lg'
                 }`}
                 onClick={() => toggleTaken(med.id)}
               >
-                <div className="flex items-center gap-5">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                    med.taken ? 'bg-(--color-border-light) text-(--color-navy)/40'
-                    : isNext ? 'bg-(--color-sage) text-white shadow-md' : 'bg-(--color-sage)/10 text-(--color-sage)'
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-[12px] flex items-center justify-center ${
+                    med.taken ? 'bg-[--color-border-light]/50 text-[--color-navy]/40'
+                    : isNext ? 'bg-[--color-sage] text-white shadow-sm' : 'bg-[--color-sage]/15 text-[--color-sage]'
                   }`}>
-                    <Pill className="w-6 h-6" />
+                    <Pill className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className={`text-xl font-bold ${med.taken ? 'text-(--color-navy)/40 line-through' : 'text-(--color-navy)'}`}>
+                    <h4 className={`text-[1.05rem] font-bold ${med.taken ? 'text-[--color-navy]/40 line-through' : 'text-[--color-navy]'}`}>
                       {med.name}
                     </h4>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-sm font-medium text-(--color-navy)/60 bg-(--color-surface-alt) px-2 py-0.5 rounded">{med.dosage}</span>
-                      <span className="text-sm font-medium text-(--color-sage) flex items-center gap-1"><Clock className="w-3 h-3" /> {formatTime(med.time)}</span>
-                      <span className="text-xs text-(--color-navy)/40">{med.days.join(', ')}</span>
+                    <div className="flex items-center gap-2.5 mt-0.5">
+                      <span className="text-[0.7rem] font-bold text-[--color-navy]/70 bg-white/50 px-1.5 py-0.5 rounded-[4px]">{med.dosage}</span>
+                      <span className="text-[0.75rem] font-bold text-[--color-sage] flex items-center gap-1"><Clock className="w-3 h-3" /> {formatTime(med.time)}</span>
+                      <span className="text-[0.65rem] text-[--color-navy]/50 uppercase tracking-widest font-bold">{med.days.join(', ')}</span>
                     </div>
                   </div>
-                  {isNext && !med.taken && <span className="ml-3 px-3 py-1 bg-(--color-sage) text-white text-xs font-bold rounded-full uppercase tracking-wider animate-pulse">{t('next')}</span>}
+                  {isNext && !med.taken && <span className="ml-2 px-2 py-0.5 bg-[--color-sage] text-white text-[0.6rem] font-bold rounded-full uppercase tracking-wider animate-pulse">{t('next')}</span>}
                 </div>
                 
-                <div className="flex items-center gap-3">
-                  <button onClick={(e) => { e.stopPropagation(); removeMed(med.id); }} className="p-2 text-red-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-5 h-5" /></button>
+                <div className="flex items-center gap-2">
+                  <button onClick={(e) => { e.stopPropagation(); removeMed(med.id); }} className="p-1.5 text-red-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4" /></button>
                   {med.taken ? (
-                    <CheckCircle2 className="w-10 h-10 text-(--color-sage)" />
+                    <CheckCircle2 className="w-8 h-8 text-[--color-sage]" />
                   ) : (
-                    <Circle className="w-10 h-10 text-(--color-border-light) hover:text-(--color-sage) transition-colors" />
+                    <Circle className="w-8 h-8 text-[--color-border-light] hover:text-[--color-sage] transition-colors" />
                   )}
                 </div>
               </div>
@@ -235,31 +235,31 @@ const Medications = () => {
       </div>
 
       {/* Full Week View */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-(--color-border-light)">
-        <h3 className="text-xl font-bold text-(--color-navy) mb-4">{t('weekly_schedule')}</h3>
+      <div className="bg-[#f5f0e8] hover:bg-[#e2dcd0] transition-all duration-300 rounded-[24px] p-5 shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-[#d2c8b9]/60">
+        <h3 className="text-lg font-bold text-[--color-navy] mb-3">{t('weekly_schedule')}</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr>
-                <th className="text-left p-3 text-(--color-navy)/50 font-bold uppercase tracking-wider text-xs">{t('medication')}</th>
+                <th className="text-left p-2.5 text-[--color-navy]/50 font-bold uppercase tracking-wider text-[0.65rem]">{t('medication')}</th>
                 {DAYS.map(d => (
-                  <th key={d} className={`p-3 text-center text-xs font-bold uppercase tracking-wider ${d === todayName ? 'text-(--color-sage)' : 'text-(--color-navy)/50'}`}>{d}</th>
+                  <th key={d} className={`p-2.5 text-center text-[0.65rem] font-bold uppercase tracking-wider ${d === todayName ? 'text-[--color-sage]' : 'text-[--color-navy]/50'}`}>{d}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {meds.map(med => (
-                <tr key={med.id} className="border-t border-(--color-border-light)">
-                  <td className="p-3 font-bold text-(--color-navy)">{med.name} <span className="text-(--color-navy)/40 font-normal text-xs">{med.dosage}</span></td>
+                <tr key={med.id} className="border-t border-[--color-border-light]/50">
+                  <td className="p-2.5 font-bold text-[--color-navy] text-[0.85rem]">{med.name} <span className="text-[--color-navy]/50 font-medium text-[0.7rem] block sm:inline">{med.dosage}</span></td>
                   {DAYS.map(d => (
-                    <td key={d} className="p-3 text-center">
+                    <td key={d} className="p-2.5 text-center">
                       {med.days.includes(d) ? (
-                        <span className={`inline-block w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${
-                          d === todayName && med.taken ? 'bg-(--color-sage) text-white' 
-                          : d === todayName ? 'bg-(--color-sage)/20 text-(--color-sage) border border-(--color-sage)' 
-                          : 'bg-(--color-surface-alt) text-(--color-navy)/60'
+                        <span className={`inline-flex w-7 h-7 rounded-[8px] items-center justify-center text-[0.65rem] font-bold ${
+                          d === todayName && med.taken ? 'bg-[#6b7c52] text-white shadow-sm' 
+                          : d === todayName ? 'bg-[--color-sage]/15 text-[--color-sage] border border-[--color-sage]/30' 
+                          : 'bg-[#f5f0e8] hover:bg-[#e2dcd0] text-[--color-navy]/60 transition-colors'
                         }`}>{formatTime(med.time).split(':')[0]}</span>
-                      ) : <span className="text-(--color-navy)/20">—</span>}
+                      ) : <span className="text-[--color-navy]/20">—</span>}
                     </td>
                   ))}
                 </tr>

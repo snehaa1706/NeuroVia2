@@ -190,9 +190,9 @@ const ConsultDoctors = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF7]">
+    <div className="min-h-screen bg-[#f5f0e8]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
       {/* Lightweight header */}
-      <header className="bg-white border-b border-[#E5E5E0] px-8 py-4 flex items-center justify-between sticky top-0 z-50">
+      <header className="bg-[#f5f0e8] border-b border-[#E5E5E0] px-8 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <span onClick={() => navigate('/consult')} className="text-xl font-bold text-[#0D2B45] cursor-pointer hover:text-[#8C9A86] transition-colors">NeuroVia</span>
           <span className="text-xs font-black text-[#8C9A86] uppercase tracking-widest bg-[#8C9A86]/10 px-3 py-1 rounded-full">Consultation</span>
@@ -208,13 +208,13 @@ const ConsultDoctors = () => {
       <div className="max-w-7xl mx-auto px-8 py-10">
         <div className="space-y-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-              <h2 className="text-4xl font-black text-[#0D2B45] tracking-tight">Find a Specialist</h2>
-              <p className="text-xl text-[#0D2B45]/40 font-medium">Select a doctor to book your consultation.</p>
+            <div className="group cursor-default transition-all duration-300 hover:scale-[1.01]">
+              <h2 className="text-5xl font-semibold text-[#0D2B45] tracking-tight transition-colors duration-300 group-hover:text-[#8C9A86]" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Find a Specialist</h2>
+              <p className="text-lg text-[#0D2B45]/50 font-light mt-2 transition-colors duration-300 group-hover:text-[#0D2B45]/70" style={{ fontFamily: "'DM Sans', sans-serif" }}>Select a doctor to book your consultation.</p>
             </div>
 
-            <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-[#E5E5E0] shadow-lg shadow-black/5 flex-1 max-w-lg">
-              <div className="pl-4 text-[#0D2B45]/30">
+            <div className="flex items-center gap-4 bg-[#ede7d9] hover:bg-[#f5f0e8] hover:shadow-xl hover:-translate-y-1 hover:border-[#8C9A86] transition-all duration-300 p-2.5 rounded-2xl border border-[#d2c8b98c] shadow-lg shadow-black/5 flex-1 max-w-lg group">
+              <div className="pl-4 text-[#0D2B45]/40 group-hover:text-[#8C9A86] transition-colors">
                 <Search className="w-5 h-5" />
               </div>
               <input
@@ -222,7 +222,8 @@ const ConsultDoctors = () => {
                 placeholder="Search by specialty or name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 bg-transparent border-none outline-none text-[#0D2B45] font-bold placeholder:text-[#0D2B45]/20 text-lg py-2"
+                className="flex-1 bg-transparent border-none outline-none text-[#0D2B45] font-medium placeholder:text-[#0D2B45]/30 text-[0.95rem] py-2"
+                style={{ fontFamily: "'DM Sans', sans-serif" }}
               />
             </div>
           </div>
@@ -232,10 +233,10 @@ const ConsultDoctors = () => {
               <button
                 key={tag}
                 onClick={() => setFilterTag(tag)}
-                className={`px-6 py-3 rounded-2xl font-bold text-base transition-all whitespace-nowrap ${
+                className={`px-6 py-2.5 rounded-2xl font-medium text-[0.9rem] transition-all duration-300 whitespace-nowrap ${
                   filterTag === tag
-                    ? 'bg-[#8C9A86] text-white shadow-lg shadow-[#84A59D]/30'
-                    : 'bg-white text-[#0D2B45]/50 border border-[#E5E5E0] hover:border-[#8C9A86]'
+                    ? 'bg-[#8C9A86] text-white shadow-lg shadow-[#8C9A86]/40 scale-105 border border-[#8C9A86]'
+                    : 'bg-[#ede7d9] text-[#0D2B45]/60 border border-[#d2c8b98c] hover:border-[#8C9A86] hover:bg-[#f5f0e8] hover:-translate-y-[2px] hover:shadow-md hover:text-[#0D2B45]'
                 }`}
               >
                 {tag}
@@ -245,7 +246,7 @@ const ConsultDoctors = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
             {filteredDoctors.map(doc => (
-              <div key={doc.id} className="bg-white rounded-3xl border border-[#E5E5E0] shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 overflow-hidden group flex flex-col">
+              <div key={doc.id} className="bg-[#f5f0e8] hover:bg-[#faf7f2] rounded-3xl border border-[#E5E5E0] shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 overflow-hidden group flex flex-col">
                 <div className="p-8 pb-4">
                   <div className="flex items-start gap-6">
                     <div className="relative shrink-0">
