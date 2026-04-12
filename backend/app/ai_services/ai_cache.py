@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class AICache:
     """Thread-safe in-memory cache with TTL expiration for AI results."""
 
-    def __init__(self, max_size: int = 256, ttl_seconds: int = 300):
+    def __init__(self, max_size: int = 256, ttl_seconds: int = 600):
         self._cache: dict[str, dict] = {}
         self._lock = threading.Lock()
         self._max_size = max_size

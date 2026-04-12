@@ -1,7 +1,7 @@
 """
 NeuroVia AI Orchestrator — Phase 9
 The Central Pipeline Controller.
-Executes AI components sequentially, manages hashing caches, and returns standardized output.
+Executes AI components in parallel where safe, manages hashing caches, and returns standardized output.
 DO NOT CALL internal AI services or ML classes from routes directly. Call them via this class.
 """
 
@@ -52,6 +52,7 @@ class AIOrchestrator:
 
     # ---------------------------------------------
     # Individual Component Executor Wrappers
+    # (CPU-bound — designed to run via asyncio.to_thread)
     # ---------------------------------------------
 
     def run_risk_prediction(self, patient_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -125,15 +126,16 @@ class AIOrchestrator:
         return res
 
     # ---------------------------------------------
-    # Full Integrated Pipeline
+    # Full Integrated Pipeline (Parallelized)
     # ---------------------------------------------
 
     async def run_full_analysis(self, req_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Executes the entire end-to-end AI cascade. 
-        Highly optimized layout pulling out components sequentially to feed the next.
+        Executes the entire end-to-end AI cascade.
+        Parallelizes deterministic models via asyncio.gather + to_thread.
+        Clock analysis runs separately. LLM runs last (depends on prior results).
         """
-        # 1. Gather all parallel inputs locally
+        # 1. Gather all inputs
         p_data = req_data.get("patient_metrics", {})
         w_hist = req_data.get("wellness_history", [])
         s_words = req_data.get("semantic_words", [])
@@ -142,17 +144,35 @@ class AIOrchestrator:
 
         state = {}
 
-        # 2. Execute deterministic / statistical models synchronously (very fast, CPU bound)
-        state["risk"] = self.run_risk_prediction(p_data)
-        state["trend"] = self.run_trend_analysis(w_hist)
-        state["semantic"] = self.run_semantic_validation(s_words, s_cat)
-        
+        # 2. Execute deterministic models IN PARALLEL via thread pool
+        # These are CPU-bound and safe to parallelize
+        try:
+            risk_result, trend_result, semantic_result = await asyncio.gather(
+                asyncio.to_thread(self.run_risk_prediction, p_data),
+                asyncio.to_thread(self.run_trend_analysis, w_hist),
+                asyncio.to_thread(self.run_semantic_validation, s_words, s_cat),
+            )
+            state["risk"] = risk_result
+            state["trend"] = trend_result
+            state["semantic"] = semantic_result
+        except Exception as e:
+            logger.error(f"[Orchestrator] Parallel execution failed, falling back to sequential: {e}")
+            # Safe fallback: run sequentially if gather fails
+            state["risk"] = self.run_risk_prediction(p_data)
+            state["trend"] = self.run_trend_analysis(w_hist)
+            state["semantic"] = self.run_semantic_validation(s_words, s_cat)
+
+        # 3. Clock analysis runs separately (image-dependent, heavier)
         if c_img:
-            state["clock"] = self.run_clock_analysis(c_img)
+            try:
+                state["clock"] = await asyncio.to_thread(self.run_clock_analysis, c_img)
+            except Exception as e:
+                logger.error(f"[Orchestrator] Clock analysis thread failed: {e}")
+                state["clock"] = self.run_clock_analysis(c_img)
         else:
             state["clock"] = {"score": 0, "assessment": "No image provided"}
 
-        # 3. Execute Neural Engine (very slow, IO bound HTTP LLM)
+        # 4. Execute Neural Engine (IO-bound HTTP LLM — always async)
         # We pass the previously calculated state right into it
         state["doctor_summary"] = await self.run_doctor_insights({
             "risk": state["risk"],
@@ -161,7 +181,7 @@ class AIOrchestrator:
             "clock": state["clock"]
         })
 
-        # 4. Synthesize everything into the Final Report layout
+        # 5. Synthesize everything into the Final Report layout
         final_payload = generate_cognitive_report(state)
 
         return final_payload

@@ -24,6 +24,15 @@ class AIPreprocessing:
             yield data[i:i + chunk_size]
 
     @staticmethod
+    def _fuzzy_match(word: str, pool: set) -> bool:
+        import difflib
+        word = str(word).lower().strip()
+        if word in pool:
+            return True
+        closest = difflib.get_close_matches(word, pool, n=1, cutoff=0.8)
+        return bool(closest)
+
+    @staticmethod
     async def evaluate_recall(expected_words: List[str], user_words: List[str]) -> Dict[str, bool]:
         """
         Maps user recall performance securely with cost bounds.
@@ -74,6 +83,9 @@ class AIPreprocessing:
                     for user_s in unmapped_user:
                         is_match = bool(result_map.get(user_s, False))
                         
+                        if confidence == "low" and not is_match:
+                            is_match = AIPreprocessing._fuzzy_match(user_s, set(chunk_expected))
+                            
                         # Only overwrite False if we actually hit a True in this batch chunk
                         if is_match or user_s not in final_results:
                             final_results[user_s] = is_match
@@ -86,10 +98,10 @@ class AIPreprocessing:
 
                 except Exception as e:
                     logger.error(f"Batch semantic evaluation failed: {e}")
-                    # Error Handling: On failure, gracefully fail closed
+                    # Error Handling: On failure, gracefully fail closed using fuzzy matching
                     for user_s in unmapped_user:
-                        if user_s not in final_results:
-                            final_results[user_s] = False
+                        if user_s not in final_results or not final_results[user_s]:
+                            final_results[user_s] = AIPreprocessing._fuzzy_match(user_s, set(chunk_expected))
 
         return final_results
 
@@ -124,16 +136,24 @@ class AIPreprocessing:
                     # Missing Key Handling: Guarantee all parsed entries resolve
                     for w in chunk:
                         is_valid = bool(result_map.get(w, False))
+                        
+                        if confidence == "low" and not is_valid:
+                            from app.ai_services.semantic_validation import SemanticValidator
+                            animal_set = SemanticValidator.CATEGORIES.get("animals", set())
+                            is_valid = AIPreprocessing._fuzzy_match(w, animal_set)
+                            
                         final_results[w] = is_valid
                         
                         # Cache Storage on Reliable Bounds
-                        if confidence != "low":
+                        if confidence != "low" and is_valid:
                             CacheService.set(f"animal:{w}", is_valid)
                 except Exception as e:
                     logger.error(f"Batch animal evaluation failed: {e}")
-                    # Error Handling: Graceful fail-closed
+                    # Error Handling: Graceful fail-closed using fuzzy matching
+                    from app.ai_services.semantic_validation import SemanticValidator
+                    animal_set = SemanticValidator.CATEGORIES.get("animals", set())
                     for w in chunk:
-                        final_results[w] = False
+                        final_results[w] = AIPreprocessing._fuzzy_match(w, animal_set)
 
         return final_results
 
@@ -172,13 +192,23 @@ class AIPreprocessing:
 
                     for w in chunk:
                         is_valid = bool(result_map.get(w, False))
+                        
+                        if confidence == "low" and not is_valid:
+                            from app.ai_services.semantic_validation import SemanticValidator
+                            cat_lower = category.lower().strip()
+                            cat_set = SemanticValidator.CATEGORIES.get(cat_lower, SemanticValidator.CATEGORIES.get("animals", set()))
+                            is_valid = AIPreprocessing._fuzzy_match(w, cat_set)
+                            
                         final_results[w] = is_valid
 
-                        if confidence != "low":
+                        if confidence != "low" and is_valid:
                             CacheService.set(f"category:{category}:{w}", is_valid)
                 except Exception as e:
                     logger.error(f"Batch category:{category} evaluation failed: {e}")
+                    from app.ai_services.semantic_validation import SemanticValidator
+                    cat_lower = category.lower().strip()
+                    cat_set = SemanticValidator.CATEGORIES.get(cat_lower, SemanticValidator.CATEGORIES.get("animals", set()))
                     for w in chunk:
-                        final_results[w] = False
+                        final_results[w] = AIPreprocessing._fuzzy_match(w, cat_set)
 
         return final_results

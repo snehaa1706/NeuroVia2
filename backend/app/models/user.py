@@ -5,16 +5,16 @@ from datetime import date, datetime
 
 
 class UserRole(str, Enum):
-    user = "user"
+    patient = "patient"
+    caregiver = "caregiver"
     doctor = "doctor"
-    admin = "admin"
 
 
 class UserRegister(BaseModel):
     email: str
     password: str
     full_name: str
-    role: UserRole = UserRole.user
+    role: UserRole = UserRole.patient
     phone: Optional[str] = None
     date_of_birth: Optional[date] = None
     specialty: Optional[str] = None
@@ -28,6 +28,7 @@ class UserRegister(BaseModel):
 class UserLogin(BaseModel):
     email: str
     password: str
+    remember_me: bool = False
 
 
 class UserProfile(BaseModel):
@@ -60,5 +61,6 @@ class UserProfileUpdate(BaseModel):
 
 class AuthResponse(BaseModel):
     access_token: str
+    refresh_token: Optional[str] = None
     token_type: str = "bearer"
     user: UserProfile

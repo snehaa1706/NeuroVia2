@@ -27,7 +27,11 @@ from app.models.ai_orchestrator_requests import (
     FullAnalysisRequest
 )
 
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 @router.get("/test-ai")
 async def test_ai_endpoint(prompt: str = "Explain early warning signs of dementia."):
@@ -50,6 +54,7 @@ def _get_user_id(request: Request) -> str:
 
 
 @router.post("/analyze-screening", response_model=AIAnalysisResponse)
+@limiter.limit("10/minute")
 async def analyze_screening_endpoint(request: Request, data: AIAnalysisRequest):
     """Analyze screening results using OpenAI."""
     sb = get_supabase()
@@ -197,6 +202,7 @@ async def health_guidance_endpoint(
 
 
 @router.post("/consultation-summary", response_model=ConsultationSummaryResponse)
+@limiter.limit("10/minute")
 async def consultation_summary_endpoint(
     request: Request, data: ConsultationSummaryRequest
 ):
@@ -244,7 +250,8 @@ async def consultation_summary_endpoint(
 # ==========================================
 
 @router.post("/cognitive-report")
-async def cognitive_report(request: FullAnalysisRequest):
+@limiter.limit("10/minute")
+async def cognitive_report(request: Request, analysis_request: FullAnalysisRequest):
     """Run full, standardized orchestrator cascade generating complete dashboard report."""
-    data = request.model_dump()
+    data = analysis_request.model_dump()
     return await orchestrator.run_full_analysis(data)

@@ -582,11 +582,21 @@ def _normalize_string(val: str) -> str:
     return str(val).lower().strip()
 
 def _safe_intersection_count(user_list: List[str], expected_list: List[str]) -> int:
-    if not user_list:
+    import difflib
+    if not user_list or not expected_list:
         return 0
     norm_user = set(_normalize_string(x) for x in user_list if x)
     norm_expected = set(_normalize_string(x) for x in expected_list if x)
-    return len(norm_user.intersection(norm_expected))
+    
+    count = 0
+    for u in norm_user:
+        if u in norm_expected:
+            count += 1
+        else:
+            closest = difflib.get_close_matches(u, norm_expected, n=1, cutoff=0.8)
+            if closest:
+                count += 1
+    return count
 
 # ============================================================
 # LEVEL 1 SCORING
@@ -599,9 +609,10 @@ async def score_level_1(ad8_answers: List[int], user_orientation: Dict[str, str]
     - Orientation: MCQ-based with approximate scoring (adjacent month = 0.5)
     - Recall: AI hybrid with exact fallback
     """
-    # 1. AD8
+    # 1. AD8 (Inverted: 0 "yes" answers = perfect cognitive health = 1.0)
+    # AD8 counts problems — more "yes" = more concern. Invert for cognitive score.
     ad8_sum = sum(1 for a in ad8_answers if a == 1)
-    norm_ad8 = max(0.0, min(ad8_sum / 8.0, 1.0))
+    norm_ad8 = max(0.0, min(1.0 - (ad8_sum / 8.0), 1.0))
 
     # 2. Orientation (MCQ with approximate scoring)
     orientation_score = 0.0
@@ -730,7 +741,20 @@ async def score_level_2(
     except Exception as e:
         logger.error(f"Fluency AI fallback: {e}")
         unique_items = set(_normalize_string(a) for a in animals_list if a)
-        fluency_count = len(unique_items)
+        
+        from app.ai_services.semantic_validation import SemanticValidator
+        cat_lower = fluency_category.lower().strip()
+        cat_set = SemanticValidator.CATEGORIES.get(cat_lower, SemanticValidator.CATEGORIES.get("animals", set()))
+        
+        import difflib
+        fluency_count = 0
+        for item in unique_items:
+            if item in cat_set:
+                fluency_count += 1
+            else:
+                closest = difflib.get_close_matches(item, cat_set, n=1, cutoff=0.8)
+                if closest:
+                    fluency_count += 1
     norm_fluency = 1.0 if fluency_count >= 14 else fluency_count / 14.0
 
     # 2. Digit Span (deterministic)
@@ -1464,7 +1488,7 @@ STROOP_COLORS = [
     {"name": "YELLOW", "hex": "#FFC107"},
 ]
 
-def generate_stroop_trials(total: int = 7, incongruent_ratio: float = 0.71, time_limit_ms: int = 3000) -> Dict[str, Any]:
+def generate_stroop_trials(total: int = 7, incongruent_ratio: float = 0.71, time_limit_ms: int = 5000) -> Dict[str, Any]:
     """
     Generate Stroop Test trials for Level 3.
     """

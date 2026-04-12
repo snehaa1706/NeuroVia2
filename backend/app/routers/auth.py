@@ -1,9 +1,11 @@
 import json
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends
+from pydantic import BaseModel
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from app.database import get_supabase
+from app.core.auth import get_current_user, create_access_token, create_refresh_token, decode_refresh_token
 from app.models.user import (
     UserRegister,
     UserLogin,
@@ -73,7 +75,8 @@ async def register(request: Request, user_data: UserRegister):
         )
 
         return AuthResponse(
-            access_token=auth_response.session.access_token if auth_response.session else "",
+            access_token=create_access_token(user_record["id"]),
+            refresh_token=create_refresh_token(user_record["id"]),
             user=profile,
         )
     except HTTPException:
@@ -121,8 +124,10 @@ async def login(request: Request, credentials: UserLogin):
             created_at=user_data.get("created_at"),
         )
 
+        days = 30 if credentials.remember_me else 7
         return AuthResponse(
-            access_token=auth_response.session.access_token,
+            access_token=create_access_token(user_data["id"]),
+            refresh_token=create_refresh_token(user_data["id"], expires_days=days),
             user=profile,
         )
     except HTTPException:
@@ -132,20 +137,14 @@ async def login(request: Request, credentials: UserLogin):
 
 
 @router.get("/me", response_model=UserProfile)
-async def get_current_user(request: Request):
+async def get_my_profile(user_id: str = Depends(get_current_user)):
     """Get current authenticated user profile."""
     sb = get_supabase()
     try:
-        auth_header = request.headers.get("Authorization", "")
-        token = auth_header.replace("Bearer ", "")
-        user_response = sb.auth.get_user(token)
-        if not user_response.user:
-            raise HTTPException(status_code=401, detail="Not authenticated")
-
         result = (
             sb.table("users")
             .select("*")
-            .eq("id", user_response.user.id)
+            .eq("id", user_id)
             .single()
             .execute()
         )
@@ -166,39 +165,15 @@ async def get_current_user(request: Request):
             gender=user_data.get("gender"),
             created_at=user_data.get("created_at"),
         )
-    except HTTPException:
-        raise
     except Exception as e:
         raise HTTPException(status_code=401, detail="Not authenticated")
 
 
 @router.put("/profile", response_model=UserProfile)
-async def update_profile(request: Request, update_data: UserProfileUpdate):
+async def update_profile(update_data: UserProfileUpdate, user_id: str = Depends(get_current_user)):
     """Update user profile."""
     sb = get_supabase()
     try:
-        auth_header = request.headers.get("Authorization", "")
-        token = auth_header.replace("Bearer ", "")
-        user_response = sb.auth.get_user(token)
-        user_id = None
-
-        if user_response and getattr(user_response, "user", None):
-            user_id = user_response.user.id
-        else:
-            # Fallback for fake/dummy token on local restarts
-            try:
-                import json, base64
-                parts = token.split(".")
-                if len(parts) == 3:
-                    payload = parts[1] + "=" * (4 - len(parts[1]) % 4)
-                    data = json.loads(base64.urlsafe_b64decode(payload))
-                    user_id = data.get("sub")
-            except Exception:
-                pass
-
-        if not user_id:
-            raise HTTPException(status_code=401, detail="Not authenticated")
-
         update_dict = update_data.model_dump(exclude_none=True)
         if "date_of_birth" in update_dict:
             update_dict["date_of_birth"] = str(update_dict["date_of_birth"])
@@ -226,8 +201,6 @@ async def update_profile(request: Request, update_data: UserProfileUpdate):
             gender=user_data.get("gender"),
             created_at=user_data.get("created_at"),
         )
-    except HTTPException:
-        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -242,11 +215,17 @@ async def google_auth(request: Request):
     from google.auth.transport import requests as google_requests
     from app.config import settings
     import uuid
+    import logging
+
+    logger = logging.getLogger(__name__)
 
     sb = get_supabase()
     body = await request.json()
     token = body.get("token")
-    role = body.get("role", "user")
+    role = body.get("role", "patient")
+    # Normalize role: only 'patient', 'caregiver', 'doctor' are valid
+    if role not in ("patient", "caregiver", "doctor"):
+        role = "patient"
     specialty = body.get("specialty")
     bio = body.get("bio")
     location = body.get("location")
@@ -254,46 +233,52 @@ async def google_auth(request: Request):
     gender = body.get("gender")
     avatar_url = body.get("avatar_url")
 
-    # Debug: Check settings
-    print(f"DEBUG: GOOGLE_CLIENT_ID value in settings: '{settings.GOOGLE_CLIENT_ID}'")
-
     if not token:
         raise HTTPException(status_code=400, detail="Token is required")
 
+    # ----- Step 1: Verify the Google token -----
     try:
-        # Verify the Google token
         user_info = id_token.verify_oauth2_token(
             token,
             google_requests.Request(),
             settings.GOOGLE_CLIENT_ID
         )
+    except Exception as e:
+        logger.warning(f"Google token verification failed: {e}")
+        raise HTTPException(status_code=401, detail=f"Invalid Google token: {str(e)}")
 
-        email = user_info.get("email")
-        name = user_info.get("name", "Google User")
-        picture = user_info.get("picture", "")
+    email = user_info.get("email")
+    name = user_info.get("name", "Google User")
+    picture = user_info.get("picture", "")
 
-        if not email:
-            raise HTTPException(status_code=400, detail="Email not found in Google token")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email not found in Google token")
 
+    # ----- Step 2: Look up user and authenticate -----
+    try:
         # Check if user already exists in our users table
         existing = sb.table("users").select("*").eq("email", email).execute()
 
+        google_password = f"google_oauth_{user_info['sub']}"
+
         if existing.data and len(existing.data) > 0:
-            # User exists — sign them in
+            # User exists in our users table — sign them in
             user_data = existing.data[0]
 
-            # Try to sign in with Supabase Auth using a known password pattern
-            # For Google users, we use a deterministic password hash
-            google_password = f"google_oauth_{user_info['sub']}"
+            # Try multiple auth strategies to obtain a valid session
+            access_token = ""
 
+            # Strategy 1: Sign in with the Google-derived password
             try:
                 auth_response = sb.auth.sign_in_with_password(
                     {"email": email, "password": google_password}
                 )
                 access_token = auth_response.session.access_token
-            except Exception:
-                # If Supabase auth fails (user was created with different method),
-                # sign up again with the google password to create auth entry
+            except Exception as e:
+                logger.debug(f"Google auth strategy 1 (sign_in) failed for {email}: {e}")
+
+            # Strategy 2: Try sign_up (creates auth entry if it doesn't exist yet)
+            if not access_token:
                 try:
                     auth_response = sb.auth.sign_up(
                         {
@@ -302,10 +287,14 @@ async def google_auth(request: Request):
                             "options": {"data": {"full_name": name, "role": user_data.get("role", "user")}}
                         }
                     )
-                    access_token = auth_response.session.access_token if auth_response.session else ""
-                except Exception:
-                    # Last resort — generate a simple session token
-                    access_token = str(uuid.uuid4())
+                    if auth_response.session:
+                        access_token = auth_response.session.access_token
+                except Exception as e:
+                    logger.debug(f"Google auth strategy 2 (sign_up) failed for {email}: {e}")
+
+            # Strategy 3: Fallback token if all Supabase auth methods fail
+            if not access_token:
+                access_token = str(uuid.uuid4())
 
             profile = UserProfile(
                 id=user_data["id"],
@@ -325,30 +314,62 @@ async def google_auth(request: Request):
             return AuthResponse(access_token=access_token, user=profile)
 
         else:
-            # New user registration via Google
+            # User does NOT exist in our users table
             if role == "doctor" and not specialty:
                 raise HTTPException(status_code=428, detail="Doctor profile details required")
 
-            google_password = f"google_oauth_{user_info['sub']}"
+            # Try sign_up first; if user already exists in Supabase Auth
+            # (but not in our users table), fall back to sign_in
+            auth_user_id = None
+            access_token = ""
 
-            auth_response = sb.auth.sign_up(
-                {
-                    "email": email,
-                    "password": google_password,
-                    "options": {
-                        "data": {
-                            "full_name": name,
-                            "role": role,
-                        }
-                    },
-                }
-            )
+            try:
+                auth_response = sb.auth.sign_up(
+                    {
+                        "email": email,
+                        "password": google_password,
+                        "options": {
+                            "data": {
+                                "full_name": name,
+                                "role": role,
+                            }
+                        },
+                    }
+                )
+                if auth_response.user:
+                    auth_user_id = auth_response.user.id
+                    # Handle obfuscated sign_up response (email confirmation enabled):
+                    # Supabase returns a user with empty identities instead of raising.
+                    identities = getattr(auth_response.user, 'identities', None)
+                    if identities is not None and len(identities) == 0:
+                        # Fake response — user already exists, treat as sign-in needed
+                        auth_user_id = None
+                if auth_response.session:
+                    access_token = auth_response.session.access_token
+            except Exception as e:
+                logger.debug(f"Google auth new-user sign_up failed for {email}: {e}")
 
-            if not auth_response.user:
-                raise HTTPException(status_code=400, detail="Failed to create Google user")
+            # Fallback: try signing in with the Google-derived password
+            if not auth_user_id or not access_token:
+                try:
+                    auth_response = sb.auth.sign_in_with_password(
+                        {"email": email, "password": google_password}
+                    )
+                    if auth_response.user and not auth_user_id:
+                        auth_user_id = auth_response.user.id
+                    if auth_response.session and not access_token:
+                        access_token = auth_response.session.access_token
+                except Exception as e:
+                    logger.debug(f"Google auth new-user sign_in fallback failed for {email}: {e}")
+
+            # If we still don't have an auth user ID, generate one
+            if not auth_user_id:
+                auth_user_id = str(uuid.uuid4())
+            if not access_token:
+                access_token = str(uuid.uuid4())
 
             user_record = {
-                "id": auth_response.user.id,
+                "id": auth_user_id,
                 "email": email,
                 "full_name": name,
                 "role": role,
@@ -363,14 +384,22 @@ async def google_auth(request: Request):
                     "gender": gender,
                 })
 
-            sb.table("users").insert(user_record).execute()
+            # Insert into users table (handle duplicate gracefully)
+            try:
+                sb.table("users").insert(user_record).execute()
+            except Exception:
+                # Row may already exist from a race condition — fetch it
+                re_check = sb.table("users").select("*").eq("email", email).execute()
+                if re_check.data and len(re_check.data) > 0:
+                    user_record = re_check.data[0]
+                    auth_user_id = user_record["id"]
 
             profile = UserProfile(
-                id=auth_response.user.id,
+                id=auth_user_id,
                 email=email,
                 full_name=name,
                 role=role,
-                avatar_url=user_record["avatar_url"],
+                avatar_url=user_record.get("avatar_url", picture),
                 specialty=user_record.get("specialty"),
                 bio=user_record.get("bio"),
                 location=user_record.get("location"),
@@ -379,11 +408,54 @@ async def google_auth(request: Request):
             )
 
             return AuthResponse(
-                access_token=auth_response.session.access_token if auth_response.session else "",
+                access_token=create_access_token(auth_user_id),
+                refresh_token=create_refresh_token(auth_user_id),
                 user=profile,
             )
 
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Invalid Google token: {str(e)}")
+        logger.error(f"Google auth failed for {email}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Authentication failed: {str(e)}")
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+@router.post("/refresh", response_model=AuthResponse)
+@limiter.limit("20/minute")
+async def refresh_session(request: Request, data: RefreshRequest):
+    """Generate a new access token using a valid refresh token."""
+    sb = get_supabase()
+    try:
+        user_id = decode_refresh_token(data.refresh_token)
+        
+        result = sb.table("users").select("*").eq("id", user_id).single().execute()
+        user_data = result.data
+        
+        profile = UserProfile(
+            id=user_data["id"],
+            email=user_data["email"],
+            full_name=user_data["full_name"],
+            role=user_data["role"],
+            phone=user_data.get("phone"),
+            date_of_birth=user_data.get("date_of_birth"),
+            avatar_url=user_data.get("avatar_url"),
+            specialty=user_data.get("specialty"),
+            bio=user_data.get("bio"),
+            location=user_data.get("location"),
+            experience=user_data.get("experience"),
+            gender=user_data.get("gender"),
+            created_at=user_data.get("created_at"),
+        )
+        
+        return AuthResponse(
+            access_token=create_access_token(user_id),
+            refresh_token=create_refresh_token(user_id),
+            user=profile,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid session")

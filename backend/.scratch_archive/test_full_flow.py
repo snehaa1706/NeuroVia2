@@ -1,6 +1,6 @@
 import asyncio
-from app.routers.screening import start_screening, submit_level1, submit_level2
-from app.models.assessment import Level1Request
+from app.modules.screening.router import start_screening, submit_level1, submit_level2
+from app.modules.screening.model import Level1Request
 from app.services.db_service import AssessmentDBService
 
 async def run():

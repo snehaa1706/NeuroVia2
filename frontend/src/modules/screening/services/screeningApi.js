@@ -56,6 +56,13 @@ export const resumeAssessment = async () => {
   return await apiFetch('/screening/resume');
 };
 
+export const validateSemanticLive = async (category, words) => {
+  return await apiFetch('/screening/validate-semantic', {
+    method: "POST",
+    body: JSON.stringify({ category, words }),
+  });
+};
+
 export const transcribeAudio = async (blob) => {
   const token = localStorage.getItem("neurovia_token") || "dummy_dev_token";
 

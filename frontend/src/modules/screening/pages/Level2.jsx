@@ -351,7 +351,7 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
           )}
 
           {processedAnimals.length > 0 && (
-            <p style={{ fontSize: "13px", color: "#888", marginTop: "5px" }}>{fluencyCategory.charAt(0).toUpperCase() + fluencyCategory.slice(1)} detected: {processedAnimals.length}</p>
+            <p style={{ fontSize: "13px", color: "#888", marginTop: "5px" }}>Words recorded: {processedAnimals.length}</p>
           )}
         </div>
 

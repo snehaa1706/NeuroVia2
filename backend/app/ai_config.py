@@ -24,7 +24,7 @@ class AIConfig:
     OLLAMA_TIMEOUT: float = float(os.getenv("OLLAMA_TIMEOUT", "30"))
 
     # Cache settings
-    CACHE_TTL_SECONDS: int = int(os.getenv("AI_CACHE_TTL", "300"))  # 5 minutes
+    CACHE_TTL_SECONDS: int = int(os.getenv("AI_CACHE_TTL", "600"))  # 10 minutes
     CACHE_MAX_SIZE: int = int(os.getenv("AI_CACHE_MAX_SIZE", "256"))
 
     @classmethod

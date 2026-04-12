@@ -7,6 +7,12 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
+from app.config import settings
+from app.config_validator import validate_credentials
+
+# Fail fast if environment is incorrectly configured
+validate_credentials()
+
 from app.routers import auth, ai, transcribe
 from app.modules.screening.router import router as screening_router
 from app.modules.doctor.router import router as doctor_router
