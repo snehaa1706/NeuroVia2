@@ -181,31 +181,7 @@ export default function ConsultLogin({ role }: ConsultLoginProps) {
             </button>
           </form>
 
-          {/* Demo Login */}
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={() => {
-                const demoUser = isDoctor
-                  ? { id: 'demo-doctor-1', email: 'dr.demo@neurovia.com', full_name: 'Dr. Sarah Chen', role: 'doctor' }
-                  : { id: 'demo-patient-1', email: 'patient.demo@neurovia.com', full_name: 'Alex Johnson', role: 'user' };
-                localStorage.setItem('consult_token', 'demo_token_' + Date.now());
-                localStorage.setItem('consult_role', role);
-                localStorage.setItem('consult_user', JSON.stringify(demoUser));
-                if (role === 'doctor') {
-                  window.location.href = '/consult/doctor/consultations';
-                } else {
-                  window.location.href = '/consult/patient/doctors';
-                }
-              }}
-              className="w-full py-[0.85rem] bg-transparent text-[#1a2744] font-medium text-[0.95rem] rounded-[10px] border border-[#d2c8b98c] hover:border-[#6b7c52] hover:bg-white/40 transition-all duration-[280ms] flex items-center justify-center gap-2"
-            >
-              <span className="text-[#6b7c52]">✨</span> Try Demo Account
-            </button>
-            <p className="text-center text-[0.7rem] text-[#4a5578]/70 mt-2">
-              Sign in as {isDoctor ? 'Dr. Sarah Chen' : 'Alex Johnson'}
-            </p>
-          </div>
+
 
           <div className="flex items-center gap-4 my-6">
             <div className="flex-1 h-px bg-[#d2c8b98c]" />

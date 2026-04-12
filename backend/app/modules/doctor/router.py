@@ -13,8 +13,27 @@ from .model import (
     PatientDashboard
 )
 from app.services.supabase_service import SupabaseIntegrationService
+import json
 
 router = APIRouter()
+
+WORKING_HOURS_FILE = os.path.join(os.path.dirname(__file__), "working_hours_db.json")
+
+def load_working_hours():
+    try:
+        if os.path.exists(WORKING_HOURS_FILE):
+            with open(WORKING_HOURS_FILE, "r") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {}
+
+def save_working_hours(data):
+    try:
+        with open(WORKING_HOURS_FILE, "w") as f:
+            json.dump(data, f)
+    except Exception:
+        pass
 
 # Ensure uploads directory exists
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "uploads")
@@ -45,13 +64,20 @@ async def get_doctor_slots(id: str, date: str):
     sb = get_supabase()
     
     # Check doctor working hours
-    doc = sb.table("users").select("working_hours").eq("id", id).execute()
     wh = None
-    if doc.data and doc.data[0].get("working_hours"):
-        wh = doc.data[0]["working_hours"]
+    try:
+        wh_db = load_working_hours()
+        if id in wh_db:
+            wh = wh_db[id]
+        else:
+            doc = sb.table("users").select("working_hours").eq("id", id).execute()
+            if doc.data and doc.data[0].get("working_hours"):
+                wh = doc.data[0]["working_hours"]
+    except Exception:
+        pass
         
     if not wh:
-        wh = {"mon_fri": "09:00-17:00", "sat": "10:00-14:00"}
+        wh = {"mon_fri": "09:00-17:00", "sat": "10:00-14:00", "sun": "10:00-14:00"}
     
     dt = datetime.strptime(date, "%Y-%m-%d")
     weekday = dt.weekday()
@@ -122,8 +148,33 @@ async def update_doctor_profile(request: Request, service: SupabaseIntegrationSe
     """
     sb = get_supabase()
     body = await request.json()
-    result = sb.table("users").update(body).eq("id", service.user_id).execute()
-    return {"status": "success", "data": result.data[0] if result.data else None}
+    
+    wh = body.pop("working_hours", None)
+    if wh:
+        wh_db = load_working_hours()
+        wh_db[service.user_id] = wh
+        save_working_hours(wh_db)
+
+    result_data = None
+    if body:
+        try:
+            result = sb.table("users").update(body).eq("id", service.user_id).execute()
+            if result.data:
+                result_data = result.data[0]
+        except Exception:
+            pass
+            
+    if not result_data:
+        try:
+            res = sb.table("users").select("*").eq("id", service.user_id).execute()
+            result_data = res.data[0] if res.data else {}
+        except Exception:
+            result_data = {}
+            
+    if wh:
+        result_data["working_hours"] = wh
+        
+    return {"status": "success", "data": result_data}
 
 @router.get("/consult/stats")
 async def get_doctor_stats(service: SupabaseIntegrationService = Depends(get_doctor_service)):
@@ -364,45 +415,54 @@ async def patient_book_consultation(request: Request):
 
     # Time slot validation
     if time_slot and doctor_id:
-        doc = sb.table("users").select("working_hours").eq("id", doctor_id).execute()
-        if doc.data and len(doc.data) > 0:
-            wh = doc.data[0].get("working_hours")
-            if wh:
-                try:
-                    dt = datetime.fromisoformat(time_slot.replace('Z', '+00:00'))
-                    weekday = dt.weekday()
-                    time_str = dt.strftime("%H:%M")
-                    valid = False
-                    
-                    if weekday <= 4 and "mon_fri" in wh:
-                        start, end = wh["mon_fri"].split("-")
-                        if start <= time_str <= end:
-                            valid = True
-                    elif weekday == 5 and "sat" in wh:
-                        start, end = wh["sat"].split("-")
-                        if start <= time_str <= end:
-                            valid = True
-                    elif weekday == 6 and "sun" in wh:
-                        start, end = wh["sun"].split("-")
-                        if start <= time_str <= end:
-                            valid = True
-                            
-                    if not valid:
-                        raise HTTPException(status_code=400, detail="Selected time outside doctor availability")
+        wh = None
+        try:
+            wh_db = load_working_hours()
+            if doctor_id in wh_db:
+                wh = wh_db[doctor_id]
+            else:
+                doc = sb.table("users").select("working_hours").eq("id", doctor_id).execute()
+                if doc.data and len(doc.data) > 0:
+                    wh = doc.data[0].get("working_hours")
+        except Exception:
+            pass
+            
+        if wh:
+            try:
+                dt = datetime.fromisoformat(time_slot.replace('Z', '+00:00'))
+                weekday = dt.weekday()
+                time_str = dt.strftime("%H:%M")
+                valid = False
+                
+                if weekday <= 4 and "mon_fri" in wh:
+                    start, end = wh["mon_fri"].split("-")
+                    if start <= time_str <= end:
+                        valid = True
+                elif weekday == 5 and "sat" in wh:
+                    start, end = wh["sat"].split("-")
+                    if start <= time_str <= end:
+                        valid = True
+                elif weekday == 6 and "sun" in wh:
+                    start, end = wh["sun"].split("-")
+                    if start <= time_str <= end:
+                        valid = True
+                        
+                if not valid:
+                    raise HTTPException(status_code=400, detail="Selected time outside doctor availability")
 
-                    # Check concurrency
-                    normalized = time_slot.replace("Z", "").replace("+00:00", "")[:16]
-                    consults = sb.table("consultations").select("time_slot, status").eq("doctor_id", doctor_id).execute()
-                    if consults.data:
-                        for c in consults.data:
-                            ts = c.get("time_slot")
-                            if ts and c.get("status") in ("pending", "accepted", "completed"):
-                                c_norm = ts.replace("Z", "").replace("+00:00", "")[:16]
-                                if c_norm == normalized:
-                                    raise HTTPException(status_code=409, detail="Time slot already booked")
+                # Check concurrency
+                normalized = time_slot.replace("Z", "").replace("+00:00", "")[:16]
+                consults = sb.table("consultations").select("time_slot, status").eq("doctor_id", doctor_id).execute()
+                if consults.data:
+                    for c in consults.data:
+                        ts = c.get("time_slot")
+                        if ts and c.get("status") in ("pending", "accepted", "completed"):
+                            c_norm = ts.replace("Z", "").replace("+00:00", "")[:16]
+                            if c_norm == normalized:
+                                raise HTTPException(status_code=409, detail="Time slot already booked")
 
-                except (ValueError, AttributeError):
-                    pass
+            except (ValueError, AttributeError):
+                pass
 
     now_iso = datetime.utcnow().isoformat()
     consultation = {

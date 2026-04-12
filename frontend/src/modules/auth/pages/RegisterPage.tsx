@@ -25,7 +25,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState(initialState.role || 'user');
+  const [role, setRole] = useState(initialState.role || 'patient');
   const [googleToken, setGoogleToken] = useState(initialState.googleToken || '');
 
   // Doctor-specific fields
@@ -259,8 +259,8 @@ export default function RegisterPage() {
       </div>
 
       {/* Right Panel */}
-      <div className="flex-1 flex flex-col justify-center items-center p-8 bg-[#f5f0e8]">
-        <div className="w-full max-w-[420px] animate-[fadeUp_0.5s_cubic-bezier(0.22,1,0.36,1)] overflow-y-auto max-h-screen no-scrollbar pb-8 pt-8">
+      <div className="flex-1 flex flex-col items-center p-8 bg-[#f5f0e8] overflow-y-auto">
+        <div className="w-full max-w-[420px] animate-[fadeUp_0.5s_cubic-bezier(0.22,1,0.36,1)] pb-8 pt-8 m-auto flex flex-col justify-center">
           
           <h2 style={fontSerif} className="text-[2.2rem] font-medium text-[#1a2744] mb-3 leading-tight">
             {step === 3 ? 'Your Profile' : 'Create your account'}
@@ -300,8 +300,8 @@ export default function RegisterPage() {
                 <div>
                   <label className={labelClass}>I am a...</label>
                   <div className="grid grid-cols-2 gap-3">
-                    <button type="button" onClick={() => setRole('user')}
-                      className={`py-3 rounded-[12px] border transition-all text-[0.85rem] font-semibold ${role === 'user' ? 'border-[#6b7c52] bg-[#6b7c52]/10 text-[#6b7c52]' : 'border-[#d2c8b98c] bg-transparent text-[#4a5578] hover:border-[#6b7c52]/50'}`}>
+                    <button type="button" onClick={() => setRole('patient')}
+                      className={`py-3 rounded-[12px] border transition-all text-[0.85rem] font-semibold ${role === 'patient' ? 'border-[#6b7c52] bg-[#6b7c52]/10 text-[#6b7c52]' : 'border-[#d2c8b98c] bg-transparent text-[#4a5578] hover:border-[#6b7c52]/50'}`}>
                       Patient
                     </button>
                     <button type="button" onClick={() => setRole('doctor')}
@@ -348,12 +348,40 @@ export default function RegisterPage() {
               </>
             )}
 
-            {/* Step 3: Doctor Details (kept minimal for styling logic match) */}
-            {step === 3 && (
-              <>
-                <div><label className={labelClass}>Specialty</label><input type="text" value={specialty} onChange={(e) => setSpecialty(e.target.value)} className={inputClass} /></div>
-                <div><label className={labelClass}>Clinic / Hospital</label><input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className={inputClass} /></div>
-                <div><label className={labelClass}>Bio</label><textarea value={bio} onChange={(e) => setBio(e.target.value)} className={inputClass} rows={3} /></div>
+                {/* Step 3: Doctor Details */}
+                {step === 3 && (
+                  <>
+                {/* Profile Photo Upload */}
+                <div className="flex flex-col items-center mb-6">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setAvatarFile(file);
+                        setAvatarPreview(URL.createObjectURL(file));
+                      }
+                    }}
+                  />
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="relative w-24 h-24 rounded-full border-[3px] border-[#6b7c52]/20 bg-white shadow-sm flex items-center justify-center cursor-pointer group overflow-hidden transition-all duration-300 hover:border-[#6b7c52]"
+                  >
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <Camera className="w-8 h-8 text-[#6b7c52]/40 group-hover:text-[#6b7c52] transition-colors" />
+                    )}
+                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Upload className="w-5 h-5 text-white mb-1" />
+                      <span className="text-[0.6rem] font-bold text-white uppercase tracking-wider">Upload</span>
+                    </div>
+                  </div>
+                  <p className="text-[0.75rem] text-[#4a5578]/70 mt-3 font-medium">Profile Photo (Optional)</p>
+                </div>
 
                 {/* Specialty */}
                 <div>
@@ -432,9 +460,8 @@ export default function RegisterPage() {
                 <div className="flex-1 h-px bg-[#d2c8b98c]" />
               </div>
               <div className="mb-10 w-full overflow-hidden flex justify-center">
-                <GoogleLoginButton onSuccess={handleGoogleSuccess} text="signup_with" />
-              </div>
-              <GoogleLoginButton
+                <GoogleLoginButton
+
                 onSuccess={async (credential: string) => {
                   if (role === 'doctor') {
                     setGoogleToken(credential);
@@ -448,7 +475,7 @@ export default function RegisterPage() {
                     const res = await fetch(`${API_URL}/auth/google`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ token: credential, role: 'user' }),
+                      body: JSON.stringify({ token: credential, role: 'patient' }),
                     });
                     const data = await res.json();
                     if (!res.ok) throw new Error(data.detail || 'Google sign-up failed');
@@ -470,6 +497,7 @@ export default function RegisterPage() {
                 }}
                 text="signup_with"
               />
+              </div>
             </>
           )}
 

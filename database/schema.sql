@@ -62,6 +62,11 @@ CREATE TABLE users (
     phone VARCHAR(20),
     date_of_birth DATE,
     avatar_url TEXT,
+    specialty VARCHAR(255),
+    bio TEXT,
+    location VARCHAR(255),
+    experience VARCHAR(100),
+    gender VARCHAR(50),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

@@ -51,6 +51,7 @@ async def register(request: Request, user_data: UserRegister):
         if user_data.phone: user_record["phone"] = user_data.phone
         if user_data.date_of_birth: user_record["date_of_birth"] = str(user_data.date_of_birth)
         if hasattr(user_data, "avatar_url") and user_data.avatar_url: user_record["avatar_url"] = user_data.avatar_url
+        # Restored missing schema columns after applying staging fix
         if hasattr(user_data, "specialty") and user_data.specialty: user_record["specialty"] = user_data.specialty
         if hasattr(user_data, "bio") and user_data.bio: user_record["bio"] = user_data.bio
         if hasattr(user_data, "location") and user_data.location: user_record["location"] = user_data.location
@@ -375,6 +376,7 @@ async def google_auth(request: Request):
                 "role": role,
                 "avatar_url": avatar_url or picture,
             }
+            # Restored DB insertion mappings after database schema fix
             if role == "doctor":
                 user_record.update({
                     "specialty": specialty,

@@ -51,3 +51,46 @@ def test_decode_expired_token():
         
     assert excinfo.value.status_code == 401
     assert "Invalid or expired" in excinfo.value.detail
+
+
+def test_register_with_avatar():
+    import uuid
+    from fastapi.testclient import TestClient
+    from app.main import app
+    from app.database import get_supabase
+    
+    sb = get_supabase()
+    client = TestClient(app)
+    
+    unique_email = f"test_doctor_{uuid.uuid4().hex[:6]}@example.com"
+    payload = {
+        "email": unique_email,
+        "password": "StrongPassword123!",
+        "full_name": "Dr. Test Avatar",
+        "role": "doctor",
+        "avatar_url": "/uploads/test_avatar.jpg",
+        "specialty": "Neurology"
+    }
+    
+    # 1. Test Registration
+    response = client.post("/auth/register", json=payload)
+    assert response.status_code == 200, f"Registration failed: {response.text}"
+    
+    data = response.json()
+    assert "user" in data
+    assert data["user"]["avatar_url"] == "/uploads/test_avatar.jpg", "avatar_url was not returned in registration response"
+    
+    # 2. Test Login
+    login_payload = {
+        "email": unique_email,
+        "password": "StrongPassword123!"
+    }
+    login_response = client.post("/auth/login", json=login_payload)
+    assert login_response.status_code == 200
+    
+    login_data = login_response.json()
+    assert login_data["user"]["avatar_url"] == "/uploads/test_avatar.jpg", "avatar_url was not properly saved to DB and restored on login"
+    
+    # Cleanup DB
+    sb.auth.admin.delete_user(login_data["user"]["id"])
+    sb.table("users").delete().eq("id", login_data["user"]["id"]).execute()
