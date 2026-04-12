@@ -209,8 +209,8 @@ class CognitiveResultResponse(BaseModel):
 
 class CognitiveSummaryResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    avg_score: float | None = None
-    latest_score: float | None = None
+    avg_score: Optional[float] = None
+    latest_score: Optional[float] = None
     trend: str  # "no_data" | "improving" | "stable" | "declining"
     recent_scores: List[float] = Field(default_factory=list)
     recent_results: List[Dict[str, Any]] = Field(default_factory=list)

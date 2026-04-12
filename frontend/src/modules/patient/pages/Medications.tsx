@@ -9,10 +9,13 @@ interface Medication {
   time: string;
   days: string[];
   taken: boolean;
+  skipped?: boolean;
   lastTakenDate?: string;
 }
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const Medications = () => {
   const { t } = useTranslation();
@@ -30,7 +33,8 @@ const Medications = () => {
       const loaded: Medication[] = JSON.parse(raw);
       const updated = loaded.map(m => ({
         ...m,
-        taken: m.lastTakenDate === todayDate ? m.taken : false
+        taken: m.lastTakenDate === todayDate ? m.taken : false,
+        skipped: m.lastTakenDate === todayDate ? m.skipped : false
       }));
       setMeds(updated);
     } else {
@@ -49,9 +53,46 @@ const Medications = () => {
     localStorage.setItem('neurovia_f2_meds', JSON.stringify(updated));
   };
 
-  const toggleTaken = (id: number) => {
-    const updated = meds.map(m => m.id === id ? { ...m, taken: !m.taken, lastTakenDate: todayDate } : m);
+  const updateStatus = async (id: number, status: 'taken' | 'skipped') => {
+    let wasSkipped = false;
+    let medName = "Medication";
+
+    const updated = meds.map(m => {
+      if (m.id === id) {
+        medName = m.name;
+        if (status === 'taken') {
+          return { ...m, taken: !m.taken, skipped: false, lastTakenDate: todayDate };
+        } else {
+          // If we are marking it as skipped (and it's currently NOT skipped)
+          if (!m.skipped) wasSkipped = true;
+          return { ...m, taken: false, skipped: !m.skipped, lastTakenDate: todayDate };
+        }
+      }
+      return m;
+    });
+    
     saveMeds(updated);
+
+    if (wasSkipped) {
+      try {
+        const token = localStorage.getItem('neurovia_patient_token');
+        await fetch(`${API_URL}/health/incident`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            incident_type: 'missed_medication',
+            severity: 'moderate',
+            description: `Patient missed scheduled medication: ${medName}`,
+            metadata: { medication_id: id, medication_name: medName }
+          })
+        });
+      } catch (e) {
+        console.error("Failed to log missed medication incident:", e);
+      }
+    }
   };
 
   const removeMed = (id: number) => {
@@ -82,7 +123,7 @@ const Medications = () => {
   };
 
   const todayMeds = meds.filter(m => m.days.includes(todayName)).sort((a, b) => a.time.localeCompare(b.time));
-  const nextMed = todayMeds.find(m => !m.taken);
+  const nextMed = todayMeds.find(m => !m.taken && !m.skipped);
   const takenCount = todayMeds.filter(m => m.taken).length;
 
   return (
@@ -193,21 +234,22 @@ const Medications = () => {
                 className={`flex items-center justify-between p-4 rounded-[16px] border transition-all cursor-pointer group ${
                   med.taken
                     ? 'bg-[#e2dcd0]/50 backdrop-blur-sm border-[--color-border-light]/50'
-                    : isNext
-                      ? 'bg-[--color-sage]/5 border-[--color-sage]/40 shadow-sm'
-                      : 'bg-[#f5f0e8] backdrop-blur-sm border-[--color-border-light] hover:bg-[#e2dcd0] hover:border-[--color-sage]/50 hover:-translate-y-[2px] hover:shadow-lg'
+                    : med.skipped
+                      ? 'bg-red-50/50 border-red-100 opacity-80'
+                      : isNext
+                        ? 'bg-[--color-sage]/5 border-[--color-sage]/40 shadow-sm'
+                        : 'bg-[#f5f0e8] backdrop-blur-sm border-[--color-border-light] hover:bg-[#e2dcd0] hover:border-[--color-sage]/50 hover:-translate-y-[2px] hover:shadow-lg'
                 }`}
-                onClick={() => toggleTaken(med.id)}
               >
                 <div className="flex items-center gap-4">
                   <div className={`w-10 h-10 rounded-[12px] flex items-center justify-center ${
-                    med.taken ? 'bg-[--color-border-light]/50 text-[--color-navy]/40'
+                    med.taken || med.skipped ? 'bg-[--color-border-light]/50 text-[--color-navy]/40'
                     : isNext ? 'bg-[--color-sage] text-white shadow-sm' : 'bg-[--color-sage]/15 text-[--color-sage]'
                   }`}>
                     <Pill className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className={`text-[1.05rem] font-bold ${med.taken ? 'text-[--color-navy]/40 line-through' : 'text-[--color-navy]'}`}>
+                    <h4 className={`text-[1.05rem] font-bold ${med.taken || med.skipped ? 'text-[--color-navy]/40 line-through' : 'text-[--color-navy]'}`}>
                       {med.name}
                     </h4>
                     <div className="flex items-center gap-2.5 mt-0.5">
@@ -221,11 +263,29 @@ const Medications = () => {
                 
                 <div className="flex items-center gap-2">
                   <button onClick={(e) => { e.stopPropagation(); removeMed(med.id); }} className="p-1.5 text-red-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4" /></button>
-                  {med.taken ? (
-                    <CheckCircle2 className="w-8 h-8 text-[--color-sage]" />
-                  ) : (
-                    <Circle className="w-8 h-8 text-[--color-border-light] hover:text-[--color-sage] transition-colors" />
-                  )}
+                  
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); updateStatus(med.id, 'skipped'); }}
+                    className={`px-3 py-1.5 rounded-[10px] text-[0.75rem] font-bold transition-all border ${
+                      med.skipped 
+                        ? 'bg-red-50 border-red-200 text-red-500 shadow-sm' 
+                        : 'border-transparent bg-[#f5f0e8] text-[--color-navy]/40 hover:bg-red-50 hover:text-red-400'
+                    }`}
+                  >
+                    {t('not_taken', 'Not Taken')}
+                  </button>
+
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); updateStatus(med.id, 'taken'); }}
+                    className={`px-4 py-1.5 rounded-[10px] text-[0.75rem] font-bold transition-all border flex items-center gap-1.5 ${
+                      med.taken 
+                        ? 'bg-[#6b7c52] border-[#6b7c52] text-white shadow-sm' 
+                        : 'border-transparent bg-[#f5f0e8] text-[--color-navy]/40 hover:bg-[#6b7c52]/10 hover:text-[#6b7c52]'
+                    }`}
+                  >
+                    {med.taken && <CheckCircle2 className="w-3.5 h-3.5" />}
+                    {t('taken', 'Taken')}
+                  </button>
                 </div>
               </div>
             );

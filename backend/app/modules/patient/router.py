@@ -4,6 +4,26 @@ router = APIRouter()
 
 from fastapi import APIRouter, HTTPException, Request
 from app.database import get_supabase
+from app.services.communication.notification_service import send_notification
+import os
+
+def _notify_alert(alert_data: dict, user_email: str = None):
+    receiver_email = os.getenv("TEST_RECEIVER_EMAIL") or user_email or os.getenv("RESEND_FROM_EMAIL") or "no-reply@neurovia.app"
+    receiver_phone = os.getenv("TEST_RECEIVER_PHONE", os.getenv("TWILIO_PHONE_NUMBER"))
+    
+    alert_msg = alert_data.get("message", "A health alert was triggered.")
+    html_content = f"<h2>NeuroVia Alert Notification</h2><p><strong>Alert:</strong> {alert_msg}</p><p>Please check the caregiver dashboard for more details.</p>"
+    
+    try:
+        send_notification(
+            email=receiver_email,
+            phone=receiver_phone,
+            subject="NeuroVia Critical Alert",
+            message=f"NeuroVia Alert: {alert_msg}",
+            html_content=html_content
+        )
+    except Exception as e:
+        print(f"Error sending notification: {e}")
 from app.modules.patient.model import (
     ActivityResponse,
     ActivityResultSubmit,
@@ -269,6 +289,7 @@ async def log_medication(
         alert_data = check_medication_alerts(med.data["user_id"], missed_count)
         if alert_data:
             sb.table("alerts").insert(alert_data).execute()
+            _notify_alert(alert_data)
 
     return MedicationLogResponse(
         id=log["id"],
@@ -369,6 +390,7 @@ async def submit_checkin(request: Request, data: HealthCheckin):
     alert_data = check_confusion_alert(user_id, data.confusion_level)
     if alert_data:
         sb.table("alerts").insert(alert_data).execute()
+        _notify_alert(alert_data)
 
     return HealthLogResponse(**log)
 
@@ -391,6 +413,7 @@ async def log_incident(request: Request, data: HealthIncident):
     alert_data = check_incident_alert(user_id, data.description)
     if alert_data:
         sb.table("alerts").insert(alert_data).execute()
+        _notify_alert(alert_data)
 
     return HealthLogResponse(**log)
 

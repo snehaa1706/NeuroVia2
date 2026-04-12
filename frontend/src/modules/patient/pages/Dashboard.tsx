@@ -102,11 +102,11 @@ const Dashboard = () => {
   ];
 
   const dailyActivities = [
-    { id: 1, title: t('memory_match'), desc: t('find_pairs'), emoji: '🧠' },
-    { id: 2, title: t('word_recall'), desc: t('remember_words'), emoji: '🗣️' },
-    { id: 3, title: t('family_faces'), desc: t('identify_loved_ones'), emoji: '👨‍👩‍👧' },
-    { id: 4, title: t('sequence_play'), desc: t('order_steps'), emoji: '📋' },
-    { id: 5, title: t('daily_objects'), desc: t('identify_household'), emoji: '🔍' },
+    { id: 1, title: t('memory_match'), type: 'memory_recall', desc: t('find_pairs'), emoji: '🧠' },
+    { id: 2, title: t('word_recall'), type: 'semantic_fluency', desc: t('remember_words'), emoji: '🗣️' },
+    { id: 3, title: t('family_faces'), type: 'family_recognition', desc: t('identify_loved_ones'), emoji: '👨‍👩‍👧' },
+    { id: 4, title: t('sequence_play'), type: 'task_sequencing', desc: t('order_steps'), emoji: '📋' },
+    { id: 5, title: t('daily_objects'), type: 'object_matching', desc: t('identify_household'), emoji: '🔍' },
   ];
 
   const moodIcon = todayLog.mood === t('happy') || todayLog.mood === t('calm') ? <Smile className="w-8 h-8" /> : todayLog.mood === t('neutral') ? <Meh className="w-8 h-8" /> : <Frown className="w-8 h-8" />;
@@ -219,7 +219,7 @@ const Dashboard = () => {
                 <h4 className="text-[0.95rem] font-bold text-[#1a2744] mb-1">{act.title}</h4>
                 <p className="text-[0.75rem] text-[#1a2744]/60 mb-3">{act.desc}</p>
               </div>
-              <Link to="/activities" className="w-full py-2 bg-[#f5f0e8] hover:bg-[#e2dcd0] text-[#1a2744] text-center block font-bold text-[0.8rem] rounded-[10px] shadow-sm hover:shadow-[0_0_15px_rgba(26,39,68,0.25)] hover:scale-[1.02] transition-all duration-300 border border-[#e2dcd0]/50">
+              <Link to="/activities" state={{ play: act.type }} className="w-full py-2 bg-[#f5f0e8] hover:bg-[#e2dcd0] text-[#1a2744] text-center block font-bold text-[0.8rem] rounded-[10px] shadow-sm hover:shadow-[0_0_15px_rgba(26,39,68,0.25)] hover:scale-[1.02] transition-all duration-300 border border-[#e2dcd0]/50">
                 {t('start')}
               </Link>
             </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { BrainCircuit, Trophy, ThumbsUp, Dumbbell, Mic, Square, Plus, Trash2, ChevronDown, Users, Phone } from 'lucide-react';
+import { getActivity } from '../services/patientApi';
 
 // ========================================
 // VOICE TRANSCRIPTION HOOK
@@ -20,10 +21,21 @@ function useVoiceInput(onResult: (text: string) => void) {
       return;
     }
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.lang = 'en-US';
-    recognition.onresult = (event: any) => { onResult(event.results[0][0].transcript); setListening(false); };
+    
+    recognition.onresult = (event: any) => { 
+      let finalPhrase = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalPhrase += event.results[i][0].transcript;
+        }
+      }
+      if (finalPhrase.trim() !== '') {
+        onResult(finalPhrase.trim());
+      }
+    };
     recognition.onerror = () => setListening(false);
     recognition.onend = () => setListening(false);
     recognitionRef.current = recognition;
@@ -97,9 +109,11 @@ const LOCAL_LIBRARY: Record<string, any[]> = {
     { category: "Furniture" }, { category: "Colors" }, { category: "Countries" },
   ],
   family_recognition: [
-    { options: ['Mother', 'Sister', 'Aunt'], answer: 'Mother', memberName: 'Mom' },
-    { options: ['Brother', 'Father', 'Uncle'], answer: 'Brother', memberName: 'Sibling' },
-    { options: ['Grandmother', 'Neighbor', 'Teacher'], answer: 'Grandmother', memberName: 'Grandma' },
+    { image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&h=300&fit=crop&crop=face', options: ['Mother', 'Sister', 'Aunt'], answer: 'Mother', memberName: 'Mom' },
+    { image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&h=300&fit=crop&crop=face', options: ['Brother', 'Father', 'Uncle'], answer: 'Brother', memberName: 'Sibling' },
+    { image: 'https://images.unsplash.com/photo-1581579438747-104c53d7fbc4?w=300&h=300&fit=crop&crop=face', options: ['Grandmother', 'Neighbor', 'Teacher'], answer: 'Grandmother', memberName: 'Grandma' },
+    { image: 'https://images.unsplash.com/photo-1552058544-f2b08422138a?w=300&h=300&fit=crop&crop=face', options: ['Father', 'Cousin', 'Friend'], answer: 'Father', memberName: 'Dad' },
+    { image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&h=300&fit=crop&crop=face', options: ['Daughter', 'Niece', 'Student'], answer: 'Daughter', memberName: 'Daughter' },
   ],
   phone_recognition: [
     { name: 'Emergency', number: '911' }, { name: 'Doctor', number: '555-0100' },
@@ -430,7 +444,7 @@ const FamilyRecognition = ({ data, onComplete }: { data: any; onComplete: (corre
     </h3>
     <div className="w-48 h-48 mx-auto bg-(--color-sage)/10 border-2 border-(--color-sage) rounded-[3rem] flex flex-col items-center justify-center shadow-inner overflow-hidden">
       {data.image ? (
-        <img src={data.image} alt={data.memberName || 'Family'} className="w-full h-full object-cover" />
+        <img src={data.image} alt={data.memberName || 'Family'} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
       ) : (
         <>
           <span className="text-6xl">👤</span>
@@ -438,6 +452,9 @@ const FamilyRecognition = ({ data, onComplete }: { data: any; onComplete: (corre
         </>
       )}
     </div>
+    {!data.image && (
+      <p className="text-xs text-(--color-navy)/40 italic">💡 Tip: Add your own family photos in the <strong>"Personal Details"</strong> panel on the Activities page for a personalized experience!</p>
+    )}
     <div className="flex justify-center gap-4 pt-4 flex-wrap">
       {data.options?.map((opt: string) => (
         <button key={opt} onClick={() => onComplete(opt === data.answer)} className="px-8 py-4 bg-(--color-surface-alt) border-2 border-(--color-border-light) hover:border-(--color-sage) hover:bg-(--color-sage) hover:text-white transition-all rounded-xl font-bold text-lg">{opt}</button>
@@ -447,10 +464,8 @@ const FamilyRecognition = ({ data, onComplete }: { data: any; onComplete: (corre
 );
 
 const PhoneRecognition = ({ data, onComplete }: { data: any; onComplete: (correct: boolean, detail?: any) => void }) => {
-  const [show, setShow] = useState(true);
   const [input, setInput] = useState('');
   const voice = useVoiceInput((text) => setInput(prev => prev + text.replace(/[^\d-]/g, '')));
-  useEffect(() => { setShow(true); setInput(''); const t = setTimeout(() => setShow(false), 10000); return () => clearTimeout(t); }, [data]);
 
   const handleSubmit = () => {
     // Normalize both to just digits for comparison
@@ -468,19 +483,13 @@ const PhoneRecognition = ({ data, onComplete }: { data: any; onComplete: (correc
     });
   };
 
-  return show ? (
-    <div className="text-center p-10 bg-(--color-surface-alt) rounded-2xl border-2 border-(--color-border-light)">
-      <CountdownTimer seconds={10} label="Memorize this number" />
-      <div className="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-3xl mb-4">📱</div>
-      <h3 className="text-2xl font-bold text-(--color-navy) mb-4">{data.name}</h3>
-      <p className="text-4xl font-black text-(--color-sage) tracking-widest">{data.number}</p>
-    </div>
-  ) : (
+  return (
     <div className="space-y-6 text-center">
       <div className="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-3xl mb-4">📱</div>
-      <h3 className="text-2xl font-bold text-(--color-navy)">What is the number for: <span className="text-(--color-sage)">{data.name}</span>?</h3>
+      <h3 className="text-2xl font-bold text-(--color-navy)">Do you remember the number for: <span className="text-(--color-sage)">{data.name}</span>?</h3>
+      <p className="text-sm text-(--color-navy)/50 mb-6 italic">Free recall: Type the number from memory.</p>
       <div className="flex gap-3 justify-center">
-        <input value={input} onChange={e => setInput(e.target.value)} className="w-full max-w-sm h-16 px-6 bg-(--color-surface-alt) border-2 border-(--color-border-light) rounded-2xl outline-none focus:border-(--color-sage) text-center text-2xl font-bold tracking-widest text-(--color-navy)" placeholder="___-___-____" />
+        <input autoFocus value={input} onChange={e => setInput(e.target.value)} className="w-full max-w-sm h-16 px-6 bg-(--color-surface-alt) border-2 border-(--color-border-light) rounded-2xl outline-none focus:border-(--color-sage) text-center text-2xl font-bold tracking-widest text-(--color-navy)" placeholder="___-___-____" />
         <MicButton listening={voice.listening} onClick={voice.toggle} />
       </div>
       <button onClick={handleSubmit} className="w-full max-w-sm mx-auto block py-4 bg-(--color-sage) text-white rounded-xl font-bold hover:bg-[#6b8c84] transition-colors">Dial Number</button>
@@ -538,7 +547,7 @@ const StoryRecall = ({ data, onComplete }: { data: any; onComplete: (correct: bo
 // ========================================
 interface RoundResult { round: number; correct: boolean; wordDetail?: { word: string; recalled: boolean }[]; correctCount?: number; totalWords?: number; }
 
-const ResultsScreen = ({ results, type, onExit }: { results: RoundResult[]; type: string; onExit: () => void }) => {
+const ResultsScreen = ({ results, type, onExit, onNextLevel, level }: { results: RoundResult[]; type: string; onExit: () => void; onNextLevel: () => void; level: number }) => {
   const hasWordDetail = results.some(r => r.wordDetail);
   let totalCorrectWords = 0, totalAllWords = 0;
   if (hasWordDetail) { results.forEach(r => { totalCorrectWords += r.correctCount || 0; totalAllWords += r.totalWords || 0; }); }
@@ -552,7 +561,8 @@ const ResultsScreen = ({ results, type, onExit }: { results: RoundResult[]; type
     <div className="text-center py-4 fade-in">
       <IconComp size={64} className={`mx-auto mb-4 ${pct >= 80 ? 'text-yellow-500' : pct >= 50 ? 'text-(--color-sage)' : 'text-orange-400'}`} />
       <h2 className="text-3xl font-bold text-(--color-navy) mb-2">{message}</h2>
-      <p className="text-(--color-navy)/60 mb-8 capitalize text-lg">{type.split('_').join(' ')} — Complete</p>
+      <p className="text-(--color-navy)/60 mb-2 capitalize text-lg">{type.split('_').join(' ')} — Level {level} Complete</p>
+      <p className="text-xs font-bold text-(--color-navy)/40 mb-6 uppercase tracking-wider">{level >= 3 ? '🏆 Max Level Reached!' : `${3 - level} level${3 - level > 1 ? 's' : ''} remaining`}</p>
       <div className="flex justify-center gap-8 mb-8">
         {hasWordDetail ? (
           <div className="bg-(--color-sage)/10 rounded-2xl p-6 min-w-[120px]"><p className="text-4xl font-black text-(--color-sage)">{totalCorrectWords}/{totalAllWords}</p><p className="text-sm font-bold text-(--color-navy)/50 mt-1 uppercase">Words Recalled</p></div>
@@ -578,7 +588,12 @@ const ResultsScreen = ({ results, type, onExit }: { results: RoundResult[]; type
           </div>
         ))}
       </div>
-      <button onClick={onExit} className="w-full max-w-sm mx-auto py-4 bg-(--color-sage) text-white rounded-xl font-bold text-lg hover:bg-[#6b8c84] transition-colors">Back to Activities</button>
+      <div className="flex gap-4 max-w-md mx-auto mt-4">
+        <button onClick={onExit} className="w-full py-4 bg-white border-2 border-(--color-border-light) text-(--color-navy) rounded-xl font-bold text-lg hover:border-(--color-sage) hover:bg-(--color-sage) hover:text-white transition-colors">Back to Activities 🔙</button>
+        {level < 3 && (
+          <button onClick={onNextLevel} className="w-full py-4 bg-(--color-sage) text-white rounded-xl font-bold text-lg hover:bg-[#6b8c84] transition-colors shadow-md text-nowrap">Level {level + 1} 🚀</button>
+        )}
+      </div>
     </div>
   );
 };
@@ -590,20 +605,31 @@ export const PersonalDataSetup = () => {
   const [showPanel, setShowPanel] = useState(false);
   const [familyMembers, setFamilyMembers] = useState<{ name: string; relationship: string; photo?: string }[]>([]);
   const [phoneContacts, setPhoneContacts] = useState<{ name: string; number: string }[]>([]);
-  const [newFamily, setNewFamily] = useState({ name: '', relationship: '' });
+  const [newFamily, setNewFamily] = useState<{ name: string; relationship: string; photo: string }>({ name: '', relationship: '', photo: '' });
   const [newPhone, setNewPhone] = useState({ name: '', number: '' });
+  const newPhotoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     try { const f = localStorage.getItem('neurovia_f2_family'); if (f) setFamilyMembers(JSON.parse(f)); } catch {}
     try { const p = localStorage.getItem('neurovia_f2_phones'); if (p) setPhoneContacts(JSON.parse(p)); } catch {}
   }, []);
 
+  const handleNewFamilyPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setNewFamily(prev => ({ ...prev, photo: reader.result as string }));
+    reader.readAsDataURL(file);
+  };
+
   const addFamily = () => {
     if (!newFamily.name.trim() || !newFamily.relationship.trim()) return;
-    const updated = [...familyMembers, { name: newFamily.name.trim(), relationship: newFamily.relationship.trim() }];
+    if (!newFamily.photo) { alert('Please upload a photo for this family member!'); return; }
+    const updated = [...familyMembers, { name: newFamily.name.trim(), relationship: newFamily.relationship.trim(), photo: newFamily.photo }];
     setFamilyMembers(updated);
     localStorage.setItem('neurovia_f2_family', JSON.stringify(updated));
-    setNewFamily({ name: '', relationship: '' });
+    setNewFamily({ name: '', relationship: '', photo: '' });
+    if (newPhotoInputRef.current) newPhotoInputRef.current.value = '';
   };
 
   const handlePhotoUpload = (idx: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -639,6 +665,8 @@ export const PersonalDataSetup = () => {
     localStorage.setItem('neurovia_f2_phones', JSON.stringify(updated));
   };
 
+  const familyPhotosCount = familyMembers.filter(m => m.photo).length;
+
   return (
     <div className="bg-[#f5f0e8] rounded-3xl shadow-sm border border-(--color-border-light) overflow-hidden">
       <button onClick={() => setShowPanel(!showPanel)} className="w-full flex items-center justify-between p-6 hover:bg-(--color-surface-alt) transition-colors">
@@ -646,10 +674,22 @@ export const PersonalDataSetup = () => {
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-sm"><Users className="w-5 h-5 text-white" /></div>
           <div className="text-left">
             <h3 className="text-lg font-bold text-(--color-navy)">Personal Details</h3>
-            <p className="text-sm text-(--color-navy)/50">Add family photos & phone numbers for personalized exercises</p>
+            <p className="text-sm text-(--color-navy)/50">
+              {familyPhotosCount > 0 ? `${familyPhotosCount} family photo${familyPhotosCount > 1 ? 's' : ''} uploaded` : 'Add family photos & phone numbers for personalized exercises'}
+            </p>
           </div>
         </div>
-        <ChevronDown className={`w-5 h-5 text-(--color-navy)/40 transition-transform ${showPanel ? 'rotate-180' : ''}`} />
+        <div className="flex items-center gap-3">
+          {familyPhotosCount > 0 && (
+            <div className="flex -space-x-2">
+              {familyMembers.filter(m => m.photo).slice(0, 4).map((m, i) => (
+                <img key={i} src={m.photo!} alt={m.name} className="w-8 h-8 rounded-full object-cover border-2 border-white" />
+              ))}
+              {familyPhotosCount > 4 && <div className="w-8 h-8 rounded-full bg-(--color-sage)/20 border-2 border-white flex items-center justify-center text-xs font-bold text-(--color-sage)">+{familyPhotosCount - 4}</div>}
+            </div>
+          )}
+          <ChevronDown className={`w-5 h-5 text-(--color-navy)/40 transition-transform ${showPanel ? 'rotate-180' : ''}`} />
+        </div>
       </button>
 
       {showPanel && (
@@ -662,9 +702,13 @@ export const PersonalDataSetup = () => {
                 {familyMembers.map((m, i) => (
                   <div key={i} className="flex items-center gap-3 p-3 bg-(--color-surface-alt) rounded-xl border border-(--color-border-light)">
                     {m.photo ? (
-                      <img src={m.photo} alt={m.name} className="w-12 h-12 rounded-full object-cover border-2 border-(--color-sage)" />
+                      <label className="cursor-pointer group relative" title="Click to change photo">
+                        <img src={m.photo} alt={m.name} className="w-12 h-12 rounded-full object-cover border-2 border-(--color-sage) group-hover:opacity-70 transition-opacity" />
+                        <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 text-xs font-bold text-white bg-black/40 rounded-full transition-opacity">📷</span>
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoUpload(i, e)} />
+                      </label>
                     ) : (
-                      <label className="w-12 h-12 rounded-full bg-(--color-sage)/10 flex items-center justify-center cursor-pointer hover:bg-(--color-sage)/20 transition-colors border-2 border-dashed border-(--color-sage)/30" title="Upload photo">
+                      <label className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center cursor-pointer hover:bg-red-100 transition-colors border-2 border-dashed border-red-300" title="Upload photo (required!)">
                         <span className="text-xl">📷</span>
                         <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoUpload(i, e)} />
                       </label>
@@ -672,16 +716,39 @@ export const PersonalDataSetup = () => {
                     <div className="flex-1">
                       <span className="font-bold text-(--color-navy)">{m.name}</span>
                       <span className="text-(--color-navy)/50 ml-2">— {m.relationship}</span>
+                      {!m.photo && <span className="text-red-400 ml-2 text-xs font-bold">⚠ needs photo</span>}
                     </div>
                     <button onClick={() => removeFamily(i)} className="text-red-400 hover:text-red-600 p-1"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 ))}
-                {familyMembers.length === 0 && <p className="text-sm text-(--color-navy)/40 italic p-3">No family members added yet. Add at least 2 for the Family Recognition exercise.</p>}
+                {familyMembers.length === 0 && (
+                  <div className="text-center p-6 bg-(--color-surface-alt) rounded-2xl border-2 border-dashed border-(--color-border-light)">
+                    <span className="text-4xl block mb-2">👨‍👩‍👧‍👦</span>
+                    <p className="font-bold text-(--color-navy) mb-1">No family members yet</p>
+                    <p className="text-sm text-(--color-navy)/40">Add at least 2 members with photos to unlock personalized Family Recognition exercises.</p>
+                  </div>
+                )}
               </div>
-              <div className="flex gap-2">
-                <input value={newFamily.name} onChange={e => setNewFamily({ ...newFamily, name: e.target.value })} className="flex-1 h-10 px-3 bg-(--color-surface-alt) border border-(--color-border-light) rounded-lg text-sm outline-none focus:border-(--color-sage)" placeholder="Name (e.g. Sarah)" />
-                <input value={newFamily.relationship} onChange={e => setNewFamily({ ...newFamily, relationship: e.target.value })} className="flex-1 h-10 px-3 bg-(--color-surface-alt) border border-(--color-border-light) rounded-lg text-sm outline-none focus:border-(--color-sage)" placeholder="Relationship (e.g. Daughter)" />
-                <button onClick={addFamily} className="h-10 px-4 bg-(--color-sage) text-white rounded-lg font-bold text-sm hover:bg-[#6b8c84] transition-colors flex items-center gap-1"><Plus className="w-4 h-4" /> Add</button>
+              {/* Add new member form with inline photo */}
+              <div className="p-4 bg-(--color-surface-alt) rounded-xl border border-(--color-border-light) space-y-3">
+                <p className="text-xs font-bold text-(--color-navy)/50 uppercase tracking-wider">Add Family Member</p>
+                <div className="flex gap-2 items-center">
+                  {newFamily.photo ? (
+                    <label className="cursor-pointer group relative shrink-0" title="Click to change photo">
+                      <img src={newFamily.photo} alt="Preview" className="w-12 h-12 rounded-full object-cover border-2 border-(--color-sage) group-hover:opacity-70 transition-opacity" />
+                      <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 text-xs font-bold text-white bg-black/40 rounded-full transition-opacity">✏️</span>
+                      <input type="file" accept="image/*" className="hidden" ref={newPhotoInputRef} onChange={handleNewFamilyPhoto} />
+                    </label>
+                  ) : (
+                    <label className="w-12 h-12 shrink-0 rounded-full bg-(--color-sage)/10 flex items-center justify-center cursor-pointer hover:bg-(--color-sage)/20 transition-colors border-2 border-dashed border-(--color-sage)/40" title="Upload photo">
+                      <span className="text-lg">📷</span>
+                      <input type="file" accept="image/*" className="hidden" ref={newPhotoInputRef} onChange={handleNewFamilyPhoto} />
+                    </label>
+                  )}
+                  <input value={newFamily.name} onChange={e => setNewFamily({ ...newFamily, name: e.target.value })} className="flex-1 h-10 px-3 bg-white border border-(--color-border-light) rounded-lg text-sm outline-none focus:border-(--color-sage)" placeholder="Name (e.g. Sarah)" />
+                  <input value={newFamily.relationship} onChange={e => setNewFamily({ ...newFamily, relationship: e.target.value })} className="flex-1 h-10 px-3 bg-white border border-(--color-border-light) rounded-lg text-sm outline-none focus:border-(--color-sage)" placeholder="Relation (e.g. Daughter)" />
+                  <button onClick={addFamily} className="h-10 px-4 bg-(--color-sage) text-white rounded-lg font-bold text-sm hover:bg-[#6b8c84] transition-colors flex items-center gap-1 shrink-0"><Plus className="w-4 h-4" /> Add</button>
+                </div>
               </div>
             </div>
 
@@ -722,18 +789,34 @@ const ActivityPlayer: React.FC<ActivityPlayerProps> = ({ activityType, onComplet
   const [questionData, setQuestionData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [round, setRound] = useState(1);
+  const [level, setLevel] = useState(1);
   const [results, setResults] = useState<RoundResult[]>([]);
   const [finished, setFinished] = useState(false);
   const usedIndicesRef = useRef<Set<number>>(new Set());
-  const totalRounds = 3;
+  const MAX_LEVEL = 3;
+  const totalRounds = level === 1 ? 3 : level === 2 ? 4 : 5;  // More questions per level
+  const difficultyMap: Record<number, string> = { 1: 'easy', 2: 'medium', 3: 'hard' };
 
-  useEffect(() => { usedIndicesRef.current = new Set(); setRound(1); setResults([]); setFinished(false); loadQuestion(); }, [activityType]);
+  useEffect(() => { usedIndicesRef.current = new Set(); setLevel(1); setRound(1); setResults([]); setFinished(false); loadQuestion(1); }, [activityType]);
 
-  const loadQuestion = () => {
+  const loadQuestion = async (targetLevel: number = level) => {
     setLoading(true);
-    const { question, index } = getLocalQuestion(activityType, usedIndicesRef.current);
-    usedIndicesRef.current.add(index);
-    setQuestionData(question);
+    try {
+      const res = await getActivity(activityType, targetLevel, 'en');
+      const diff = difficultyMap[targetLevel] || 'easy';
+      const data = await res.json();
+      if (data && data.activity && data.activity.content) {
+         setQuestionData(data.activity.content.content || data.activity.content);
+      } else {
+         const { question, index } = getLocalQuestion(activityType, usedIndicesRef.current);
+         usedIndicesRef.current.add(index);
+         setQuestionData(question.content || question);
+      }
+    } catch {
+       const { question, index } = getLocalQuestion(activityType, usedIndicesRef.current);
+       usedIndicesRef.current.add(index);
+       setQuestionData(question.content || question); 
+    }
     setLoading(false);
   };
 
@@ -764,18 +847,18 @@ const ActivityPlayer: React.FC<ActivityPlayerProps> = ({ activityType, onComplet
     setResults(nr);
     if (round < totalRounds) {
       setRound(p => p + 1);
-      loadQuestion();
+      loadQuestion(level);
     } else {
       finishActivity(nr);
     }
   };
 
-  if (finished) return <ResultsScreen results={results} type={activityType} onExit={onExit} />;
+  if (finished) return <ResultsScreen results={results} type={activityType} onExit={onExit} onNextLevel={() => { if (level < MAX_LEVEL) { const nl = level + 1; setLevel(nl); setRound(1); setResults([]); setFinished(false); usedIndicesRef.current = new Set(); loadQuestion(nl); } }} level={level} />;
 
   if (loading || !questionData) return (
     <div className="flex flex-col items-center justify-center py-16">
       <div className="w-12 h-12 border-4 border-(--color-sage) border-t-transparent rounded-full animate-spin mb-4" />
-      <p className="text-(--color-navy)/60 font-bold">Generating unique exercise...</p>
+      <p className="text-(--color-navy)/60 font-bold">Generating Level {level} exercise...</p>
     </div>
   );
 
@@ -803,6 +886,7 @@ const ActivityPlayer: React.FC<ActivityPlayerProps> = ({ activityType, onComplet
         <div className="flex items-center gap-3">
           <BrainCircuit size={24} className="text-(--color-sage)" />
           <span className="text-lg font-bold text-(--color-navy) capitalize">{activityType.split('_').join(' ')}</span>
+          <span className="px-3 py-1 bg-(--color-sage)/10 text-(--color-sage) rounded-full text-xs font-black uppercase tracking-wider">Level {level}</span>
         </div>
         <div className="flex items-center gap-2">
           {Array.from({ length: totalRounds }).map((_, i) => (

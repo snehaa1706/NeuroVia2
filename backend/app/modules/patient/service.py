@@ -50,9 +50,11 @@ Rule-based alerts fire first; AI interprets only after.
 from app.modules.patient.model import AlertType, AlertSeverity
 
 
+from typing import Optional
+
 def check_medication_alerts(
     user_id: str, missed_count: int
-) -> dict | None:
+) -> Optional[dict]:
     """Generate alert if 2+ medications missed."""
     if missed_count >= 2:
         return {
@@ -66,7 +68,7 @@ def check_medication_alerts(
 
 def check_confusion_alert(
     user_id: str, confusion_level: int
-) -> dict | None:
+) -> Optional[dict]:
     """Generate alert if confusion level >= 8."""
     if confusion_level >= 8:
         return {
@@ -82,7 +84,7 @@ def check_score_decline(
     user_id: str,
     previous_score: float,
     current_score: float,
-) -> dict | None:
+) -> Optional[dict]:
     """Generate alert if cognitive score declined significantly."""
     if previous_score > 0 and current_score < previous_score * 0.75:
         decline_pct = round((1 - current_score / previous_score) * 100)

@@ -5,6 +5,7 @@ import logging
 import time
 from collections import defaultdict
 from uuid import uuid4
+from typing import Optional
 
 from app.config import settings
 
@@ -43,7 +44,7 @@ def _make_token(user_id: str) -> str:
     return f"{header}.{payload}.{signature}"
 
 
-def _decode_token(token: str) -> dict | None:
+def _decode_token(token: str) -> Optional[dict]:
     """Decode the simple JWT-like token and return the payload (or None)."""
     import base64
     try:
@@ -63,7 +64,7 @@ def _decode_token(token: str) -> dict | None:
 
 class _DummyUser:
     """Mimics the Supabase user object returned by auth calls."""
-    def __init__(self, id: str, email: str, user_metadata: dict | None = None):
+    def __init__(self, id: str, email: str, user_metadata: Optional[dict] = None):
         self.id = id
         self.email = email
         self.user_metadata = user_metadata or {}
@@ -77,14 +78,14 @@ class _DummySession:
 
 class _DummyAuthResponse:
     """Mimics the combined auth response from Supabase (user + session)."""
-    def __init__(self, user: _DummyUser, session: _DummySession | None):
+    def __init__(self, user: _DummyUser, session: Optional[_DummySession]):
         self.user = user
         self.session = session
 
 
 class _DummyUserResponse:
     """Mimics the response from get_user (user only, no session)."""
-    def __init__(self, user: _DummyUser | None):
+    def __init__(self, user: Optional[_DummyUser]):
         self.user = user
 
 

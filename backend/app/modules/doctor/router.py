@@ -263,7 +263,7 @@ async def respond_to_consultation(id: str, response: ConsultationResponse, servi
     patient_data = sb.table("users").select("email").eq("id", patient_id).execute()
     patient_email = patient_data.data[0].get("email") if patient_data.data else "patient@neurovia.com"
 
-    print(f"📧 SEND_EMAIL: To={patient_email} | Subject='Your Consultation Report' | Body='Your specialized prescription is ready in the NeuroVia dashboard.'")
+    print(f"[EMAIL] SEND_EMAIL: To={patient_email} | Subject='Your Consultation Report' | Body='Your specialized prescription is ready in the NeuroVia dashboard.'")
 
     return {"status": "success", "data": result.data[0]}
 

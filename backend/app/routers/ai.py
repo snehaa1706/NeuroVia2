@@ -120,8 +120,10 @@ async def generate_activity_endpoint(request: Request, data: ActivityGenerationR
 
     activity_type = data.activity_type or "memory_recall"
     difficulty = data.difficulty or "easy"
+    level = data.level
+    language = data.language
 
-    ai_result = await generate_activity(activity_type, difficulty)
+    ai_result = await generate_activity(activity_type, difficulty, level=level, language=language)
 
     if "error" in ai_result:
         raise HTTPException(status_code=500, detail=ai_result["error"])
@@ -143,6 +145,8 @@ async def generate_activity_endpoint(request: Request, data: ActivityGenerationR
         "activity_type": activity_type,
         "content": ai_result,
         "difficulty": difficulty,
+        "level": level,
+        "language": language
     }
     result = sb.table("activities").insert(activity_record).execute()
 
