@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { submitLevel1, resumeAssessment } from '../services/screeningApi';
+import VoiceDictation from '@/components/ui/VoiceDictation';
 
 const AD8_QUESTIONS = [
   "Problems with judgment (e.g., making decisions, bad financial choices)?",
@@ -225,14 +226,19 @@ export default function Level1({ assessmentId, initialContext, onNext }) {
           <h3 className="mt-0 text-[#1a2744] font-serif text-[32px] leading-[1.2] mb-4">Memory Recall</h3>
           <p className="text-[#4a5578] text-[16px] mb-8 leading-[1.6]">Enter the words you memorized earlier.</p>
           
-          <input
-            type="text"
-            placeholder="e.g., word1, word2, word3"
-            value={recall}
-            onChange={(e) => setRecall(e.target.value)}
-            disabled={dontRememberRecall}
-            className={`w-full px-5 py-4 rounded-[16px] border text-[16px] mb-6 outline-none transition-all ${dontRememberRecall ? 'bg-[#f5f0e8]/50 border-[#e2dcd0]/50 text-[#1a2744]/40' : 'bg-white border-[#d2c8b98c] text-[#1a2744] focus:border-[#6b7c52] focus:ring-4 focus:ring-[#6b7c52]/10 shadow-sm'}`}
-          />
+          <div className="flex items-center gap-3 mb-6">
+            <input
+              type="text"
+              placeholder="e.g., word1, word2, word3"
+              value={recall}
+              onChange={(e) => setRecall(e.target.value)}
+              disabled={dontRememberRecall}
+              className={`flex-1 px-5 py-4 rounded-[16px] border text-[16px] outline-none transition-all ${dontRememberRecall ? 'bg-[#f5f0e8]/50 border-[#e2dcd0]/50 text-[#1a2744]/40' : 'bg-white border-[#d2c8b98c] text-[#1a2744] focus:border-[#6b7c52] focus:ring-4 focus:ring-[#6b7c52]/10 shadow-sm'}`}
+            />
+            {!dontRememberRecall && (
+              <VoiceDictation onTranscript={(text) => setRecall(prev => prev ? prev + ', ' + text : text)} size="md" />
+            )}
+          </div>
           
           <div className="flex flex-col sm:flex-row gap-4">
             <button

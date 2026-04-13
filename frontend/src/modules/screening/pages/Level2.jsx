@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { submitLevel2, transcribeAudio, resumeAssessment } from '../services/screeningApi';
+import VoiceDictation from '@/components/ui/VoiceDictation';
 
 export default function Level2({ assessmentId, initialContext, onNext }) {
   const assessment_id = assessmentId || localStorage.getItem("screening_assessmentId");
@@ -531,14 +532,19 @@ export default function Level2({ assessmentId, initialContext, onNext }) {
             <strong>Now recall and type them from memory.</strong>
           </p>
 
-          <input
-            type="text"
-            placeholder="e.g., word1, word2, word3"
-            value={delayedRecall}
-            onChange={(e) => setDelayedRecall(e.target.value)}
-            disabled={dontRememberDelayedRecall}
-            className={`w-full px-5 py-4 rounded-[16px] border text-[16px] mb-6 outline-none transition-all ${dontRememberDelayedRecall ? 'bg-[#f5f0e8]/50 border-[#e2dcd0]/50 text-[#1a2744]/40' : 'bg-white border-[#d2c8b98c] text-[#1a2744] focus:border-[#6b7c52] focus:ring-4 focus:ring-[#6b7c52]/10 shadow-sm'}`}
-          />
+          <div className="flex items-center gap-3 mb-6">
+            <input
+              type="text"
+              placeholder="e.g., word1, word2, word3"
+              value={delayedRecall}
+              onChange={(e) => setDelayedRecall(e.target.value)}
+              disabled={dontRememberDelayedRecall}
+              className={`flex-1 px-5 py-4 rounded-[16px] border text-[16px] outline-none transition-all ${dontRememberDelayedRecall ? 'bg-[#f5f0e8]/50 border-[#e2dcd0]/50 text-[#1a2744]/40' : 'bg-white border-[#d2c8b98c] text-[#1a2744] focus:border-[#6b7c52] focus:ring-4 focus:ring-[#6b7c52]/10 shadow-sm'}`}
+            />
+            {!dontRememberDelayedRecall && (
+              <VoiceDictation onTranscript={(text) => setDelayedRecall(prev => prev ? prev + ', ' + text : text)} size="md" />
+            )}
+          </div>
           <button
             type="button"
             onClick={() => {
