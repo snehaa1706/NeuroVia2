@@ -1,8 +1,10 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Activity, Brain, User, Stethoscope, ArrowRight, Shield, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function ConsultEntry() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   // Preserve any screening state passed in
@@ -35,7 +37,7 @@ export default function ConsultEntry() {
             How can we help<span className="text-[#6b7c52] italic">?</span>
           </h1>
           <p className="text-lg md:text-xl text-[#4a5578]/80 font-light max-w-lg mx-auto leading-relaxed">
-            Connect with board-certified specialists for professional cognitive health consultations.
+            {t('consult_desc')}
           </p>
         </div>
 
@@ -53,9 +55,9 @@ export default function ConsultEntry() {
               <User className="w-10 h-10 text-[#6b7c52]" />
             </div>
 
-            <h3 className="text-[1.8rem] font-semibold text-[#1a2744] mb-3 group-hover:text-[#6b7c52] transition-colors" style={{ fontFamily: "'Cormorant Garamond', serif" }}>I'm a Patient</h3>
+            <h3 className="text-[1.8rem] font-semibold text-[#1a2744] mb-3 group-hover:text-[#6b7c52] transition-colors" style={{ fontFamily: "'Cormorant Garamond', serif" }}>{t('consult_as_patient')}</h3>
             <p className="text-[#4a5578]/80 leading-relaxed font-light mb-8 flex-1">
-              Browse qualified specialists and book a professional cognitive health consultation.
+              {t('consult_patient_desc')}
             </p>
 
             <div className="flex flex-wrap gap-2 mt-auto">
@@ -80,9 +82,9 @@ export default function ConsultEntry() {
               <Stethoscope className="w-10 h-10 text-[#1a2744]" />
             </div>
 
-            <h3 className="text-[1.8rem] font-semibold text-[#1a2744] mb-3 group-hover:text-[#1a2744] transition-colors" style={{ fontFamily: "'Cormorant Garamond', serif" }}>I'm a Doctor</h3>
+            <h3 className="text-[1.8rem] font-semibold text-[#1a2744] mb-3 group-hover:text-[#1a2744] transition-colors" style={{ fontFamily: "'Cormorant Garamond', serif" }}>{t('consult_as_doctor')}</h3>
             <p className="text-[#4a5578]/80 leading-relaxed font-light mb-8 flex-1">
-              Access your patient queue, review consultation requests, and respond with clinical notes.
+              {t('consult_doctor_login_desc')}
             </p>
 
             <div className="flex flex-wrap gap-2 mt-auto">

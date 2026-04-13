@@ -1,8 +1,10 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle2, ArrowRight, Brain, Home } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function ConsultSuccess() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { doctor_name } = location.state || {};
@@ -15,15 +17,14 @@ export default function ConsultSuccess() {
         </div>
 
         <h1 className="text-5xl font-black text-[#0D2B45] mb-4 tracking-tight">
-          Booking Confirmed<span className="text-[#8C9A86]">!</span>
+          {t('booking_success')}
         </h1>
 
         <p className="text-xl text-slate-400 leading-relaxed mb-4">
-          Your consultation request has been sent to{' '}
-          <span className="font-bold text-[#0D2B45]">{doctor_name || 'a specialist'}</span>.
+          {t('booking_success_desc')}
         </p>
         <p className="text-base text-slate-400 mb-12">
-          The doctor will review your submission and you will be contacted with next steps within 24-48 hours.
+          {t('what_happens_next')}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -31,7 +32,7 @@ export default function ConsultSuccess() {
             onClick={() => navigate('/consult/patient/doctors')}
             className="px-8 py-4 bg-[#0D2B45] text-white font-bold rounded-2xl hover:bg-[#1a3a55] transition-all shadow-lg flex items-center justify-center gap-2 group"
           >
-            Book Another
+            {t('book_now')}
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
 
@@ -40,7 +41,7 @@ export default function ConsultSuccess() {
             className="px-8 py-4 bg-white text-[#0D2B45] font-bold rounded-2xl border-2 border-[#E5E5E0] hover:border-[#8C9A86] transition-all flex items-center justify-center gap-2"
           >
             <Home className="w-4 h-4" />
-            Back to Home
+            {t('return_to_dashboard')}
           </button>
         </div>
 

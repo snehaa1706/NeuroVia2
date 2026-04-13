@@ -1,14 +1,16 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, MessageSquare, Settings, LogOut, Activity, Calendar } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const DoctorSidebar = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const links = [
-    { name: 'Dashboard', path: '/doctor/dashboard', icon: LayoutDashboard },
-    { name: 'Patients', path: '/doctor/patients', icon: Users },
-    { name: 'Consultations', path: '/doctor/consultations', icon: MessageSquare },
-    { name: 'Schedule', path: '/doctor/schedule', icon: Calendar },
+    { name: t('dashboard'), path: '/doctor/dashboard', icon: LayoutDashboard },
+    { name: t('patient_list'), path: '/doctor/patients', icon: Users },
+    { name: t('consultations'), path: '/doctor/consultations', icon: MessageSquare },
+    { name: t('schedule'), path: '/doctor/schedule', icon: Calendar },
   ];
 
   return (
@@ -58,7 +60,7 @@ const DoctorSidebar = () => {
           }
         >
           <Settings className="w-5 h-5" />
-          Settings
+          {t('settings')}
         </NavLink>
         <button
           onClick={() => {
@@ -71,7 +73,7 @@ const DoctorSidebar = () => {
           className="flex items-center gap-4 px-6 py-3 rounded-2xl text-lg font-semibold text-red-400/50 hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 w-full"
         >
           <LogOut className="w-5 h-5" />
-          Logout
+          {t('logout')}
         </button>
       </div>
     </aside>
