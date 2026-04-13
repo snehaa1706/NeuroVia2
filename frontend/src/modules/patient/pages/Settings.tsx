@@ -45,6 +45,8 @@ const Settings = () => {
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
 
+  const token: string | null = localStorage.getItem("token");
+
   // Resolve avatar for display
   let displayAvatar = avatarPreview || avatarUrl;
   if (displayAvatar && !displayAvatar.startsWith('http') && !displayAvatar.startsWith('data:')) {
