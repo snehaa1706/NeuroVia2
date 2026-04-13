@@ -3,6 +3,7 @@ import { User, Bell, Palette, RotateCcw, Save, Check, Mail, Phone, Calendar, Shi
 import { useTranslation } from 'react-i18next';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const token = localStorage.getItem("token") || "";
 
 const Settings = () => {
   const { t } = useTranslation();
@@ -45,7 +46,7 @@ const Settings = () => {
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
 
-  const token: string | null = localStorage.getItem("token");
+
 
   // Resolve avatar for display
   let displayAvatar = avatarPreview || avatarUrl;
