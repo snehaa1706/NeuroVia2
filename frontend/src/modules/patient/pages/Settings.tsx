@@ -3,7 +3,6 @@ import { User, Bell, Palette, RotateCcw, Save, Check, Mail, Phone, Calendar, Shi
 import { useTranslation } from 'react-i18next';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const token = localStorage.getItem("token") || "";
 
 const Settings = () => {
   const { t } = useTranslation();
@@ -224,6 +223,7 @@ const Settings = () => {
                       localStorage.setItem('neurovia_patient_user', JSON.stringify(updatedUser));
                     }
 
+                    const token = localStorage.getItem("token") || "";
                     await fetch(`${API_URL}/auth/profile`, {
                       method: 'PUT',
                       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
