@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AlertCircle, Calendar, Send, CheckCircle2, ChevronLeft, Brain, User, Clock, ArrowRight, Activity } from 'lucide-react';
+import VoiceDictation from '@/components/ui/VoiceDictation';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -347,7 +348,10 @@ const ConsultationRequest = () => {
 
             <div className="flex-1 space-y-6">
               <div>
-                <label className="text-xs font-black text-(--color-navy)/50 uppercase tracking-widest block mb-3 px-1">Describe symptoms or concerns</label>
+                <div className="flex items-center gap-2 mb-3 px-1">
+                  <label className="text-xs font-black text-(--color-navy)/50 uppercase tracking-widest">Describe symptoms or concerns</label>
+                  <VoiceDictation onTranscript={(text) => setNotes(prev => prev ? prev + ' ' + text : text)} />
+                </div>
                 <textarea 
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}

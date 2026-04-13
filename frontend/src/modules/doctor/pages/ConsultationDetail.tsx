@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Brain, Calendar, Info, AlertCircle, FileText, CheckCircle2, Save, XCircle, Activity, User, MessageSquare } from 'lucide-react';
 import { doctorApi } from '../services/doctorApi';
+import VoiceDictation from '@/components/ui/VoiceDictation';
 
 const ConsultationDetail = () => {
     const { id } = useParams();
@@ -207,7 +208,10 @@ const ConsultationDetail = () => {
                             </div>
 
                             <div>
-                                <label className="text-xs font-black text-(--color-navy)/50 uppercase tracking-widest block mb-2 px-1">Clinical Observations & Notes</label>
+                                <div className="flex items-center gap-2 mb-2 px-1">
+                                  <label className="text-xs font-black text-(--color-navy)/50 uppercase tracking-widest">Clinical Observations & Notes</label>
+                                  {!isFinalized && <VoiceDictation onTranscript={(text) => setNotes(prev => prev ? prev + ' ' + text : text)} />}
+                                </div>
                                 <textarea 
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
@@ -251,7 +255,10 @@ const ConsultationDetail = () => {
                             </div>
 
                             <div>
-                                <label className="text-xs font-black text-(--color-navy)/50 uppercase tracking-widest block mb-2 px-1">Medicines / Advice</label>
+                                <div className="flex items-center gap-2 mb-2 px-1">
+                                  <label className="text-xs font-black text-(--color-navy)/50 uppercase tracking-widest">Medicines / Advice</label>
+                                  {!isFinalized && <VoiceDictation onTranscript={(text) => setPrescriptionText(prev => prev ? prev + ' ' + text : text)} />}
+                                </div>
                                 <textarea 
                                     value={prescriptionText}
                                     onChange={(e) => setPrescriptionText(e.target.value)}

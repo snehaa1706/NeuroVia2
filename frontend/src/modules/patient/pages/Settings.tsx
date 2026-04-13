@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Bell, Palette, RotateCcw, Save, Check, Mail, Phone, Calendar, Shield, Camera, Upload, Stethoscope, MapPin, Clock, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import VoiceDictation from '@/components/ui/VoiceDictation';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -319,7 +320,10 @@ const Settings = () => {
               </div>
             </div>
             <div className="mt-4">
-              <label className="text-xs font-bold text-(--color-navy)/50 uppercase tracking-wider block mb-1.5">About You</label>
+              <div className="flex items-center gap-2 mb-1.5">
+                <label className="text-xs font-bold text-(--color-navy)/50 uppercase tracking-wider">About You</label>
+                <VoiceDictation onTranscript={(text) => setBio((prev: string) => prev ? prev + ' ' + text : text)} />
+              </div>
               <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} placeholder="Tell patients about your experience..."
                 className="w-full px-4 py-3 border-2 border-(--color-border-light) rounded-xl bg-(--color-surface-alt) outline-none focus:border-(--color-sage) text-(--color-navy) font-medium transition-colors resize-none placeholder:text-(--color-navy)/25" />
             </div>
