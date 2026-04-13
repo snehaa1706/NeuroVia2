@@ -21,6 +21,12 @@ router = APIRouter()
 # so we search common install locations and inject it into PATH + pydub config.
 def _find_ffmpeg():
     """Find ffmpeg executable, searching common Windows install paths."""
+    try:
+        import imageio_ffmpeg
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except ImportError:
+        pass
+        
     import shutil
     # Check if already in PATH
     path = shutil.which("ffmpeg")
@@ -75,8 +81,9 @@ def convert_webm_to_wav(input_path: str, output_path: str) -> bool:
         print(f"[Transcribe] pydub conversion failed: {e}")
         # Try ffmpeg directly as fallback
         try:
+            exe = _ffmpeg_path if _ffmpeg_path else "ffmpeg"
             subprocess.run(
-                ["ffmpeg", "-y", "-i", input_path, "-ar", "16000", "-ac", "1", output_path],
+                [exe, "-y", "-i", input_path, "-ar", "16000", "-ac", "1", output_path],
                 capture_output=True, timeout=15
             )
             return os.path.exists(output_path) and os.path.getsize(output_path) > 100
