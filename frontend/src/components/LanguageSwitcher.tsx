@@ -4,6 +4,7 @@ import { Globe } from 'lucide-react';
 const LANGUAGES = [
   { code: 'en', label: 'English', flag: '🇺🇸' },
   { code: 'hi', label: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'es', label: 'Español', flag: '🇪🇸' },
   { code: 'kn', label: 'ಕನ್ನಡ', flag: '🇮🇳' },
 ];
 
