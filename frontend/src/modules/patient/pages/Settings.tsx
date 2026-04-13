@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const Settings = () => {
+  const token = localStorage.getItem("token") || "";
   const { t } = useTranslation();
   const getUser = () => {
     // Determine context from URL path
